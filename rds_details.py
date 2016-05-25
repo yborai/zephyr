@@ -17,10 +17,8 @@ class RDSDetailsProcessor(CoreProcessor):
 
     def _fieldnames(self):
         return [
-            'DbInstanceId', 'DbInstanceName', 'Estimated Monthly Storage Cost',
-            'Estimated Monthly Compute Cost', 'Estimated Monthly Total Cost',
-            'RegionName', 'DbInstanceClass', 'Engine', 'EngineVersion', 'LicenseModel',
-            'Auto Minor Version Upgrade', 'Master Username', 'Publicly Accessible',
-            'IP Address', 'AllocatedStorageGB', 'FreeStorageSpaceBytes', 'Endpoint',
+            'DbInstanceId', 'DbInstanceName', 'MonthlyCost', 'RegionName',
+            'DbInstanceClass', 'Engine', 'EngineVersion', 'LicenseModel',
+            'AllocatedStorageGB', 'FreeStorageSpaceBytes', 'Endpoint',
             'BackupRetentionPeriod'
         ]

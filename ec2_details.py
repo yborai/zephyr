@@ -1,6 +1,4 @@
-import json
-import csv
-
+from core import CoreProcessor
 from datetime import datetime
 
 
@@ -9,19 +7,9 @@ def create_sheet(json_string, csv_filename='ec2_details.csv'):
     return processor.write_csv(csv_filename)
 
 
-class EC2DetailsProcessor(object):
-    def __init__(self, json_string):
-        self.ec2_details = json.loads(json_string)
-
-    def write_csv(self, csv_filename):
-        with open(csv_filename, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=self.__fieldnames__())
-
-            writer.writeheader()
-            for details_row in self.ec2_details['Ec2Instances']:
-                writer.writerow(self.__filter_row__(details_row))
-
-        return csv_filename
+class EC2DetailsProcessor(CoreProcessor):
+    def __data_key__(self):
+        return 'Ec2Instances'
 
     def __filter_row__(self, details_row):
         filtered_row = {

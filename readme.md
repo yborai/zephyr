@@ -1,6 +1,6 @@
 # ec2 details sheet generator
 
-To use this generator just import `create_sheet` method from `ec2_details_sheet` module and run it:
+To use this generator just import `create_sheet` method from `ec2_details` module and run it:
 
 ```python
 from ec2_details_sheet import create_sheet

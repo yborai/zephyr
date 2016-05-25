@@ -8,25 +8,25 @@ def create_sheet(json_string, csv_filename='ec2_details.csv'):
 
 
 class EC2DetailsProcessor(CoreProcessor):
-    def __data_key__(self):
+    def _data_key(self):
         return 'Ec2Instances'
 
-    def __filter_row__(self, details_row):
+    def _filter_row(self, details_row):
         filtered_row = {
-            key: details_row[key] for key in self.__fieldnames__() if key in details_row.keys()
+            key: details_row[key] for key in self._fieldnames() if key in details_row.keys()
         }
 
-        return self.__format_datefields__(filtered_row)
+        return self._format_datefields(filtered_row)
 
-    def __format_datefields__(self, row):
-        for datefields in self.__datetime_fields__():
+    def _format_datefields(self, row):
+        for datefields in self._datetime_fields():
             row[datefields] = datetime.strptime(
                 row[datefields], '%Y-%m-%dT%H:%M:%S'
             ).strftime('%m/%d/%y %H:%M')
 
         return row
 
-    def __fieldnames__(self):
+    def _fieldnames(self):
         return [
             'InstanceId', 'InstanceName', 'Status', 'Region', 'PricingPlatform',
             'InstanceType', 'LaunchTime', 'AvgCpuforLast7Days', 'AvgCpuforLast30Days',
@@ -39,7 +39,7 @@ class EC2DetailsProcessor(CoreProcessor):
             'MinimumCpuUtilizationDateTime', 'PeakCpuUtilization', 'PeakCpuUtilizationDateTime'
         ]
 
-    def __datetime_fields__(self):
+    def _datetime_fields(self):
         return [
             'MinimumCpuUtilizationDateTime', 'PeakCpuUtilizationDateTime', 'LaunchTime'
         ]

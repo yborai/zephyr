@@ -1,7 +1,7 @@
 from core import CoreProcessor
 
 
-def create_sheet(json_string, csv_filename='ec2_details.csv'):
+def create_sheet(json_string, csv_filename='rds_details.csv'):
     processor = RDSDetailsProcessor(json_string)
     return processor.write_csv(csv_filename)
 

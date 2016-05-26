@@ -3,11 +3,11 @@ from core import CoreProcessor
 
 
 def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):
-    processor = EC2RIRecommendations(json_string)
+    processor = EC2RIRecommendationsProcessor(json_string)
     return processor.write_csv(csv_filename)
 
 
-class EC2RIRecommendations(CoreProcessor):
+class EC2RIRecommendationsProcessor(CoreProcessor):
     def __init__(self, json_string):
         raw_details = json.loads(self._escape_json_string(json_string))
 

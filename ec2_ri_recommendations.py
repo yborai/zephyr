@@ -1,6 +1,4 @@
-import csv
 import json
-
 from core import CoreProcessor
 
 
@@ -15,16 +13,17 @@ class EC2RIRecommendations(CoreProcessor):
         self.parsed_details = {self._data_key(): []}
 
         for detail in details['BestPracticeChecks']:
-            details_reader = csv.DictReader(
-                detail[self._data_key()], self._fieldnames(), delimiter='|'
-            )
-
-            for row in details_reader:
-                self.parsed_details[self._data_key()].append(row)
+            for row in detail[self._data_key()]:
+                self.parsed_details[self._data_key()].append(
+                    {
+                        pair.split(':')[0].strip(): pair.split(':')[1].strip()
+                        for pair in row.split('|')
+                    }
+                )
 
     def _filter_row(self, details_row):
         filtered_row = {
-            key: (details_row[key]).replace("%s:" % key, '').strip()
+            key: details_row[key].strip()
             for key in self._fieldnames() if key in details_row.keys()
         }
 

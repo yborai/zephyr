@@ -9,7 +9,7 @@ def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):
 
 class EC2RIRecommendations(CoreProcessor):
     def __init__(self, json_string):
-        details = json.loads(json_string)
+        details = json.loads(self._escape_json_string(json_string))
         self.parsed_details = {self._data_key(): []}
 
         for detail in details['BestPracticeChecks']:
@@ -44,3 +44,6 @@ class EC2RIRecommendations(CoreProcessor):
             "Upfront RI Cost", "Reserved Monthly Cost",
             "On-Demand Monthly Cost", "Total Savings"
         )
+
+    def _escape_json_string(self, json_string):
+        return json_string.replace('<a href=\"', '').replace('\" target=\"_blank\"', '')

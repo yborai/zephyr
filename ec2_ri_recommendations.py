@@ -9,17 +9,25 @@ def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):
 
 class EC2RIRecommendations(CoreProcessor):
     def __init__(self, json_string):
-        details = json.loads(self._escape_json_string(json_string))
-        self.parsed_details = {self._data_key(): []}
+        raw_details = json.loads(self._escape_json_string(json_string))
 
-        for detail in details['BestPracticeChecks']:
-            for row in detail[self._data_key()]:
-                self.parsed_details[self._data_key()].append(
+        parsed_data = []
+        for raw_detail_row in raw_details['BestPracticeChecks']:
+            for raw_data in raw_detail_row[self._data_key()]:
+                parsed_data.append(
                     {
-                        pair.split(':')[0].strip(): pair.split(':')[1].strip()
-                        for pair in row.split('|')
+                        self._left_side(pair): self._right_side(pair)
+                        for pair in raw_data.split('|')
                     }
                 )
+
+        self.parsed_details = {self._data_key(): parsed_data}
+
+    def _left_side(self, pair):
+        return pair.split(':')[0].strip()
+
+    def _right_side(self, pair):
+        return pair.split(':')[1].strip()
 
     def _filter_row(self, details_row):
         filtered_row = {

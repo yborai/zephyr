@@ -27,7 +27,7 @@ class EC2DetailsProcessor(CoreProcessor):
         return row
 
     def _fieldnames(self):
-        return [
+        return (
             'InstanceId', 'InstanceName', 'Status', 'Region', 'PricingPlatform',
             'InstanceType', 'LaunchTime', 'AvgCpuforLast7Days', 'AvgCpuforLast30Days',
             'AvgCpuforLast90Days', 'AvgNetworkInLast30Days', 'AvgNetworkOutLast30Days',
@@ -37,9 +37,9 @@ class EC2DetailsProcessor(CoreProcessor):
             'HoursLowCpuLast7Days', 'HoursLowCpuLast30Days', 'HoursRunningLast7Days',
             'HoursRunningLast30Days', 'HoursRunningLast90Days', 'MinimumCpuUtilization',
             'MinimumCpuUtilizationDateTime', 'PeakCpuUtilization', 'PeakCpuUtilizationDateTime'
-        ]
+        )
 
     def _datetime_fields(self):
-        return [
+        return (
             'MinimumCpuUtilizationDateTime', 'PeakCpuUtilizationDateTime', 'LaunchTime'
-        ]
+        )

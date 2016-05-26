@@ -16,9 +16,9 @@ class RDSDetailsProcessor(CoreProcessor):
         }
 
     def _fieldnames(self):
-        return [
+        return (
             'DbInstanceId', 'DbInstanceName', 'MonthlyCost', 'RegionName',
             'DbInstanceClass', 'Engine', 'EngineVersion', 'LicenseModel',
             'AllocatedStorageGB', 'FreeStorageSpaceBytes', 'Endpoint',
             'BackupRetentionPeriod'
-        ]
+        )

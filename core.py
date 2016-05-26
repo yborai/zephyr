@@ -1,6 +1,9 @@
 import json
 import csv
 
+from re import sub
+from decimal import Decimal
+
 
 class CoreProcessor(object):
     def __init__(self, json_string):
@@ -16,7 +19,19 @@ class CoreProcessor(object):
 
         return csv_filename
 
+    def _format_money_fields(self, row):
+        for money_field in self._money_fields():
+            row[money_field] = self._parse_money(row[money_field])
+
+        return row
+
+    def _parse_money(self, money_string):
+        return Decimal(sub(r'[^\d\-.]', '', money_string))
+
     def _fieldnames(self):
+        raise NotImplementedError
+
+    def _money_fields(self):
         raise NotImplementedError
 
     def _data_key(self):

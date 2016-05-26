@@ -1,5 +1,5 @@
 import json
-from core import CoreProcessor
+from .core import CoreProcessor
 
 
 def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):

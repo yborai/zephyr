@@ -1,4 +1,4 @@
-from core import CoreProcessor
+from .core import CoreProcessor
 
 
 def create_sheet(json_string, csv_filename='rds_details.csv'):

@@ -1,4 +1,4 @@
-from ec2_ri_recommendations import EC2RIRecommendationsProcessor
+from .ec2_ri_recommendations import EC2RIRecommendationsProcessor
 
 
 def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):

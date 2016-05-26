@@ -1,4 +1,4 @@
-from core import CoreProcessor
+from .core import CoreProcessor
 from datetime import datetime
 
 

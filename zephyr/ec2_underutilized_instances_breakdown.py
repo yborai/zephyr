@@ -4,11 +4,11 @@ import csv
 
 
 def create_sheet(json_string, csv_filename='ec2_migration_recommendations.csv'):
-    processor = EC2UnderutilizedInstancesBreakdowb(json_string)
+    processor = EC2UnderutilizedInstancesBreakdown(json_string)
     return processor.write_csv(csv_filename)
 
 
-class EC2UnderutilizedInstancesBreakdowb(EC2MigrationRecommencationsProcessor):
+class EC2UnderutilizedInstancesBreakdown(EC2MigrationRecommencationsProcessor):
     def write_csv(self, csv_filename):
         with open(csv_filename, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self._fieldnames())

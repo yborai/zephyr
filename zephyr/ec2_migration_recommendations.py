@@ -1,12 +1,12 @@
-from .ec2_ri_recommendations import EC2RIRecommendationsProcessor
+from .recommendations_core import RecommendationsCoreProcessor
 
 
-def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):
+def create_sheet(json_string, csv_filename='ec2_migration_recommendations.csv'):
     processor = EC2MigrationRecommencationsProcessor(json_string)
     return processor.write_csv(csv_filename)
 
 
-class EC2MigrationRecommencationsProcessor(EC2RIRecommendationsProcessor):
+class EC2MigrationRecommencationsProcessor(RecommendationsCoreProcessor):
     def _fieldnames(self):
         return (
             "Instance", "Region", "Recommendation", "On-Demand Current Monthly Cost",

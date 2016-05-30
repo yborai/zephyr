@@ -6,9 +6,12 @@ import csv
 def create_sheet(json_string, define_category_func, csv_filename='ec2_instances_breakdown.csv'):
     """
     This function creates new class instance
-    with provided define_category function.
-    And immediately writes the parsed json review
+    with provided define_category function
+    and immediately writes the parsed json review
     to specified csv file.
+
+    define_category_func should take one string argument
+    and returns string which contains category name.
     """
     processor = EC2UnderutilizedInstancesBreakdown(json_string, define_category_func)
     return processor.write_csv(csv_filename)
@@ -16,13 +19,6 @@ def create_sheet(json_string, define_category_func, csv_filename='ec2_instances_
 
 class EC2UnderutilizedInstancesBreakdown(EC2MigrationRecommencationsProcessor):
     def __init__(self, json_string, define_category_func):
-        """
-        This constructor takes additional parameter:
-        define_category function. This function is needed to define
-        current category for provided instance row from the review.
-        define_category_func should take one string argument
-        and returns string with category name.
-        """
         self.define_category_func = define_category_func
         super().__init__(json_string)
 

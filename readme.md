@@ -66,7 +66,8 @@ Default value for `csv_filepath` param is `ec2_underutilized_instances.csv` (fil
 ## EC2 underutilized instances breakdown sheet generator
 
 To use this generator import `create_sheet` method from `zephyr.ec2_underutilized_instances_breakdown` module.
-Also you need a function to define category for each line of review. You need to create this function by yourself.
+Also you need a function to define category for each line of review. You need to create this function by yourself
+and provide it as a parameter.
 Example:
 
 ```python

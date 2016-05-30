@@ -61,9 +61,13 @@ class EC2UnderutilizedInstancesBreakdown(EC2MigrationRecommencationsProcessor):
     def _define_category(self, raw_category):
         """
         This method tries to call define_category function
-        for current class instance and returns the result of computing.
+        for current class instance and returns the result of computing
+        or raises an exception if define_category_func isn't callable.
         """
-        return self.define_category_func(raw_category)
+        if callable(self.define_category_func):
+            return self.define_category_func(raw_category)
+
+        raise IllegalArgumentError("define_category_func parameter should be callable")
 
     def _fieldnames(self):
         return (
@@ -78,3 +82,7 @@ class EC2UnderutilizedInstancesBreakdown(EC2MigrationRecommencationsProcessor):
 
     def _empty_row(self):
         return {}
+
+
+class IllegalArgumentError(ValueError):
+    pass

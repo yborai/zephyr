@@ -38,9 +38,14 @@ class EC2UnderutilizedInstancesBreakdown(EC2MigrationRecommencationsProcessor):
 
             writer.writeheader()
             for category, group in grouped_rows:
+                category_sum = 0
                 for row in group:
+                    category_sum += row["Predicted Monthly Cost"]
                     writer.writerow(row)
-
+                writer.writerow({
+                    "Category": row["Category"],
+                    "Predicted Monthly Cost": category_sum,
+                })
                 writer.writerow(self._empty_row())
         return csv_filename
 

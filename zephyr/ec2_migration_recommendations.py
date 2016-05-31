@@ -1,5 +1,6 @@
-from .recommendations_core import RecommendationsCoreProcessor
 import re
+
+from .recommendations_core import RecommendationsCoreProcessor
 
 
 def create_sheet(json_string, csv_filename='ec2_migration_recommendations.csv'):

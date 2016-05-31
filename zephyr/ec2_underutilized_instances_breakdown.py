@@ -1,6 +1,7 @@
-from itertools import groupby
-from .ec2_migration_recommendations import EC2MigrationRecommencationsProcessor
 import csv
+from itertools import groupby
+
+from .ec2_migration_recommendations import EC2MigrationRecommencationsProcessor
 
 
 def create_sheet(json_string, define_category_func, csv_filename='ec2_instances_breakdown.csv'):

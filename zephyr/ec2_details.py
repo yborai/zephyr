@@ -1,5 +1,6 @@
-from .core import CoreProcessor
 from datetime import datetime
+
+from .core import CoreProcessor
 
 
 def create_sheet(json_string, csv_filename='ec2_details.csv'):

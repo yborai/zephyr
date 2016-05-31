@@ -1,8 +1,8 @@
 import json
-from .core import CoreProcessor
-
 from re import sub
 from decimal import Decimal
+
+from .core import CoreProcessor
 
 
 class RecommendationsCoreProcessor(CoreProcessor):

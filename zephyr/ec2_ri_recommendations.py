@@ -1,4 +1,5 @@
 import json
+
 from .recommendations_core import RecommendationsCoreProcessor
 
 

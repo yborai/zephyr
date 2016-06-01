@@ -88,3 +88,16 @@ create_sheet(json_string, define_category, csv_filepath)
 
 New csv file will appear on provided path.
 Default value for `csv_filepath` param is `ec2_instances_breakdown.csv` (file will appear in current directory).
+
+## Service requests sheet generator
+
+To use this generator just import `create_sheet` method from `zephyr.service_requests` module and run it:
+
+```python
+from zephyr.service_requests import create_sheet
+
+create_sheet(json_string, csv_filepath)
+```
+
+New csv file will appear on provided path. Also two other minor csv reviews will appear near the provided path.
+Default value for `csv_filepath` param is `service_requests.csv` (file will appear in current directory).

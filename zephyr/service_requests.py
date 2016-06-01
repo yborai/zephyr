@@ -22,45 +22,42 @@ class ServiceRequestProcessor(CoreProcessor):
                 dict(zip(parsed_result["header"], row))
             )
 
-        self.grouped_by_area = self._group_by_area()
-        self.grouped_by_severity = self._group_by_severity()
+        self.grouped_by_area = self._group_by("area")
+        self.grouped_by_severity = self._group_by("severity")
 
     def write_csv(self, csv_filename):
         super().write_csv(csv_filename)
-        area_csv_filepath = self._write_area_total_csv(csv_filename)
-        severity_csv_filepath = self._write_severity_total_csv(csv_filename)
+
+        area_csv_filepath = self._write_grouped_review_csv(
+            csv_filename, "area", self.grouped_by_area
+        )
+        severity_csv_filepath = self._write_grouped_review_csv(
+            csv_filename, "severity", self.grouped_by_severity
+        )
 
         return csv_filename, area_csv_filepath, severity_csv_filepath
 
-    def _write_area_total_csv(self, csv_filename):
-        area_csv_filepath = os.path.splitext(csv_filename)[0] + "_area_total.csv"
-        with open(area_csv_filepath, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=("category", "total"))
+    def _write_grouped_review_csv(self, csv_filename, review_type, data):
+        review_csv_filepath = os.path.splitext(csv_filename)[0] + "_" + review_type + "_total.csv"
+        with open(review_csv_filepath, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=(review_type, "total"))
 
             writer.writeheader()
-            grand_total_area = 0
-            for area, rows in self.grouped_by_area:
+            grand_total = 0
+            for grouper, rows in data:
                 total = len(list(rows))
-                grand_total_area += total
-                writer.writerow({"category": area, "total": total})
-            writer.writerow({"category": "Grand Total", "total": grand_total_area})
+                grand_total += total
+                writer.writerow({review_type: grouper, "total": total})
+            writer.writerow({review_type: "Grand Total", "total": grand_total})
 
-        return area_csv_filepath
+        return review_csv_filepath
 
-    def _write_severity_total_csv(self, csv_filename):
-        severity_csv_filepath = os.path.splitext(csv_filename)[0] + "_severity_total.csv"
-        with open(severity_csv_filepath, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=("severity", "total"))
-
-            writer.writeheader()
-            grand_total_severity = 0
-            for severity, rows in self.grouped_by_severity:
-                total = len(list(rows))
-                grand_total_severity += total
-                writer.writerow({"severity": severity, "total": total})
-            writer.writerow({"severity": "Grand Total", "total": grand_total_severity})
-
-        return severity_csv_filepath
+    def _group_by(self, group_identifier):
+        rows = sorted(
+            self.parsed_details[self._data_key()],
+            key=lambda row: row[group_identifier], reverse=False
+        )
+        return groupby(rows, lambda row: row[group_identifier])
 
     def _filter_row(self, details_row):
         filtered_row = {
@@ -68,20 +65,6 @@ class ServiceRequestProcessor(CoreProcessor):
         }
 
         return self._format_datefields(filtered_row)
-
-    def _group_by_area(self):
-        rows = sorted(
-            self.parsed_details[self._data_key()],
-            key=lambda row: row["area"], reverse=False
-        )
-        return groupby(rows, lambda row: row["area"])
-
-    def _group_by_severity(self):
-        rows = sorted(
-            self.parsed_details[self._data_key()],
-            key=lambda row: row["severity"], reverse=False
-        )
-        return groupby(rows, lambda row: row["severity"])
 
     def _format_datefields(self, row):
         for datefields in self._datetime_fields():

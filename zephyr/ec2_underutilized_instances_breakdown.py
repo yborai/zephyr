@@ -32,6 +32,8 @@ class EC2UnderutilizedInstancesBreakdown(EC2MigrationRecommencationsProcessor):
         grouped_rows = self._group_rows(filtered_rows)
         self._write_to_file(csv_filename, grouped_rows)
 
+        return csv_filename
+
     def _write_to_file(self, csv_filename, grouped_rows):
         with open(csv_filename, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self._fieldnames())

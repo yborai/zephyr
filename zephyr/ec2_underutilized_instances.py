@@ -9,8 +9,8 @@ def create_sheet(json_string, csv_filename='ec2_underutilized_instances.csv'):
 class EC2UnderutilizedInstances(EC2MigrationRecommencationsProcessor):
     def _fieldnames(self):
         return (
-            "Instance ID", "Instance Name", "CPU Util", "Network In (Bytes)",
-            "Network Out (Bytes)", "Predicted Monthly Cost", "Region"
+            "Instance ID", "Instance Name", "Average CPU Util",
+            "Predicted Monthly Cost", "Region"
         )
 
     def _money_fields(self):

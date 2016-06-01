@@ -138,3 +138,5 @@ Each `*_json` argument is a string to be parsed to create a review.
 If any `*_json` argument will be omitted it will not appear in final review.
 To create `EC2 underutilized instances breakdown` review you also need to pass define_category_func.
 If this function is omitted, `EC2 underutilized instances breakdown` review will not be created.
+
+This function will create full account review on provided path.

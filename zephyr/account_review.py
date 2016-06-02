@@ -25,6 +25,23 @@ def create_xlsx_account_review(
     workbook = xlsxwriter.Workbook(destination_filepath + '/' + xslx_filename)
     temp_filepath = create_temp_folder(destination_filepath, temporary_folder_name)
 
+    create_review_sheet(
+        workbook, ec2_details_json, ec2_details, 'EC2 details', temp_filepath
+    )
+    create_review_sheet(
+        workbook, rds_details_json, rds_details, 'RDS details', temp_filepath
+    )
+
+    create_review_sheet(
+        workbook, ec2_ri_recommendations_json, ec2_ri_recommendations,
+        'EC2 RI recommendations', temp_filepath
+    )
+
+    create_review_sheet(
+        workbook, ec2_migration_recommendations_json, ec2_migration_recommendations,
+        'EC2 migration recommendations', temp_filepath
+    )
+
     if service_requests_json is not None:
         service_sheet, area_sheet, severity_sheet = service_requests.create_sheet(
             service_requests_json, temp_filepath + '/' + 'service_requests.csv'
@@ -34,32 +51,6 @@ def create_xlsx_account_review(
 
         insert_csv_to_worksheet(service_requests_sheet, area_sheet, 1, 6)
         insert_csv_to_worksheet(service_requests_sheet, severity_sheet, 12, 6)
-
-    if ec2_details_json is not None:
-        ec2_details_sheet = ec2_details.create_sheet(
-            ec2_details_json, temp_filepath + '/' + 'ec2_details.csv'
-        )
-        write_csv_to_worksheet(workbook, 'EC2 details', ec2_details_sheet)
-
-    if rds_details_json is not None:
-        rds_details_sheet = rds_details.create_sheet(
-            rds_details_json, temp_filepath + '/' + 'rds_details.csv'
-        )
-        write_csv_to_worksheet(workbook, 'RDS details', rds_details_sheet)
-
-    if ec2_ri_recommendations_json is not None:
-        ec2_ri_recommendations_sheet = ec2_ri_recommendations.create_sheet(
-            ec2_ri_recommendations_json, temp_filepath + '/' + 'rds_details.csv'
-        )
-        write_csv_to_worksheet(workbook, 'EC2 RI recommendations', ec2_ri_recommendations_sheet)
-
-    if ec2_migration_recommendations_json is not None:
-        ec2_migration_recommendations_sheet = ec2_migration_recommendations.create_sheet(
-            ec2_migration_recommendations_json, temp_filepath + '/' + 'rds_details.csv'
-        )
-        write_csv_to_worksheet(
-            workbook, 'EC2 migration recommendations', ec2_migration_recommendations_sheet
-        )
 
     if ec2_underutilized_instances_json is not None:
         ec2_underutilized_instances_sheet = ec2_underutilized_instances.create_sheet(
@@ -87,6 +78,22 @@ def create_xlsx_account_review(
 
     remove_temp_folder(temp_filepath)
     workbook.close()
+
+
+def create_review_sheet(
+        workbook, review_json, module, sheet_name, temp_filepath, temp_filename='temp.csv'):
+    """
+    create_review_sheet function creates a new worksheet
+    inside the provided workbook and fills it with a data
+    from prom provided review_json processed with given module's
+    create_sheet function.
+    """
+    if review_json is not None:
+        review_sheet = module.create_sheet(
+            review_json, temp_filepath + '/' + temp_filename
+        )
+        write_csv_to_worksheet(workbook, sheet_name, review_sheet)
+        return review_sheet
 
 
 def write_csv_to_worksheet(workbook, worksheet_name, csv_filepath):

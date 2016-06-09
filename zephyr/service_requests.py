@@ -79,7 +79,7 @@ class ServiceRequestProcessor(CoreProcessor):
 
     def _fieldnames(self):
         return (
-            "summary", "status", "severity", "created_date", "created_by"
+            "summary", "status", "severity", "area", "created_date", "created_by"
         )
 
     def _datetime_fields(self):

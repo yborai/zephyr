@@ -73,7 +73,7 @@ def create_xlsx_account_review(
                 "Breakdown of Underutilized EC2 Instances"
             )
             insert_csv_to_worksheet(
-                ec2_underutilized_instances_xls_sheet, ec2_underutilized_breakdown_sheet, 1, 8
+                ec2_underutilized_instances_xls_sheet, ec2_underutilized_breakdown_sheet, 1, 6
             )
 
     remove_temp_folder(temp_filepath)
@@ -119,7 +119,7 @@ def write_csv_to_worksheet(workbook, worksheet_name, csv_filepath):
     return current_worksheet
 
 
-def insert_csv_to_worksheet(worksheet, csv_filepath, row, col):
+def insert_csv_to_worksheet(worksheet, csv_filepath, start_row, start_col):
     """
     insert_csv_to_worksheet function inserts
     data from csv file to the given worksheet.
@@ -127,9 +127,9 @@ def insert_csv_to_worksheet(worksheet, csv_filepath, row, col):
     """
     with open(csv_filepath, 'r') as f:
         reader = csv.reader(f)
-        row_index = 1
+        row_index = start_row
         for row in reader:
-            column_index = 6
+            column_index = start_col
             for col in row:
                 worksheet.write(row_index, column_index, col)
                 column_index += 1

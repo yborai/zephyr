@@ -8,6 +8,7 @@ from decimal import Decimal
 
 DAY = datetime.timedelta(days=1)
 
+
 def timed(func):
     """
     Wrap a function in a timer.
@@ -20,8 +21,11 @@ def timed(func):
         print('%s' % (s_1 - s_0))
         return value
     return timed_func
+
+
 def percent(numer, denom, digits=2):
-    return round(Decimal(100.)*numer/denom, digits)
+    return round(Decimal(100.) * numer / denom, digits)
+
 
 class DecimalEncoder(json.JSONEncoder):
     """Serialize decimal.Decimal objects into JSON as floats."""
@@ -30,6 +34,7 @@ class DecimalEncoder(json.JSONEncoder):
             return float(obj)
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
+
 
 def end_of_month_before(date):
     """
@@ -40,6 +45,7 @@ def end_of_month_before(date):
     fom = datetime.datetime(year=date_y, month=date_m, day=1)
     return fom - DAY
 
+
 def month_range(date):
     """
     Returns a tuple of datetimes corresponding to
@@ -48,7 +54,7 @@ def month_range(date):
     """
     dy, dm = date.year, date.month
     begin_dt = datetime.datetime(year=dy, month=dm, day=1)
-    month_next = begin_dt + DAY*31 # a day in the month after report_begin
+    month_next = begin_dt + DAY * 31  # a day in the month after report_begin
     nmy, nmm = month_next.year, month_next.month
     # last day of report date month
     end_dt = datetime.datetime(year=nmy, month=nmm, day=1) - DAY

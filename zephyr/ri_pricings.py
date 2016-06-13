@@ -98,8 +98,12 @@ class RIPricingProcessor(RecommendationsCoreProcessor):
 
                 if 'Partial' in row['Commitment Type']:
                     total_data['Payment Type'] = 'Partial Upfront'
+                elif 'No' in row['Commitment Type']:
+                    total_data['Payment Type'] = 'No Upfront'
+                else:
+                    total_data['Payment Type'] = 'All Upfront'
 
-                if '1 Year Partial' in row['Commitment Type']:
+                if '1 Year' in row['Commitment Type']:
                     total_data['Term'] = 12
                 else:
                     total_data['Term'] = 36

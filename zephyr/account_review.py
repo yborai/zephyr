@@ -33,23 +33,21 @@ def create_xlsx_account_review(
         workbook, rds_details_json, rds_details, 'RDS details', temp_filepath
     )
 
-    if ec2_ri_recommendations_json is not None:
-        ec2_ri_recommendations_sheet = ec2_ri_recommendations.create_sheet(
-            ec2_ri_recommendations_json, temp_filepath + '/' + 'temp.csv'
-        )
-        write_csv_to_worksheet(workbook, 'EC2 RI recommendations', ec2_ri_recommendations_sheet)
-
-        if ri_pricing_csv is not None:
-            ri_pricing_sheet = ri_pricings.create_sheet(
-                ec2_ri_recommendations_json, ri_pricing_csv, temp_filepath + '/' + 'temp.csv'
-            )
-            write_csv_to_worksheet(workbook, 'RI pricing', ri_pricing_sheet)
-
+    create_review_sheet(
+        workbook, ec2_ri_recommendations_json, ec2_ri_recommendations,
+        'EC2 RI recommendations', temp_filepath
+    )
 
     create_review_sheet(
         workbook, ec2_migration_recommendations_json, ec2_migration_recommendations,
         'EC2 migration recommendations', temp_filepath
     )
+
+    if ec2_ri_recommendations_json is not None and ri_pricing_csv is not None:
+        ri_pricing_sheet = ri_pricings.create_sheet(
+            ec2_ri_recommendations_json, ri_pricing_csv, temp_filepath + '/' + 'temp.csv'
+        )
+        write_csv_to_worksheet(workbook, 'RI pricing', ri_pricing_sheet)
 
     if service_requests_json is not None:
         service_sheet, area_sheet, severity_sheet = service_requests.create_sheet(

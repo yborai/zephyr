@@ -5,6 +5,7 @@ import shutil
 import xlsxwriter
 
 from . import service_requests, ec2_details, rds_details, ec2_ri_recommendations
+from . import ri_pricings
 from . import ec2_migration_recommendations, ec2_underutilized_instances
 from . import ec2_underutilized_instances_breakdown
 
@@ -12,7 +13,7 @@ from . import ec2_underutilized_instances_breakdown
 def create_xlsx_account_review(
         destination_filepath, xslx_filename='account_review.xlsx',
         service_requests_json=None, ec2_details_json=None,
-        rds_details_json=None, ec2_ri_recommendations_json=None,
+        rds_details_json=None, ec2_ri_recommendations_json=None, ri_pricing_csv=None,
         ec2_migration_recommendations_json=None, ec2_underutilized_instances_json=None,
         define_category_func=None,
         temporary_folder_name='temp'):
@@ -32,10 +33,18 @@ def create_xlsx_account_review(
         workbook, rds_details_json, rds_details, 'RDS details', temp_filepath
     )
 
-    create_review_sheet(
-        workbook, ec2_ri_recommendations_json, ec2_ri_recommendations,
-        'EC2 RI recommendations', temp_filepath
-    )
+    if ec2_ri_recommendations_json is not None:
+        ec2_ri_recommendations_sheet = ec2_ri_recommendations.create_sheet(
+            ec2_ri_recommendations_json, temp_filepath + '/' + 'temp.csv'
+        )
+        write_csv_to_worksheet(workbook, 'EC2 RI recommendations', ec2_ri_recommendations_sheet)
+
+        if ri_pricing_csv is not None:
+            ri_pricing_sheet = ri_pricings.create_sheet(
+                ec2_ri_recommendations_json, ri_pricing_csv, temp_filepath + '/' + 'temp.csv'
+            )
+            write_csv_to_worksheet(workbook, 'RI pricing', ri_pricing_sheet)
+
 
     create_review_sheet(
         workbook, ec2_migration_recommendations_json, ec2_migration_recommendations,

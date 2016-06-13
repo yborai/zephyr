@@ -102,6 +102,19 @@ create_sheet(json_string, csv_filepath)
 New csv file will appear on provided path. Also two other minor csv reviews will appear near the provided path.
 Default value for `csv_filepath` param is `service_requests.csv` (file will appear in current directory).
 
+## RI pricing sheet generator
+
+To use this generator just import `create_sheet` function from `zephyr.ri_pricings` module and run it:
+
+```python
+from zephyr.ri_pricings import create_sheet
+
+create_sheet(json_string, csv_data_source_filepath, csv_filepath)
+```
+
+New csv file will appear on provided path. Also two other minor csv reviews will appear near the provided path.
+Default value for `csv_filepath` param is `ri_pricing.csv` (file will appear in current directory).
+
 ## Complete account review xlsx sheet generator
 
 To use this generator you need import `create_xlsx_account_review` function from `zephyr.account_review` module.
@@ -130,7 +143,8 @@ ec2_ri_recommendations_json=ec2_ri_recommendations_json,
 ec2_migration_recommendations_json=ec2_migration_recommendations_json,
 ec2_underutilized_instances_json=ec2_underutilized_instances_json,
 define_category_func=define_category,
-temporary_folder_name=temp_folder_name
+temporary_folder_name=temp_folder_name,
+ri_pricing_csv=path_to_csv_data_source
 )
 ```
 
@@ -138,5 +152,6 @@ Each `*_json` argument is a string to be parsed to create a review.
 If any `*_json` argument will be omitted it will not appear in final review.
 To create `EC2 underutilized instances breakdown` review you also need to pass define_category_func.
 If this function is omitted, `EC2 underutilized instances breakdown` review will not be created.
+In addition, to create `RI pricing` review, `ri_pricing_csv` variable should be passed.
 
 This function will create full account review on provided path.

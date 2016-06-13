@@ -1,5 +1,6 @@
 import csv
 import itertools
+from decimal import Decimal
 
 from .recommendations_core import RecommendationsCoreProcessor
 
@@ -30,11 +31,11 @@ class RIPricingProcessor(RecommendationsCoreProcessor):
 
     def _merge_data(self):
         grouped_json_data = self._prepare_json_total_data()
-        grouped_csv_data = self._prepare_csv_total_data()
+        grouped_csv_data = self._prepare_csv_total_data(grouped_json_data)
 
         self.parsed_details = {self._data_key(): grouped_csv_data}
 
-    def _prepare_csv_total_data(self):
+    def _prepare_csv_total_data(self, grouped_json_data):
         csv_data = sorted(self.csv_data, key=self._csv_group_keys)
         csv_data = itertools.groupby(csv_data, self._csv_group_keys)
 
@@ -51,15 +52,28 @@ class RIPricingProcessor(RecommendationsCoreProcessor):
 
                 if row['Unit'] == 'Quantity':
                     total_data['Upfront'] = row['PricePerUnit']
+
+                    for json_data_row in grouped_json_data:
+                        if self._same_instance(total_data, json_data_row):
+                            total_data['Effective Hourly'] = (
+                                json_data_row['Reserved Monthly Cost'] /
+                                Decimal(total_data['Upfront'])
+                            )
+                            total_data['On-Demand Hourly'] = (
+                                json_data_row['On-Demand Monthly Cost'] /
+                                Decimal(total_data['Upfront'])
+                            )
                 else:
                     total_data['Monthly'] = row['PricePerUnit']
 
-                if total_data['Payment Type'] == 'All Upfront':
-                    total_data['Monthly'] = 0
-                if total_data['Payment Type'] == 'No Upfront':
-                    total_data['Upfront'] = 0
+            if total_data['Payment Type'] == 'All Upfront':
+                total_data['Monthly'] = 0
+            if total_data['Payment Type'] == 'No Upfront':
+                total_data['Upfront'] = 0
 
-            grouped_csv_data.append(total_data)
+            if total_data['Payment Type'] and total_data['Region']:
+                grouped_csv_data.append(total_data)
+
         return grouped_csv_data
 
     def _prepare_json_total_data(self):
@@ -76,7 +90,8 @@ class RIPricingProcessor(RecommendationsCoreProcessor):
                 total_data['Region'] = row['AZ']
                 total_data['Instance Type'] = row['Instance Type']
                 total_data['Tenancy'] = row['Tenancy']
-                if 'linux' in row['Platform']:
+
+                if 'Linux' in row['Platform']:
                     total_data['Platform'] = 'Linux'
                 else:
                     total_data['Platform'] = row['Platform']
@@ -89,10 +104,20 @@ class RIPricingProcessor(RecommendationsCoreProcessor):
                 else:
                     total_data['Term'] = 36
 
+                total_data['Reserved Monthly Cost'] = row['Reserved Monthly Cost']
+                total_data['On-Demand Monthly Cost'] = row['On-Demand Monthly Cost']
+
                 total_data = self._aggregate_data(total_data, row)
             grouped_json_data.append(total_data)
 
         return grouped_json_data
+
+    def _same_instance(self, json_data_row, total_data):
+        return (json_data_row['Region'] == total_data['Region'] and
+                json_data_row['Instance Type'] == total_data['Instance Type'] and
+                json_data_row['Platform'] == total_data['Platform'] and
+                json_data_row['Payment Type'] == total_data['Payment Type'] and
+                json_data_row['Term'] == total_data['Term'])
 
     def _aggregate_data(self, total_data, row):
         for field in self._money_fields() + ('Number',):

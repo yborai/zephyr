@@ -43,11 +43,10 @@ def create_xlsx_account_review(
         'EC2 migration recommendations', temp_filepath
     )
 
-    if ec2_ri_recommendations_json is not None and ri_pricing_csv is not None:
-        ri_pricing_sheet = ri_pricings.create_sheet(
-            ec2_ri_recommendations_json, ri_pricing_csv, temp_filepath + '/' + 'temp.csv'
-        )
-        write_csv_to_worksheet(workbook, 'RI pricing', ri_pricing_sheet)
+    create_review_sheet(
+        workbook, ri_pricing_csv, ri_pricings,
+        'RI pricing', temp_filepath
+    )
 
     if service_requests_json is not None:
         service_sheet, area_sheet, severity_sheet = service_requests.create_sheet(

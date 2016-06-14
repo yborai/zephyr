@@ -109,10 +109,10 @@ To use this generator just import `create_sheet` function from `zephyr.ri_pricin
 ```python
 from zephyr.ri_pricings import create_sheet
 
-create_sheet(json_string, csv_data_source_filepath, csv_filepath)
+create_sheet(csv_data_source_filepath, csv_filepath)
 ```
 
-New csv file will appear on provided path. Also two other minor csv reviews will appear near the provided path.
+New csv file will appear on provided path.
 Default value for `csv_filepath` param is `ri_pricing.csv` (file will appear in current directory).
 
 ## Complete account review xlsx sheet generator

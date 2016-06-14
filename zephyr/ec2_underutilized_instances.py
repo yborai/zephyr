@@ -1,4 +1,4 @@
-from .ec2_migration_recommendations import EC2MigrationRecommencationsProcessor
+from .ec2_migration_recommendations import EC2MigrationRecommendationsProcessor
 
 
 def create_sheet(json_string, csv_filename='ec2_underutilized_instances.csv'):
@@ -6,7 +6,7 @@ def create_sheet(json_string, csv_filename='ec2_underutilized_instances.csv'):
     return processor.write_csv(csv_filename)
 
 
-class EC2UnderutilizedInstances(EC2MigrationRecommencationsProcessor):
+class EC2UnderutilizedInstances(EC2MigrationRecommendationsProcessor):
     def _fieldnames(self):
         return (
             "Instance ID", "Instance Name", "Average CPU Util",

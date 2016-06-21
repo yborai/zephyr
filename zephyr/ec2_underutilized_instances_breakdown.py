@@ -1,7 +1,7 @@
 import csv
 from itertools import groupby
 
-from .ec2_migration_recommendations import EC2MigrationRecommendationsProcessor
+from .ec2_migration_recommendations import EC2MigrationRecommendationsSheet
 
 
 def create_sheet(json_string, define_category_func, csv_filename='ec2_instances_breakdown.csv'):
@@ -18,7 +18,7 @@ def create_sheet(json_string, define_category_func, csv_filename='ec2_instances_
     return processor.write_csv(csv_filename)
 
 
-class EC2UnderutilizedInstancesBreakdown(EC2MigrationRecommendationsProcessor):
+class EC2UnderutilizedInstancesBreakdown(EC2MigrationRecommendationsSheet):
     def __init__(self, json_string, define_category_func):
         self.define_category_func = define_category_func
         super().__init__(json_string)

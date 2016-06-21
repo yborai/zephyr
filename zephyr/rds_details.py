@@ -1,12 +1,12 @@
-from .core import CoreProcessor
+from .core import Sheet
 
 
 def create_sheet(json_string, csv_filename='rds_details.csv'):
-    processor = RDSDetailsProcessor(json_string)
+    processor = RDSDetailsSheet(json_string)
     return processor.write_csv(csv_filename)
 
 
-class RDSDetailsProcessor(CoreProcessor):
+class RDSDetailsSheet(Sheet):
     def _data_key(self):
         return 'RdsDbInstances'
 

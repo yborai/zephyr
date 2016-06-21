@@ -1,14 +1,14 @@
 import re
 
-from .recommendations_core import RecommendationsCoreProcessor
+from .recommendations_core import RecommendationsSheet
 
 
 def create_sheet(json_string, csv_filename='ec2_migration_recommendations.csv'):
-    processor = EC2MigrationRecommendationsProcessor(json_string)
+    processor = EC2MigrationRecommendationsSheet(json_string)
     return processor.write_csv(csv_filename)
 
 
-class EC2MigrationRecommendationsProcessor(RecommendationsCoreProcessor):
+class EC2MigrationRecommendationsSheet(RecommendationsSheet):
     def _filter_row(self, details_row):
         details_row["Instance ID"] = self._get_instance_id(details_row[self._instance_field()])
         details_row["Instance Name"] = self._get_instance_name(details_row[self._instance_field()])

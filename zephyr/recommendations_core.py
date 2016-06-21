@@ -2,10 +2,10 @@ import json
 from re import sub
 from decimal import Decimal
 
-from .core import CoreProcessor
+from .core import Sheet
 
 
-class RecommendationsCoreProcessor(CoreProcessor):
+class RecommendationsSheet(Sheet):
     def __init__(self, json_string):
         raw_details = json.loads(self._escape_json_string(json_string))
 

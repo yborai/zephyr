@@ -2,15 +2,15 @@ import csv
 import itertools
 from decimal import Decimal
 
-from .recommendations_core import RecommendationsCoreProcessor
+from .recommendations_core import RecommendationsSheet
 
 
 def create_sheet(csv_filepath, csv_filename='ri_pricing.csv'):
-    processor = RIPricingProcessor(csv_filepath)
+    processor = RIPricingSheet(csv_filepath)
     return processor.write_csv(csv_filename)
 
 
-class RIPricingProcessor(RecommendationsCoreProcessor):
+class RIPricingSheet(RecommendationsSheet):
     def __init__(self, csv_filepath):
         self._read_from_csv(csv_filepath)
 

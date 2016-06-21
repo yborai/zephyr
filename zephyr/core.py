@@ -2,7 +2,7 @@ import json
 import csv
 
 
-class CoreProcessor(object):
+class Sheet(object):
     def __init__(self, json_string):
         self.parsed_details = json.loads(json_string)
 

@@ -1,14 +1,14 @@
 from datetime import datetime
 
-from .core import CoreProcessor
+from .core import Sheet
 
 
 def create_sheet(json_string, csv_filename='ec2_details.csv'):
-    processor = EC2DetailsProcessor(json_string)
+    processor = EC2DetailsSheet(json_string)
     return processor.write_csv(csv_filename)
 
 
-class EC2DetailsProcessor(CoreProcessor):
+class EC2DetailsSheet(Sheet):
     def _data_key(self):
         return 'Ec2Instances'
 

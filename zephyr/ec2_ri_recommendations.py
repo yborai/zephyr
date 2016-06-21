@@ -1,14 +1,14 @@
 import json
 
-from .recommendations_core import RecommendationsCoreProcessor
+from .recommendations_core import RecommendationsSheet
 
 
 def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):
-    processor = EC2RIRecommendationsProcessor(json_string)
+    processor = EC2RIRecommendationsSheet(json_string)
     return processor.write_csv(csv_filename)
 
 
-class EC2RIRecommendationsProcessor(RecommendationsCoreProcessor):
+class EC2RIRecommendationsSheet(RecommendationsSheet):
     def _fieldnames(self):
         return (
             "Number", "Instance Type", "AZ", "Platform", "Commitment Type",

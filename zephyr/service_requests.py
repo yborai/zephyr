@@ -4,15 +4,15 @@ import json
 from datetime import datetime
 from itertools import groupby
 
-from .core import CoreProcessor
+from .core import Sheet
 
 
 def create_sheet(json_string, csv_filename='service_requests.csv'):
-    processor = ServiceRequestProcessor(json_string)
+    processor = ServiceRequestSheet(json_string)
     return processor.write_csv(csv_filename)
 
 
-class ServiceRequestProcessor(CoreProcessor):
+class ServiceRequestSheet(Sheet):
     def __init__(self, json_string):
         parsed_result = json.loads(json_string)
         self.parsed_details = {"result": []}

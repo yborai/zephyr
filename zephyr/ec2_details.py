@@ -20,9 +20,11 @@ class EC2DetailsSheet(Sheet):
         return self._format_datefields(filtered_row)
 
     def _format_datefields(self, row):
-        for datefields in self._datetime_fields():
-            row[datefields] = datetime.strptime(
-                row[datefields], '%Y-%m-%dT%H:%M:%S'
+        for field in self._datetime_fields():
+            if(row[field] is None):
+                continue
+            row[field] = datetime.strptime(
+                row[field], '%Y-%m-%dT%H:%M:%S'
             ).strftime('%m/%d/%y %H:%M')
 
         return row

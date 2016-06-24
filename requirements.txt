@@ -1,1 +1,5 @@
+cement<2.7
+colorlog>=2.6.0
+pymssql==2.1.2
+pystache>=0.5.4
 XlsxWriter==0.8.9

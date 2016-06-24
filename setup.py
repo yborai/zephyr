@@ -29,6 +29,11 @@ def autosetup():
         zip_safe=False,
         packages=find_packages(exclude=[]),
         install_requires=requirements_txt,
+        entry_points = {
+            'console_scripts': [
+                'zephyr = zephyr.__main__:main',
+            ]
+        }
     )
 
 if(__name__ == '__main__'):

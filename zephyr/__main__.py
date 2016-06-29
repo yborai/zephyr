@@ -21,12 +21,19 @@ class Toolkit(foundation.CementApp):
         label = 'zephyr'
         base_controller = 'base'
         config_defaults = defaults
-        plugins = ['configure', 'data', 'report', 'stub']
+        plugins = [
+            'configure',
+            'data',
+            'report',
+            'stub',
+        ]
         handlers = [
             ToolkitBaseController
         ]
         extensions = [
-            'mustache', 'cement.ext.ext_json', 'colorlog',
+            'cement.ext.ext_json',
+            'colorlog',
+            'mustache',
         ]
         output_handler = 'mustache'
         log_handler = 'colorlog'

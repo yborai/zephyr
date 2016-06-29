@@ -1,10 +1,17 @@
-import json
 import csv
+import json
 
 
 class Sheet(object):
     def __init__(self, json_string):
         self.parsed_details = json.loads(json_string)
+
+    def get_data(self):
+        out = list(self._fieldnames())
+        rows = self.parsed_details[self._data_key()]
+        data = [self._filter_row(row) for row in rows]
+        out.extend(data)
+        return out
 
     def write_csv(self, csv_filename):
         with open(csv_filename, 'w') as csvfile:

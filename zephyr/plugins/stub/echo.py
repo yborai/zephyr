@@ -1,5 +1,3 @@
-import sys
-
 from cement.core import controller
 
 class ToolkitEcho(controller.CementBaseController):

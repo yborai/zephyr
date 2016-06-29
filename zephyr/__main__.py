@@ -21,7 +21,7 @@ class Toolkit(foundation.CementApp):
         label = 'zephyr'
         base_controller = 'base'
         config_defaults = defaults
-        plugins = ['configure', 'stub']
+        plugins = ['configure', 'data', 'report', 'stub']
         handlers = [
             ToolkitBaseController
         ]

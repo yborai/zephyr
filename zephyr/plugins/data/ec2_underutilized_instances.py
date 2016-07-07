@@ -2,6 +2,8 @@ from .ec2_migration_recommendations import EC2MigrationRecommendationsSheet
 
 from cement.core import controller
 
+from .common import DecimalEncoder
+
 class ToolkitEC2UnderutilizedInstances(controller.CementBaseController):
     class Meta:
         label = "underutilized-instances"
@@ -30,13 +32,15 @@ class ToolkitEC2UnderutilizedInstances(controller.CementBaseController):
         if(not cache):
             raise NotImplementedError # We'll add fetching later
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
+#        import pdb; pdb.set_trace()
         with open(cache, "r") as f:
             response = f.read()
         sheet = EC2UnderutilizedInstancesSheet(response)
-        self.app.render(sheet.get_data())
+        sheet_data = sheet.get_data()
+        self.app.render(sheet_data, cls=DecimalEncoder)
 
 def create_sheet(json_string, csv_filename='ec2_underutilized_instances.csv'):
-    processor = EC2UnderutilizedInstances(json_string)
+    processor = EC2UnderutilizedInstancesSheet(json_string)
     return processor.write_csv(csv_filename)
 
 

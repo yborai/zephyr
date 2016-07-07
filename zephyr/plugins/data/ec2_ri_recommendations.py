@@ -6,7 +6,7 @@ from .recommendations_core import RecommendationsSheet
 
 import decimal
 
-import re
+from .common import DecimalEncoder
 
 class ToolkitEC2RIRecommendations(controller.CementBaseController):
     class Meta:
@@ -38,7 +38,9 @@ class ToolkitEC2RIRecommendations(controller.CementBaseController):
         with open(cache, "r") as f: 
             response = f.read()
         sheet = EC2RIRecommendationsSheet(response)
-        self.app.render(sheet.get_data())
+        sheet_data = sheet.get_data()
+        self.app.render(sheet_data, cls=DecimalEncoder)
+
 
 
 

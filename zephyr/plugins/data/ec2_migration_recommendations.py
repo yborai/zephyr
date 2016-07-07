@@ -1,8 +1,12 @@
+import json
+
 import re
 
 from cement.core import controller
 
 from .recommendations_core import RecommendationsSheet
+
+from .common import DecimalEncoder
 
 class ToolkitEC2MigrationRecommendations(controller.CementBaseController):
     class Meta:
@@ -35,7 +39,8 @@ class ToolkitEC2MigrationRecommendations(controller.CementBaseController):
         with open(cache, "r") as f:
             response = f.read()
         sheet = EC2MigrationRecommendationsSheet(response)
-        self.app.render(sheet.get_data())
+        sheet_data = sheet.get_data()
+        self.app.render(sheet_data, cls=DecimalEncoder)
 
 
 

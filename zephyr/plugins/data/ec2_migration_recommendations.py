@@ -1,6 +1,42 @@
 import re
 
+from cement.core import controller
+
 from .recommendations_core import RecommendationsSheet
+
+class ToolkitEC2MigrationRecommendations(controller.CementBaseController):
+    class Meta:
+        label = "migration-recommendations"
+        stacked_on = "data"
+        stacked_type = "nested"
+        description = "Get the migration recommendations meta information"
+
+        arguments = controller.CementBaseController.Meta.arguments + [(
+            ["--cc_api_key"], dict(
+                type=str,
+                help="The CloudCheckr API key to use."
+            )
+        ), (
+            ["--cache"], dict(
+                 type=str,
+                 help="The path to the cached response to use."
+            )
+        )]
+
+    @controller.expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+     
+    def run(self, **kwargs):
+        cache = self.app.pargs.cache
+        if(not cache):
+            raise NotImplementedError # We will add fetching later.
+        self.app.log.info("Using cached response: {cache}".format(cache=cache))
+        with open(cache, "r") as f:
+            response = f.read()
+        sheet = EC2MigrationRecommendationsSheet(response)
+        self.app.render(sheet.get_data())
+
 
 
 def create_sheet(json_string, csv_filename='ec2_migration_recommendations.csv'):

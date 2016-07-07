@@ -2,18 +2,12 @@ import json
 
 from cement.core import controller
 
-from .recommendations_core import RecommendationsSheet
-
-import decimal
-
-import re
-
-class ToolkitEC2RIRecommendations(controller.CementBaseController):
+class ToolkitBillingMonthly(controller.CementBaseController):
     class Meta:
-        label = "ri-recommendations"
+        label = "billing-monthly"
         stacked_on = "data"
         stacked_type = "nested"
-        description = "Get the ri recommendations meta information."
+        description = "Get the monthly billing meta information."
 
         arguments = controller.CementBaseController.Meta.arguments + [(
             ["--cc_api_key"], dict(
@@ -35,24 +29,19 @@ class ToolkitEC2RIRecommendations(controller.CementBaseController):
         if(not cache):
             raise NotImplementedError # We will add fetching later.
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        regex = \[$][0-9][0-9][.][0-9][0-9]
-        with open(cache, "r") as f: 
+        with open(cache, "r") as f:
             response = f.read()
-            for regex in response:
-                self.app.log.info("hi")
-                regex = float(regex)
-            self.app.log.info(response)
-        sheet = EC2RIRecommendationsSheet(response)
+        sheet = BillingMonthlySheet(response)
         self.app.render(sheet.get_data())
 
 
 
 def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):
-    processor = EC2RIRecommendationsSheet(json_string)
+    processor = BillingMonthlySheet(json_string)
     return processor.write_csv(csv_filename)
 
 
-class EC2RIRecommendationsSheet(RecommendationsSheet):
+'''class BillingMonthlySheet(Sheet):
     def _fieldnames(self):
         return (
             "Number", "Instance Type", "AZ", "Platform", "Commitment Type",
@@ -65,3 +54,4 @@ class EC2RIRecommendationsSheet(RecommendationsSheet):
             "Upfront RI Cost", "Reserved Monthly Cost",
             "On-Demand Monthly Cost", "Total Savings"
         )
+'''

@@ -35,13 +35,8 @@ class ToolkitEC2RIRecommendations(controller.CementBaseController):
         if(not cache):
             raise NotImplementedError # We will add fetching later.
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        regex = \[$][0-9][0-9][.][0-9][0-9]
         with open(cache, "r") as f: 
             response = f.read()
-            for regex in response:
-                self.app.log.info("hi")
-                regex = float(regex)
-            self.app.log.info(response)
         sheet = EC2RIRecommendationsSheet(response)
         self.app.render(sheet.get_data())
 

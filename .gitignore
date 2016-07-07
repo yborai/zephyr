@@ -91,5 +91,8 @@ ENV/
 # Rope project settings
 .ropeproject
 
+# Local files
+.*
+
 /venv
 /test

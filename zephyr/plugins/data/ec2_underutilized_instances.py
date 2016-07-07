@@ -32,7 +32,6 @@ class ToolkitEC2UnderutilizedInstances(controller.CementBaseController):
         if(not cache):
             raise NotImplementedError # We'll add fetching later
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
-#        import pdb; pdb.set_trace()
         with open(cache, "r") as f:
             response = f.read()
         sheet = EC2UnderutilizedInstancesSheet(response)

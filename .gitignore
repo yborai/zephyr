@@ -92,6 +92,7 @@ ENV/
 .ropeproject
 
 # Local files
+.DS_Store
 .*
 
 /venv

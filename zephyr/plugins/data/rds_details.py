@@ -1,39 +1,40 @@
+from .common import ToolkitDataController
 from .core import Sheet
 
 from cement.core import controller
 
-class ToolkitRdsDetails(controller.CementBaseController):
-	class Meta:
-		label = "rds-details"
-		stacked_on = "data"
-		stacked_type = "nested"
-		description = "Get the detailed rds meta information"
+class ToolkitRdsDetails(ToolkitDataController):
+    class Meta:
+        label = "rds-details"
+        stacked_on = "data"
+        stacked_type = "nested"
+        description = "Get the detailed rds meta information"
 
-		arguments = controller.CementBaseController.Meta.arguments + [(
-			["--cc_api_key"], dict(
-				type=str,
-				help="The CloudCheckr API key to use."
-			)
-		), (
-			["--cache"], dict(
-				type=str,
-				help="The path to the cached response to use."
-			)
-		)]
-		
-	@controller.expose(hide=True)
-	def default(self):
-		self.run(**vars(self.app.pargs))
+        arguments = ToolkitDataController.Meta.arguments + [(
+            ["--cc_api_key"], dict(
+                type=str,
+                help="The CloudCheckr API key to use."
+            )
+        ), (
+            ["--cache"], dict(
+                type=str,
+                help="The path to the cached response to use."
+            )
+        )]
 
-	def run(self, **kwargs):
-		cache = self.app.pargs.cache
-		if(not cache):
-			raise NotImplementedError #We will add fetching later
-		self.app.log.info("Using cached response: {cache}".format(cache=cache))
-		with open(cache, "r") as f:
-			response = f.read()
-		sheet = RDSDetailsSheet(response)
-		self.app.render(sheet.get_data())
+    @controller.expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        cache = self.app.pargs.cache
+        if(not cache):
+            raise NotImplementedError #We will add fetching later
+        self.app.log.info("Using cached response: {cache}".format(cache=cache))
+        with open(cache, "r") as f:
+            response = f.read()
+        sheet = RDSDetailsSheet(response)
+        self.app.render(sheet.get_data())
 
 def create_sheet(json_string, csv_filename='rds_details.csv'):
     processor = RDSDetailsSheet(json_string)

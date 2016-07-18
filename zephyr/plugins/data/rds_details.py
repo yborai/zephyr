@@ -1,7 +1,7 @@
+from cement.core import controller
+
 from .common import ToolkitDataController
 from .core import Sheet
-
-from cement.core import controller
 
 class ToolkitRdsDetails(ToolkitDataController):
     class Meta:

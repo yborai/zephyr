@@ -44,6 +44,19 @@ def month_range(date):
 def percent(numer, denom, digits=2):
     return round(Decimal(100.) * numer / denom, digits)
 
+def rows_to_excel(sheet, rows, top=0, left=0):
+    """
+    Take rows, an iterable of iterables, and write it to a given sheet
+    with the top, left cell at (top, left).
+    """
+    n_rows = len(rows)
+    n_cells = len(rows[0])
+    #import pdb;pdb.set_trace()
+    for i in range(n_rows):
+        row = rows[i]
+        for j in range(n_cells):
+            sheet.write(top+i, left+j, row[j])
+
 def timed(func):
     """
     Wrap a function in a timer.

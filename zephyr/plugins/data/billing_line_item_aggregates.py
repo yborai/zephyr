@@ -1,13 +1,20 @@
+import csv
 import json
 
 from cement.core import controller
 
-class ToolkitBillingInvoices(controller.CementBaseController):
+def data(cache="billing-line-item-aggregates.csv"):
+    with open(cache, "r") as f:
+        reader = csv.DictReader(f)
+        out = [reader.fieldnames] + [list(row.values()) for row in reader]
+    return out
+
+class ToolkitBillingLineItemAggregates(controller.CementBaseController):
     class Meta:
-        label = "billing-invoices"
+        label = "billing-line-item-aggregates"
         stacked_on = "data"
         stacked_type = "nested"
-        description = "Get the billing invoice meta information."
+        description = "Get the billing line item aggregate totals."
 
         arguments = controller.CementBaseController.Meta.arguments + [(
             ["--cc_api_key"], dict(
@@ -31,27 +38,11 @@ class ToolkitBillingInvoices(controller.CementBaseController):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
             response = f.read()
-        sheet = BillingInvoicesSheet(response)
+        sheet = BillingLineItemAggregatesSheet(response)
         self.app.render(sheet.get_data())
 
 
 
 def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):
-    processor = BillingInvoicesSheet(json_string)
+    processor = BillingLineItemAggregatesSheet(json_string)
     return processor.write_csv(csv_filename)
-
-
-'''class BillingInvoicesSheet(Sheet):
-    def _fieldnames(self):
-        return (
-            "Number", "Instance Type", "AZ", "Platform", "Commitment Type",
-            "Tenancy", "Upfront RI Cost", "Reserved Monthly Cost",
-            "On-Demand Monthly Cost", "Total Savings"
-        )
-
-    def _money_fields(self):
-        return (
-            "Upfront RI Cost", "Reserved Monthly Cost",
-            "On-Demand Monthly Cost", "Total Savings"
-        )
-'''

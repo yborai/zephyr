@@ -1,7 +1,10 @@
 from cement.core import handler, controller
 
+from .account_review import AccountReview
+
 def load(app):
     handler.register(ToolkitReportController)
+    handler.register(AccountReview)
 
 class ToolkitReportController(controller.CementBaseController):
     class Meta:

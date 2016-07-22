@@ -1,4 +1,4 @@
--e git+https://github.com/datafolklabs/cement.git@c27b2985806ef5d90366f618c6d08409e1318bdc#egg=cement
+cement>=2.10.2
 colorlog>=2.6.0
 pystache>=0.5.4
 XlsxWriter==0.8.9

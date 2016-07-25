@@ -1,6 +1,7 @@
 """
 Common code for zephyr
 """
+import csv
 import datetime
 import json
 
@@ -9,6 +10,24 @@ from decimal import Decimal
 from cement.core import controller
 
 DAY = datetime.timedelta(days=1)
+
+class DDH(object):
+    def __init__(self, headers=None, data=None):
+        self.headers = headers or []
+        self.data = data or []
+
+    def to_csv(self, *args, **kwargs):
+        fieldnames = self.headers
+        out = io.StringIO()
+        writer = csv.DictWriter(out, fieldnames=fieldnames, *args, **kwargs)
+        writer.writeheader()
+        for row in self.data:
+            writer.writerow(dict(zip(fieldnames, row)))
+        return out.getvalue()
+
+    def to_json(self, *args, **kwargs):
+        out = dict(header=self.headers, data=self.data)
+        return json.dumps(out)
 
 class DecimalEncoder(json.JSONEncoder):
     """Serialize decimal.Decimal objects into JSON as floats."""

@@ -100,7 +100,12 @@ class ToolkitDataController(controller.CementBaseController):
                 type=str,
                 help="Path to configuration file"
             )
-        ),]
+        ), (
+            ["--cache"], dict(
+                 type=str,
+                 help="The path to the cached response to use."
+            )
+        )]
 
     @controller.expose(hide=True)
     def default(self):

@@ -5,24 +5,21 @@ from .ec2_migration_recommendations import EC2MigrationRecommendationsSheet
 
 from cement.core import controller
 
-class ToolkitEC2UnderutilizedInstancesBreakdown(controller.CementBaseController):
+from .common import ToolkitDataController
+
+class ToolkitEC2UnderutilizedInstancesBreakdown(ToolkitDataController):
     class Meta:
         label = "underutilized-instances-breakdown"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the underutilized instance breakdown meta information"
 
-        arguments = controller.CementBaseController.Meta.arguments + [(
-            ["--cc_api_key"], dict(
-                type=str,
-                help="The CloudCheckr API key to use."
-            )
-        ), (
-            ["--cache"], dict(
-                type=str,
-                help="The path to the cached response to use."
-            )
-        )]
+        arguments = ToolkitDataController.Meta.arguments #+ [(
+        #    ["--cc_api_key"], dict(
+        #        type=str,
+        #        help="The CloudCheckr API key to use."
+        #    )
+        #)]
 
     @controller.expose(hide=True)
     def default(self):

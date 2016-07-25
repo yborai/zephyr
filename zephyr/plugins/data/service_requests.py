@@ -6,26 +6,22 @@ from itertools import groupby
 
 from cement.core import controller
 from .core import Sheet
+from .common import ToolkitDataController
 
 
-class ToolkitServiceRequests(controller.CementBaseController):
+class ToolkitServiceRequests(ToolkitDataController):
     class Meta:
         label = "service-requests"
         stacked_on = "data"
         stacked_type = "nested"
         description = "get the detailed service requests meta information."
 
-        arguments = controller.CementBaseController.Meta.arguments +[(
-            ["--cc_api_key"], dict (
-                type=str,
-                help="The CloudCheckr API key to use."
-                )
-        ), (
-            ["--cache"], dict(
-                type=str,
-                help="The path to the cached response to use."
-            )
-        )]
+        arguments = ToolkitDataController.Meta.arguments #+[(
+        #    ["--cc_api_key"], dict (
+        #        type=str,
+        #        help="The CloudCheckr API key to use."
+        #        )
+        #)]
 
     @controller.expose(hide=True)
     def default(self):

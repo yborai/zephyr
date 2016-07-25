@@ -8,24 +8,21 @@ from .recommendations_core import RecommendationsSheet
 
 from .common import DecimalEncoder
 
-class ToolkitEC2MigrationRecommendations(controller.CementBaseController):
+from .common import ToolkitDataController
+
+class ToolkitEC2MigrationRecommendations(ToolkitDataController):
     class Meta:
         label = "migration-recommendations"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the migration recommendations meta information"
 
-        arguments = controller.CementBaseController.Meta.arguments + [(
-            ["--cc_api_key"], dict(
-                type=str,
-                help="The CloudCheckr API key to use."
-            )
-        ), (
-            ["--cache"], dict(
-                 type=str,
-                 help="The path to the cached response to use."
-            )
-        )]
+        arguments = ToolkitDataController.Meta.arguments #+ [(
+        #    ["--cc_api_key"], dict(
+        #        type=str,
+        #        help="The CloudCheckr API key to use."
+        #    )
+        #)]
 
     @controller.expose(hide=True)
     def default(self):

@@ -10,17 +10,12 @@ class ToolkitRdsDetails(ToolkitDataController):
         stacked_type = "nested"
         description = "Get the detailed rds meta information"
 
-        arguments = ToolkitDataController.Meta.arguments + [(
-            ["--cc_api_key"], dict(
-                type=str,
-                help="The CloudCheckr API key to use."
-            )
-        ), (
-            ["--cache"], dict(
-                type=str,
-                help="The path to the cached response to use."
-            )
-        )]
+        arguments = ToolkitDataController.Meta.arguments #+ [(
+            #["--cc_api_key"], dict(
+            #    type=str,
+            #    help="The CloudCheckr API key to use."
+            #)
+        #)]
 
     @controller.expose(hide=True)
     def default(self):

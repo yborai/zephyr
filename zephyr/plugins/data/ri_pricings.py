@@ -4,25 +4,21 @@ from decimal import Decimal
 
 from cement.core import controller
 from .recommendations_core import RecommendationsSheet
+from .common import ToolkitDataController
 
-class ToolkitRiPricings(controller.CementBaseController):
+class ToolkitRiPricings(ToolkitDataController):
     class Meta:
         label = "ri-pricings"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the detailed ri pricings meta information."
 
-        arguments = controller.CementBaseController.Meta.arguments + [(
-            ["--cc_api_key"], dict(
-                type=str,
-                help="The CloudCheckr API key to use."
-            )
-        ), (
-            ["--cache"], dict(
-                type=str,
-                help="The path to the cached response to use."
-            )
-        )]
+        arguments = ToolkitDataController.Meta.arguments #+ [(
+        #    ["--cc_api_key"], dict(
+        #        type=str,
+        #        help="The CloudCheckr API key to use."
+        #    )
+        #)]
 
     @controller.expose(hide=True)
     def default(self):

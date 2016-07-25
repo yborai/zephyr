@@ -2,6 +2,7 @@ import csv
 import json
 
 from cement.core import controller
+from .common import ToolkitDataController
 
 def data(cache="billing-line-item-aggregates.csv"):
     with open(cache, "r") as f:
@@ -9,24 +10,19 @@ def data(cache="billing-line-item-aggregates.csv"):
         out = [reader.fieldnames] + [list(row.values()) for row in reader]
     return out
 
-class ToolkitBillingLineItemAggregates(controller.CementBaseController):
+class ToolkitBillingLineItemAggregates(ToolkitDataController):
     class Meta:
         label = "billing-line-item-aggregates"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the billing line item aggregate totals."
 
-        arguments = controller.CementBaseController.Meta.arguments + [(
-            ["--cc_api_key"], dict(
-                type=str,
-                help="The CloudCheckr API key to use."
-            )
-        ), (
-            ["--cache"], dict(
-                 type=str,
-                 help="The path to the cached response to use."
-            )
-        )]
+        arguments = ToolkitDataController.Meta.arguments #+ [(
+        #    ["--cache"], dict(
+        #         type=str,
+        #         help="The path to the cached response to use."
+        #    )
+        #)]
     @controller.expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))

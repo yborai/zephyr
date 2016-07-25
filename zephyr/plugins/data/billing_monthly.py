@@ -18,12 +18,12 @@ class ToolkitBillingMonthly(ToolkitDataController):
         stacked_type = "nested"
         description = "Get the monthly billing meta information."
 
-        arguments = controller.CementBaseController.Meta.arguments + [(
-            ["--cache"], dict(
-                 type=str,
-                 help="The path to the cached response to use."
-            )
-        )]
+        arguments = ToolkitDataController.Meta.arguments #+ [(
+            #["--cache"], dict(
+            #     type=str,
+            #     help="The path to the cached response to use."
+            #)
+        #)]
 
     @controller.expose(hide=True)
     def default(self):

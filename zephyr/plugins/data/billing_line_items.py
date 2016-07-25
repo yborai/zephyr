@@ -12,19 +12,19 @@ def data(cache="billing-line-items.csv"):
         out = [reader.fieldnames] + [list(row.values()) for row in reader]
     return out
 
-class ToolkitBillingLineItems(controller.CementBaseController):
+class ToolkitBillingLineItems(ToolkitDataController):
     class Meta:
         label = "billing-line-items"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the line items billing meta information."
 
-        arguments = controller.CementBaseController.Meta.arguments + [(
-            ["--cache"], dict(
-                 type=str,
-                 help="The path to the cached response to use."
-            )
-        )]
+        arguments = ToolkitDataController.Meta.arguments #+ [(
+        #    ["--cache"], dict(
+        #         type=str,
+        #         help="The path to the cached response to use."
+        #    )
+        #)]
     @controller.expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))

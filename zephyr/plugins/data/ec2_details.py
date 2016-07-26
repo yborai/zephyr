@@ -31,7 +31,7 @@ class ToolkitInstanceDetails(ToolkitDataController):
         with open(cache, "r") as f:
             response = f.read()
         sheet = EC2DetailsSheet(response)
-        self.app.render(sheet.get_data())
+        self.app.render(sheet.to_ddh())
 
 def create_sheet(json_string, csv_filename="ec2_details.csv"):
     processor = EC2DetailsSheet(json_string)

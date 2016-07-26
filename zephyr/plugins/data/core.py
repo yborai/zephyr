@@ -1,6 +1,7 @@
 import csv
 import json
 
+from .common import DDH
 
 class Sheet(object):
     def __init__(self, json_string):
@@ -22,6 +23,12 @@ class Sheet(object):
                 writer.writerow(self._filter_row(details_row))
 
         return csv_filename
+
+    def to_ddh(self):
+        header = self._fieldnames()
+        parsed = self.parsed_details[self._data_key()]
+        data = [[obj[col] for col in header] for obj in parsed]
+        return DDH(headers=header, data=data)
 
     def _fieldnames(self):
         raise NotImplementedError

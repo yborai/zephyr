@@ -4,21 +4,38 @@ from cement.utils.misc import minimal_logger
 
 LOG = minimal_logger(__name__)
 
-class ZephyrOutputHandler(output.CementOutputHandler):
+class CSVOutputHandler(output.CementOutputHandler):
     class Meta:
         interface = output.IOutput
-        label = 'zephyr'
+        label = 'csv'
         overridable = True
 
     def __init__(self, *args, **kw):
-        super(ZephyrOutputHandler, self).__init__(*args, **kw)
+        super(CSVOutputHandler, self).__init__(*args, **kw)
 
     def _setup(self, app):
-        super(ZephyrOutputHandler, self)._setup(app)
+        super(CSVOutputHandler, self)._setup(app)
 
     def render(self, ddh, *args, **kwargs):
         LOG.debug("Rendering a DDH as a CSV")
         return ddh.to_csv()
 
+class JSONOutputHandler(output.CementOutputHandler):
+    class Meta:
+        interface = output.IOutput
+        label = 'json'
+        overridable = True
+
+    def __init__(self, *args, **kw):
+        super(JSONOutputHandler, self).__init__(*args, **kw)
+
+    def _setup(self, app):
+        super(JSONOutputHandler, self)._setup(app)
+
+    def render(self, ddh, *args, **kwargs):
+        LOG.debug("Rendering a DDH as JSON")
+        return ddh.to_json()
+
 def load(app):
-    handler.register(ZephyrOutputHandler)
+    handler.register(CSVOutputHandler)
+    handler.register(JSONOutputHandler)

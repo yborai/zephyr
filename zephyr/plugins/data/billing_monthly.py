@@ -31,9 +31,8 @@ class ToolkitBillingMonthly(ToolkitDataController):
         with open(cache, "r") as f:
             reader = csv.DictReader(f)
             header = reader.fieldnames
-            data = [list(row.values()) for row in reader]
+            data = [[row[col] for col in header] for row in reader]
         out = DDH(headers=header, data=data)
-        #self.app.render([header] + data)
         self.app.render(out)
         return out
 

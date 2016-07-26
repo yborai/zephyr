@@ -3,13 +3,7 @@ import json
 
 from cement.core import controller
 
-from .common import ToolkitDataController
-
-def data(cache="billing-monthly.csv"):
-    with open(cache, "r") as f:
-        reader = csv.DictReader(f)
-        out = [reader.fieldnames] + [list(row.values()) for row in reader]
-    return out
+from .common import DDH, ToolkitDataController
 
 class ToolkitBillingMonthly(ToolkitDataController):
     class Meta:
@@ -34,8 +28,14 @@ class ToolkitBillingMonthly(ToolkitDataController):
         if(not cache):
             raise NotImplementedError # We will add fetching later.
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        out = data(cache)
+        with open(cache, "r") as f:
+            reader = csv.DictReader(f)
+            header = reader.fieldnames
+            data = [list(row.values()) for row in reader]
+        out = DDH(headers=header, data=data)
+        #self.app.render([header] + data)
         self.app.render(out)
+        return out
 
 def create_sheet(table):
     processor = BillingMonthlySheet(json_string)

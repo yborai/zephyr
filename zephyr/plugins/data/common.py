@@ -3,6 +3,7 @@ Common code for zephyr
 """
 import csv
 import datetime
+import io
 import json
 
 from decimal import Decimal

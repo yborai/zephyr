@@ -32,6 +32,7 @@ class Toolkit(foundation.CementApp):
         ]
         extensions = [
             'cement.ext.ext_json',
+            'zephyr.plugins.data.output',
             'colorlog',
             'mustache',
         ]

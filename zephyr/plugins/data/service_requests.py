@@ -5,7 +5,7 @@ from datetime import datetime
 from itertools import groupby
 
 from cement.core import controller
-from .core import Sheet
+from .core import Warp
 from .common import ToolkitDataController
 
 
@@ -34,15 +34,15 @@ class ToolkitServiceRequests(ToolkitDataController):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache,"r") as f:
             response = f.read()
-        sheet = ServiceRequestSheet(response)
-        self.app.render(sheet.get_data())
+        warp = ServiceRequestWarp(response)
+        self.app.render(warp.to_ddh())
 
 def create_sheet(json_string, csv_filename='service_requests.csv'):
-    processor = ServiceRequestSheet(json_string)
+    processor = ServiceRequestWarp(json_string)
     return processor.write_csv(csv_filename)
 
 
-class ServiceRequestSheet(Sheet):
+class ServiceRequestWarp(Warp):
     def __init__(self, json_string):
         parsed_result = json.loads(json_string)
         self.parsed_details = {"result": []}

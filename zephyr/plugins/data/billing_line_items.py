@@ -1,5 +1,4 @@
 import csv
-import json
 
 from cement.core import controller
 
@@ -8,7 +7,6 @@ from .common import ToolkitDataController
 def data(cache="billing-line-items.csv"):
     with open(cache, "r") as f:
         reader = csv.DictReader(f)
-        #import pdb;pdb.set_trace()
         out = [reader.fieldnames] + [list(row.values()) for row in reader]
     return out
 
@@ -35,10 +33,9 @@ class ToolkitBillingLineItems(ToolkitDataController):
             raise NotImplementedError # We will add fetching later.
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
-            response = f.read()
-        sheet = BillingLineItemsSheet(response)
-        self.app.render(sheet.get_data())
-
-def create_sheet(json_string, csv_filename='ec2_ri_recommendations.csv'):
-    processor = BillingLineItemsSheet(json_string)
-    return processor.write_csv(csv_filename)
+            reader = csv.DictReader(f)
+            ddh = DDH(
+                headers=reader.fieldnames,
+                data=[list(row.values()) for row in reader]
+            )
+        self.app.render(ddh)

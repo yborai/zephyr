@@ -8,17 +8,11 @@ The zephyr reporting toolkit
 
 commands:
 
-    configure
-      Configure zephyr.
-    
     data
       Generate single table reports for an account.
     
     report
       Generate advanced reports.
-      
-    stub
-      a test plugin
       
 optional arguments:
     -h, --help  show this help message and exit
@@ -48,16 +42,16 @@ $pip install --editable .
 
 ## data subcommand
 
-Command Name                | Description
-----------------------------|------------------------------------------
-billing-monthly             | Provides a monthly itemized billing summary. 
-instance-details            | Get the detailed instance meta information.
-migration-recommendations   | Recommends which insatnces should be updated.
-rds-details                 | Get the detailed rds meta information.
-ri-pricings                 | Outlines pricing information for reserved instances
-ri-recommendations          | Recommends which instances be transfered to reserved instances based on usage data.
-service-requests            | Lists the open service requests assoicated to an account.
-underutilized-instances     | Lists instances which have low CPU utilization.
+Command Name           | Description
+-----------------------|-----------------------------------------------
+billing-monthly        | Provides a monthly itemized billing summary. 
+compute-details        | Get the detailed instance meta information.
+compute-migration      | Recommends which insatnces should be updated.
+compute-ri             | Recommends which instances be transfered to reserved instances based on usage data.
+compute-underutilized  | Lists instances which have low CPU utilization.
+db-details             | Get the detailed rds meta information.
+ri-pricings            | Outlines pricing information for reserved instances
+service-requests       | Lists the open service requests assoicated to an account.
 
 
 ## report subcommand

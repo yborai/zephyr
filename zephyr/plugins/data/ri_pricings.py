@@ -3,7 +3,7 @@ import itertools
 from decimal import Decimal
 
 from cement.core import controller
-from .recommendations_core import RecommendationsSheet
+from .core import RecommendationsWarp
 from .common import ToolkitDataController
 
 class ToolkitRiPricings(ToolkitDataController):
@@ -31,15 +31,15 @@ class ToolkitRiPricings(ToolkitDataController):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
             response = f.read()
-        sheet = RIPricingSheet(response)
-        self.app.render(sheet.get_data())
+        warp = RIPricingWarp(response)
+        self.app.render(warp.to_ddh())
 
 def create_sheet(csv_filepath, csv_filename='ri_pricing.csv'):
-    processor = RIPricingSheet(csv_filepath)
+    processor = RIPricingWarp(csv_filepath)
     return processor.write_csv(csv_filename)
 
 
-class RIPricingSheet(RecommendationsSheet):
+class RIPricingWarp(RecommendationsWarp):
     def __init__(self, csv_filepath):
         self._read_from_csv(csv_filepath)
 

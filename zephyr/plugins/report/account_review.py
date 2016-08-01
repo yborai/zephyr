@@ -6,14 +6,21 @@ import xlsxwriter
 
 from cement.core import controller
 
-from ..data import service_requests, ec2_details, rds_details, ec2_ri_recommendations
-from ..data import ri_pricings
-from ..data import ec2_migration_recommendations, ec2_underutilized_instances
-from ..data import ec2_underutilized_instances_breakdown
-from ..data import billing_monthly, billing_line_items, billing_line_item_aggregates
+from ..data import (
+    billing_line_item_aggregates,
+    billing_line_items,
+    billing_monthly,
+    compute_details,
+    compute_migration,
+    compute_ri,
+    compute_underutilized,
+    compute_underutilized_breakdown,
+    db_details,
+    ri_pricings,
+    service_requests,
+)
 
 from ..data.common import rows_to_excel, ToolkitDataController
-
 
 def create_review_sheet(
         workbook, review_json, module, sheet_name, temp_filepath, temp_filename='temp.csv'
@@ -128,19 +135,19 @@ def create_xlsx_account_review(
     rows_to_excel(sheet_dy, monthly_totals, top=len(line_item_aggs)+1, left=8)
 
     create_review_sheet(
-        workbook, ec2_details_json, ec2_details, 'EC2 details', temp_filepath
+        workbook, ec2_details_json, compute_details, 'EC2 details', temp_filepath
     )
     create_review_sheet(
-        workbook, rds_details_json, rds_details, 'RDS details', temp_filepath
+        workbook, rds_details_json, db_details, 'RDS details', temp_filepath
     )
 
     create_review_sheet(
-        workbook, ec2_ri_recommendations_json, ec2_ri_recommendations,
+        workbook, ec2_ri_recommendations_json, compute_ri,
         'EC2 RI recommendations', temp_filepath
     )
 
     create_review_sheet(
-        workbook, ec2_migration_recommendations_json, ec2_migration_recommendations,
+        workbook, ec2_migration_recommendations_json, compute_migration,
         'EC2 migration recommendations', temp_filepath
     )
 
@@ -160,7 +167,7 @@ def create_xlsx_account_review(
         insert_csv_to_worksheet(service_requests_sheet, severity_sheet, 12, 6)
 
     if ec2_underutilized_instances_json is not None:
-        ec2_underutilized_instances_sheet = ec2_underutilized_instances.create_sheet(
+        ec2_underutilized_instances_sheet = compute_underutilized.create_sheet(
             ec2_underutilized_instances_json,
             temp_filepath + '/' + 'ec2_underutilized_instances.csv'
         )
@@ -169,7 +176,7 @@ def create_xlsx_account_review(
         )
 
         if define_category_func is not None:
-            ec2_underutilized_breakdown_sheet = ec2_underutilized_instances_breakdown.create_sheet(
+            ec2_underutilized_breakdown_sheet = compute_underutilized_breakdown.create_sheet(
                 ec2_underutilized_instances_json,
                 define_category_func,
                 temp_filepath + '/' + 'ec2_underutilized_instances_breakdown.csv'
@@ -213,7 +220,3 @@ class AccountReview(ToolkitDataController):
             reader = csv.DictReader(f)
             out = [row for row in reader]
         self.app.render(out)
-
-def create_sheet(table):
-    processor = BillingMonthlySheet(json_string)
-    return processor.write_csv(csv_filename)

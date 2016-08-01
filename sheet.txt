@@ -1,0 +1,12 @@
+##### Sheet Specification #####
+
+
+A Sheet is an object that is populated with reports for the account review.
+
+The account review will be one xlsx file containing multiple sheet objects.
+
+Therefore, the sheet objects must support the following:
+	* DDH integration (where DDH is the format we use to generate reports)
+	* Graphs (a graphical representation of a table, or an image)
+	* Formatting capabilities (include font types, cell coloring, etc.)
+	* Sorting functionality for CSVs

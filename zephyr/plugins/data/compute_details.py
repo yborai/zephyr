@@ -61,7 +61,7 @@ class ComputeDetailsWarp(Warp):
 
     def _fieldnames(self):
         return (
-            "InstanceId", "InstanceName", "Status", "Region", "PricingPlatform",
+            "InstanceId", "InstanceName", "PrivateIpAddress", "Status", "Region", "PricingPlatform",
             "InstanceType", "LaunchTime", "AvgCpuforLast7Days", "AvgCpuforLast30Days",
             "AvgCpuforLast90Days", "AvgNetworkInLast30Days", "AvgNetworkOutLast30Days",
             "HighCpuPercent", "LowCpuPercent", "HoursCpuUtilAbove80", "HoursCpuUtilBelow80",

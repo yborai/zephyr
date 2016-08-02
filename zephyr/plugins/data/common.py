@@ -106,6 +106,11 @@ class ToolkitDataController(controller.CementBaseController):
                  type=str,
                  help="The path to the cached response to use."
             )
+        ), (
+            ["--compute_details"], dict(
+                type=str,
+                help="The path to the cached compute-details response to use."
+            )
         )]
 
     @controller.expose(hide=True)

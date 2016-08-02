@@ -10,7 +10,7 @@ from .compute_underutilized_breakdown import ToolkitComputeUnderutilizedBreakdow
 from .db_details import ToolkitDBDetails
 from .ri_pricings import ToolkitRiPricings
 from .service_requests import ToolkitServiceRequests
-from .compute_AV import ToolkitComputeAV
+from .compute_av import ToolkitComputeAV
 
 def load(app):
     handler.register(ToolkitDataController)

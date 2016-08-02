@@ -12,7 +12,7 @@ from cement.core import controller
 
 class ToolkitComputeAV(ToolkitDataController):
     class Meta:
-        label = "compute-AV"
+        label = "compute-av"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the AV of instance meta information"

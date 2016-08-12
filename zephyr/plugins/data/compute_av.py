@@ -36,12 +36,12 @@ class ToolkitComputeAV(ToolkitDataController):
             raise NotImplementedError # We will add fetching later.
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         if(not compute_details):
-            raise NotImplementedError 
+            raise NotImplementedError
         self.app.log.info("Using compute_details response: {compute_details}".format(compute_details=compute_details))
         with open(cache, "r") as f:
             bit_response = json.load(f)
         bit_list = bit_response
-        
+
         with open(compute_details, "r") as details_f:
             cc_response = json.load(details_f)
         cc_response_instances = cc_response.get('Ec2Instances')

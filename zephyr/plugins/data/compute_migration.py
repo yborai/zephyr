@@ -51,7 +51,10 @@ class ComputeMigrationWarp(RecommendationsWarp):
         return instance_string.strip().split(' ')[0]
 
     def _get_instance_name(self, instance_string):
-        return re.search('\((.*?)\)', instance_string).group(0)[1:-1]
+        regex = re.search('\((.*?)\)', instance_string)
+        if regex is not None:
+            return re.search('\((.*?)\)', instance_string).group(0)[1:-1]
+        return ''
 
     def _instance_field(self):
         return "Instance"

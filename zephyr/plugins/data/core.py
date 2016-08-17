@@ -52,8 +52,6 @@ class RecommendationsWarp(Warp):
 
         parsed_data = []
         for raw_detail_row in raw_details['BestPracticeChecks']:
-            if (raw_detail_row["CheckId"] != 240):
-                continue
             for raw_data in raw_detail_row[self._data_key()]:
                 parsed_data.append(
                     {

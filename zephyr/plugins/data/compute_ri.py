@@ -41,6 +41,9 @@ def create_sheet(json_string, csv_filename='compute-ri.csv'):
 
 
 class ComputeRIWarp(RecommendationsWarp):
+    def __init__(self, json_string):
+        super().__init__(json_string, bpc_id=190)
+
     def _fieldnames(self):
         return (
             "Number", "Instance Type", "AZ", "Platform", "Commitment Type",

@@ -2,7 +2,7 @@ from cement.core import controller
 
 from .common import DecimalEncoder
 from .common import ToolkitDataController
-from .compute_migration import ComputeMigrationWarp
+from .core import SplitInstanceWarp
 
 class ToolkitComputeUnderutilized(ToolkitDataController):
     class Meta:
@@ -37,7 +37,10 @@ def create_sheet(json_string, csv_filename='compute-underutilized.csv'):
     return processor.write_csv(csv_filename)
 
 
-class ComputeUnderutilizedWarp(ComputeMigrationWarp):
+class ComputeUnderutilizedWarp(SplitInstanceWarp):
+    def __init__(self, json_string):
+        super().__init__(json_string, bpc_id=68)
+
     def _fieldnames(self):
         return (
             "Instance ID", "Instance Name", "Average CPU Util",

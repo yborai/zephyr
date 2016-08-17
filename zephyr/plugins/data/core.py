@@ -1,8 +1,8 @@
 import csv
 import json
 
-from re import sub
 from decimal import Decimal
+from re import search, sub
 
 from .common import DDH
 
@@ -47,11 +47,16 @@ class Warp(object):
 
 
 class RecommendationsWarp(Warp):
-    def __init__(self, json_string):
+    def __init__(self, json_string, bpc_id=None):
+        self.bpc_id = bpc_id
         raw_details = json.loads(self._escape_json_string(json_string))
 
         parsed_data = []
+        bpcs = raw_details['BestPracticeChecks']
+        bpcs_n = len(bpcs)
         for raw_detail_row in raw_details['BestPracticeChecks']:
+            if(bpcs_n > 1 and raw_detail_row['CheckId'] != self.bpc_id):
+                continue
             for raw_data in raw_detail_row[self._data_key()]:
                 parsed_data.append(
                     {
@@ -93,3 +98,23 @@ class RecommendationsWarp(Warp):
 
     def _data_key(self):
         return 'Results'
+
+
+class SplitInstanceWarp(RecommendationsWarp):
+    def _filter_row(self, details_row):
+        details_row["Instance ID"] = self._get_instance_id(details_row[self._instance_field()])
+        details_row["Instance Name"] = self._get_instance_name(details_row[self._instance_field()])
+
+        return super()._filter_row(details_row)
+
+    def _get_instance_id(self, instance_string):
+        return instance_string.strip().split(' ')[0]
+
+    def _get_instance_name(self, instance_string):
+        regex = search('\((.*?)\)', instance_string)
+        if regex is not None:
+            return search('\((.*?)\)', instance_string).group(0)[1:-1]
+        return ''
+
+    def _instance_field(self):
+        return "Instance"

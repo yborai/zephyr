@@ -1,8 +1,6 @@
-import re
-
 from cement.core import controller
 
-from .core import RecommendationsWarp
+from .core import SplitInstanceWarp
 from .common import DecimalEncoder
 from .common import ToolkitDataController
 
@@ -40,24 +38,9 @@ def create_sheet(json_string, csv_filename='compute-migration.csv'):
     return processor.write_csv(csv_filename)
 
 
-class ComputeMigrationWarp(RecommendationsWarp):
-    def _filter_row(self, details_row):
-        details_row["Instance ID"] = self._get_instance_id(details_row[self._instance_field()])
-        details_row["Instance Name"] = self._get_instance_name(details_row[self._instance_field()])
-
-        return super()._filter_row(details_row)
-
-    def _get_instance_id(self, instance_string):
-        return instance_string.strip().split(' ')[0]
-
-    def _get_instance_name(self, instance_string):
-        regex = re.search('\((.*?)\)', instance_string)
-        if regex is not None:
-            return re.search('\((.*?)\)', instance_string).group(0)[1:-1]
-        return ''
-
-    def _instance_field(self):
-        return "Instance"
+class ComputeMigrationWarp(SplitInstanceWarp):
+    def __init__(self, json_string):
+        super().__init__(json_string, bpc_id=240)
 
     def _fieldnames(self):
         return (

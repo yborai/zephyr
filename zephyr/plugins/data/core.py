@@ -30,7 +30,10 @@ class Warp(object):
     def to_ddh(self):
         header = self._fieldnames()
         parsed = self.parsed_details[self._data_key()]
-        data = [[obj[col] for col in header] for obj in parsed]
+        data = [
+            [self._filter_row(row)[col] for col in header]
+            for row in parsed
+        ]
         return DDH(headers=header, data=data)
 
     def _fieldnames(self):
@@ -49,6 +52,8 @@ class RecommendationsWarp(Warp):
 
         parsed_data = []
         for raw_detail_row in raw_details['BestPracticeChecks']:
+            if (raw_detail_row["CheckId"] != 240):
+                continue
             for raw_data in raw_detail_row[self._data_key()]:
                 parsed_data.append(
                     {

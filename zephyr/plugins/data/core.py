@@ -34,7 +34,7 @@ class Warp(object):
             [self._filter_row(row)[col] for col in header]
             for row in parsed
         ]
-        return DDH(headers=header, data=data)
+        return DDH(header=header, data=data)
 
     def _fieldnames(self):
         raise NotImplementedError

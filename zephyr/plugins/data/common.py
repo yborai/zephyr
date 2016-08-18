@@ -13,12 +13,13 @@ from cement.core import controller
 DAY = datetime.timedelta(days=1)
 
 class DDH(object):
-    def __init__(self, headers=None, data=None):
-        self.headers = headers or []
+    def __init__(self, header=None, data=None):
+        self.header = header or []
         self.data = data or []
 
     def to_csv(self, *args, **kwargs):
-        fieldnames = self.headers
+        del(kwargs["template"])
+        fieldnames = self.header
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=fieldnames, *args, **kwargs)
         writer.writeheader()
@@ -27,8 +28,9 @@ class DDH(object):
         return out.getvalue()
 
     def to_json(self, *args, **kwargs):
-        out = dict(header=self.headers, data=self.data)
-        return json.dumps(out)
+        del(kwargs["template"])
+        out = dict(header=self.header, data=self.data)
+        return json.dumps(out, cls=DecimalEncoder, *args, **kwargs)
 
 class DecimalEncoder(json.JSONEncoder):
     """Serialize decimal.Decimal objects into JSON as floats."""
@@ -71,7 +73,6 @@ def rows_to_excel(sheet, rows, top=0, left=0):
     """
     n_rows = len(rows)
     n_cells = len(rows[0])
-    #import pdb;pdb.set_trace()
     for i in range(n_rows):
         row = rows[i]
         for j in range(n_cells):

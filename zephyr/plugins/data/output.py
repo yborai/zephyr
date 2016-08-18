@@ -18,7 +18,7 @@ class CSVOutputHandler(output.CementOutputHandler):
 
     def render(self, ddh, *args, **kwargs):
         LOG.debug("Rendering a DDH as a CSV")
-        return ddh.to_csv()
+        return ddh.to_csv(*args, **kwargs)
 
 class JSONOutputHandler(output.CementOutputHandler):
     class Meta:
@@ -34,7 +34,7 @@ class JSONOutputHandler(output.CementOutputHandler):
 
     def render(self, ddh, *args, **kwargs):
         LOG.debug("Rendering a DDH as JSON")
-        return ddh.to_json()
+        return ddh.to_json(*args, **kwargs)
 
 def load(app):
     handler.register(CSVOutputHandler)

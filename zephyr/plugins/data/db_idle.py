@@ -1,15 +1,14 @@
 from cement.core import controller
 
 from .core import RecommendationsWarp
-from .common import DecimalEncoder
 from .common import ToolkitDataController
 
-class ToolkitComputeRI(ToolkitDataController):
+class ToolkitDBIdle(ToolkitDataController):
     class Meta:
-        label = "compute-ri"
+        label = "db-idle"
         stacked_on = "data"
         stacked_type = "nested"
-        description = "Get the ri recommendations meta information."
+        description = "List idle database instances."
 
         arguments = ToolkitDataController.Meta.arguments #+ [(
         #    ["--cc_api_key"], dict(
@@ -29,28 +28,29 @@ class ToolkitComputeRI(ToolkitDataController):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f: 
             response = f.read()
-        warp = ComputeRIWarp(response)
-        self.app.render(warp.to_ddh(), cls=DecimalEncoder)
+        warp = DBIdleWarp(response)
+        self.app.render(warp.to_ddh())
 
 
-def create_sheet(json_string, csv_filename='compute-ri.csv'):
-    processor = ComputeRIWarp(json_string)
+def create_sheet(json_string, csv_filename='db-idle.csv'):
+    processor = DBIdleWarp(json_string)
     return processor.write_csv(csv_filename)
 
 
-class ComputeRIWarp(RecommendationsWarp):
+class DBIdleWarp(RecommendationsWarp):
     def __init__(self, json_string):
-        super().__init__(json_string, bpc_id=190)
+        super().__init__(json_string, bpc_id=134)
 
     def _fieldnames(self):
         return (
-            "Number", "Instance Type", "AZ", "Platform", "Commitment Type",
-            "Tenancy", "Upfront RI Cost", "Reserved Monthly Cost",
-            "On-Demand Monthly Cost", "Total Savings"
+            "DB Instance",
+            "Average Read IOPS",
+            "Average Write IOPS",
+            "Predicted Monthly Cost",
+            "Region",
         )
 
     def _money_fields(self):
         return (
-            "Upfront RI Cost", "Reserved Monthly Cost",
-            "On-Demand Monthly Cost", "Total Savings"
+            "Predicted Monthly Cost",
         )

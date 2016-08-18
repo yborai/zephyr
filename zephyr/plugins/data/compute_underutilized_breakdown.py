@@ -3,7 +3,7 @@ from itertools import groupby
 
 from cement.core import controller
 
-from .compute_migration import ComputeMigrationWarp
+from .core import SplitInstanceWarp
 from .common import ToolkitDataController
 
 class ToolkitComputeUnderutilizedBreakdown(ToolkitDataController):
@@ -49,10 +49,10 @@ def create_sheet(json_string, define_category_func, csv_filename='compute-underu
     return processor.write_csv(csv_filename)
 
 
-class ComputeUnderutilizedBreakdownWarp(ComputeMigrationWarp):
+class ComputeUnderutilizedBreakdownWarp(SplitInstanceWarp):
     def __init__(self, json_string, define_category_func):
         self.define_category_func = define_category_func
-        super().__init__(json_string)
+        super().__init__(json_string, bpc_id=68)
 
     def write_csv(self, csv_filename):
         filtered_rows = (

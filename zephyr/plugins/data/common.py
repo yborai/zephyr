@@ -93,9 +93,9 @@ def timed(func):
 
 class ToolkitDataController(controller.CementBaseController):
     class Meta:
-        label = 'data'
-        stacked_on = 'base'
-        stacked_type = 'nested'
+        label = "data"
+        stacked_on = "base"
+        stacked_type = "nested"
         description = "Generate single table reports for an account."
         arguments = controller.CementBaseController.Meta.arguments + [(
             ["--config"], dict(

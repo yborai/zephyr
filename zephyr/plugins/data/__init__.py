@@ -14,6 +14,7 @@ from .ri_pricings import ToolkitRiPricings
 from .service_requests import ToolkitServiceRequests
 from .storage_detached import ToolkitStorageDetached
 from .compute_av import ToolkitComputeAV
+from .iam_users import ToolkitIamUsers
 
 def load(app):
     handler.register(ToolkitDataController)
@@ -31,3 +32,4 @@ def load(app):
     handler.register(ToolkitServiceRequests)
     handler.register(ToolkitStorageDetached)
     handler.register(ToolkitComputeAV)
+    handler.register(ToolkitIamUsers)

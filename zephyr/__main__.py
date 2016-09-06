@@ -24,6 +24,7 @@ class Toolkit(foundation.CementApp):
         plugins = [
             'configure',
             'data',
+            'etl',
             'report',
             'stub',
         ]

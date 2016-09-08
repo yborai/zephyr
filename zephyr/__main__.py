@@ -1,50 +1,47 @@
 import os
 
-from cement.core import handler, controller, foundation, exc
+from cement.core.foundation import CementApp
+from cement.core.exc import FrameworkError
+from cement.utils import fs, misc
 from cement.utils.misc import init_defaults
 
-defaults = init_defaults('zephyr', 'log.logging')
-defaults['log.logging']['level'] = os.environ.get('ZEPHYR_DEBUG_LEVEL', 'INFO')
-defaults['log.colorlog'] = defaults['log.logging']
+from .cli.controllers import ZephyrCLI, ZephyrReport, ZephyrAccountReview
 
-class ToolkitBaseController(controller.CementBaseController):
-    class Meta:
-        label = 'base'
-        description = "The zephyr reporting toolkit"
-    
-    @controller.expose(hide=True)
-    def default(self):
-        self.app.args.print_help()
+defaults = init_defaults("zephyr", "log.logging")
+defaults["log.logging"]["level"] = os.environ.get("ZEPHYR_DEBUG_LEVEL", "INFO")
+defaults["log.colorlog"] = defaults["log.logging"]
+defaults["zephyr"]["data_dir"] = "~/.zephyr"
 
-class Toolkit(foundation.CementApp):
+class Zephyr(CementApp):
     class Meta:
-        label = 'zephyr'
-        base_controller = 'base'
+        label = "zephyr"
+        base_controller = "base"
         config_defaults = defaults
         plugins = [
-            'configure',
-            'data',
-            'etl',
-            'report',
-            'stub',
+            "configure",
+            "data",
+            "etl",
+            "stub",
         ]
         handlers = [
-            ToolkitBaseController
+            ZephyrCLI,
+            ZephyrReport,
+            ZephyrAccountReview,
         ]
         extensions = [
-            'zephyr.plugins.data.output',
-            'colorlog',
-            'mustache',
+            "zephyr.cli.output",
+            "colorlog",
+            "mustache",
         ]
-        output_handler = 'mustache'
-        log_handler = 'colorlog'
+        output_handler = "mustache"
+        log_handler = "colorlog"
 
 def main():
-    with Toolkit() as app:
+    with Zephyr() as app:
         try:
             app.run()
-        except exc.FrameworkError as e:
-            if not getattr(app.pargs, 'output_handler_override', True):
+        except FrameworkError as e:
+            if not getattr(app.pargs, "output_handler_override", True):
                 app.log.error("No output handler specified. Set with the -o flag.")
             raise e
 

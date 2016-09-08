@@ -6,7 +6,7 @@ import xlsxwriter
 
 from cement.core import controller
 
-from ..data import (
+from ..plugins.data import (
     billing_line_item_aggregates,
     billing_line_items,
     billing_monthly,
@@ -20,7 +20,7 @@ from ..data import (
     service_requests,
 )
 
-from ..data.common import rows_to_excel, ToolkitDataController
+from ..plugins.data.common import rows_to_excel, ToolkitDataController
 
 def create_review_sheet(
         workbook, review_json, module, sheet_name, temp_filepath, temp_filename='temp.csv'
@@ -193,30 +193,3 @@ def create_xlsx_account_review(
     remove_temp_folder(temp_filepath)
     workbook.close()
 
-class AccountReview(ToolkitDataController):
-    class Meta:
-        label = "account-review"
-        stacked_on = "report"
-        stacked_type = "nested"
-        description = "Generate an account review for a given account."
-
-        arguments = controller.CementBaseController.Meta.arguments + [(
-            ["--cache-folder"], dict(
-                 type=str,
-                 help="The path to the folder containing the  cached responses."
-            )
-        )]
-
-    @controller.expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
-    def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            reader = csv.DictReader(f)
-            out = [row for row in reader]
-        self.app.render(out)

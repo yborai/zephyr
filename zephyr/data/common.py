@@ -8,7 +8,8 @@ import json
 
 from decimal import Decimal
 
-from cement.core import controller
+# A temporary salve while controllers are migrated
+from ..cli.controllers import ZephyrData as ToolkitDataController
 
 DAY = datetime.timedelta(days=1)
 
@@ -90,30 +91,3 @@ def timed(func):
         print('%s' % (s_1 - s_0))
         return value
     return timed_func
-
-class ToolkitDataController(controller.CementBaseController):
-    class Meta:
-        label = "data"
-        stacked_on = "base"
-        stacked_type = "nested"
-        description = "Generate single table reports for an account."
-        arguments = controller.CementBaseController.Meta.arguments + [(
-            ["--config"], dict(
-                type=str,
-                help="Path to configuration file"
-            )
-        ), (
-            ["--cache"], dict(
-                 type=str,
-                 help="The path to the cached response to use."
-            )
-        ), (
-            ["--compute_details"], dict(
-                type=str,
-                help="The path to the cached compute-details response to use."
-            )
-        )]
-
-    @controller.expose(hide=True)
-    def default(self):
-        self.app.args.print_help()

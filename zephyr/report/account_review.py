@@ -6,7 +6,7 @@ import xlsxwriter
 
 from cement.core import controller
 
-from ..plugins.data import (
+from ..data import (
     billing_line_item_aggregates,
     billing_line_items,
     billing_monthly,
@@ -20,7 +20,7 @@ from ..plugins.data import (
     service_requests,
 )
 
-from ..plugins.data.common import rows_to_excel, ToolkitDataController
+from ..data.common import rows_to_excel
 
 def create_review_sheet(
         workbook, review_json, module, sheet_name, temp_filepath, temp_filename='temp.csv'

@@ -1,17 +1,16 @@
 from cement.core import controller
 
+from ..cli.controllers import ZephyrData
 from .core import RecommendationsWarp
-from .common import DecimalEncoder
-from .common import ToolkitDataController
 
-class ToolkitComputeRI(ToolkitDataController):
+class ZephyrLBIdle(ZephyrData):
     class Meta:
-        label = "compute-ri"
+        label = "lb-idle"
         stacked_on = "data"
         stacked_type = "nested"
-        description = "Get the ri recommendations meta information."
+        description = "List idle load balancers."
 
-        arguments = ToolkitDataController.Meta.arguments #+ [(
+        arguments = ZephyrData.Meta.arguments #+ [(
         #    ["--cc_api_key"], dict(
         #        type=str,
         #        help="The CloudCheckr API key to use."
@@ -29,28 +28,27 @@ class ToolkitComputeRI(ToolkitDataController):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f: 
             response = f.read()
-        warp = ComputeRIWarp(response)
-        self.app.render(warp.to_ddh(), cls=DecimalEncoder)
+        warp = LBIdleWarp(response)
+        self.app.render(warp.to_ddh())
 
 
-def create_sheet(json_string, csv_filename='compute-ri.csv'):
-    processor = ComputeRIWarp(json_string)
+def create_sheet(json_string, csv_filename='lb-idle.csv'):
+    processor = LBIdleWarp(json_string)
     return processor.write_csv(csv_filename)
 
 
-class ComputeRIWarp(RecommendationsWarp):
+class LBIdleWarp(RecommendationsWarp):
     def __init__(self, json_string):
-        super().__init__(json_string, bpc_id=190)
+        super().__init__(json_string, bpc_id=126)
 
     def _fieldnames(self):
         return (
-            "Number", "Instance Type", "AZ", "Platform", "Commitment Type",
-            "Tenancy", "Upfront RI Cost", "Reserved Monthly Cost",
-            "On-Demand Monthly Cost", "Total Savings"
+            "Load Balancer",
+            "Average Hourly Request Count",
+            "Predicted Monthly Cost",
         )
 
     def _money_fields(self):
         return (
-            "Upfront RI Cost", "Reserved Monthly Cost",
-            "On-Demand Monthly Cost", "Total Savings"
+            "Predicted Monthly Cost",
         )

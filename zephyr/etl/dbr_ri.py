@@ -2,47 +2,16 @@ import csv
 
 from cement.core import controller
 
+from ..cli.controllers import ZephyrETL
 
-class ToolkitETLController(controller.CementBaseController):
-    class Meta:
-        label = "etl"
-        stacked_on = "base"
-        stacked_type = "nested"
-        description = "Generate single table reports for an account."
-        arguments = controller.CementBaseController.Meta.arguments + [(
-                ["--infile"], dict(
-                    type=str,
-                    help="Path to input file.",
-                    required=True,
-                ),
-            ),
-            (
-                ["--outfile"], dict(
-                    type=str,
-                    help="Path to output file.",
-                    required=True,
-                ),
-            ),
-            (
-               ["--no-tags"], dict(
-                    action="store_true",
-                    help="Removes tags in output file."
-                )
-        )]
-
-    @controller.expose(hide=True)
-    def default(self):
-        self.app.args.print_help()
-
-
-class ToolkitFilterDBR(ToolkitETLController):
+class ZephyrDBRRI(ZephyrETL):
     class Meta:
         label = "dbr-ri"
         stacked_on = "etl"
         stacked_type = "nested"
         description = "Filter the DBR for only reserved instances."
 
-        arguments = ToolkitETLController.Meta.arguments
+        arguments = ZephyrETL.Meta.arguments
 
     @controller.expose(hide=True)
     def default(self):

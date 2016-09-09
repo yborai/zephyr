@@ -2,17 +2,17 @@ from datetime import datetime
 
 from cement.core import controller
 
+from ..cli.controllers import ZephyrData
 from .core import Warp
-from .common import ToolkitDataController
 
-class ToolkitComputeDetails(ToolkitDataController):
+class ZephyrComputeDetails(ZephyrData):
     class Meta:
         label = "compute-details"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the detailed instance meta information."
         
-        arguments = ToolkitDataController.Meta.arguments #+ [(
+        arguments = ZephyrData.Meta.arguments #+ [(
         #    ["--cc_api_key"], dict(
         #        type=str,
         #        help="The CloudCheckr API key to use."

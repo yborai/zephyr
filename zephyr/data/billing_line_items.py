@@ -1,25 +1,23 @@
-"""
-Billing Line Item Aggregates
-"""
 import csv
 
 from cement.core import controller
-from .common import ToolkitDataController
 
-def data(cache="billing-line-item-aggregates.csv"):
+from ..cli.controllers import ZephyrData
+
+def data(cache="billing-line-items.csv"):
     with open(cache, "r") as f:
         reader = csv.DictReader(f)
         out = [reader.fieldnames] + [[row[col] for col in reader.fieldnames] for row in reader]
     return out
 
-class ToolkitBillingLineItemAggregates(ToolkitDataController):
+class ZephyrBillingLineItems(ZephyrData):
     class Meta:
-        label = "billing-line-item-aggregates"
+        label = "billing-line-items"
         stacked_on = "data"
         stacked_type = "nested"
-        description = "Get the billing line item aggregate totals."
+        description = "Get the line items billing meta information."
 
-        arguments = ToolkitDataController.Meta.arguments #+ [(
+        arguments = ZephyrData.Meta.arguments #+ [(
         #    ["--cache"], dict(
         #         type=str,
         #         help="The path to the cached response to use."

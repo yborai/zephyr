@@ -1,17 +1,18 @@
 import json
 
-from .common import ToolkitDataController, DDH
-
 from cement.core import controller
 
-class ToolkitIamUsers(ToolkitDataController):
+from ..cli.controllers import ZephyrData
+from .common import DDH
+
+class ZephyrIAMUsers(ZephyrData):
     class Meta:
         label = "iam-users"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the IAM Users meta information"
 
-        arguments = ToolkitDataController.Meta.arguments #+ [(
+        arguments = ZephyrData.Meta.arguments #+ [(
         #    ["--cc_api_key"], dict(
         #        type=str,
         #        help="The CloudCheckr API key to use."

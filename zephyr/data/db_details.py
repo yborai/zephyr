@@ -1,16 +1,16 @@
 from cement.core import controller
 
-from .common import ToolkitDataController
+from ..cli.controllers import ZephyrData
 from .core import Warp
 
-class ToolkitDBDetails(ToolkitDataController):
+class ZephyrDBDetails(ZephyrData):
     class Meta:
         label = "db-details"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the detailed rds meta information"
 
-        arguments = ToolkitDataController.Meta.arguments #+ [(
+        arguments = ZephyrData.Meta.arguments #+ [(
             #["--cc_api_key"], dict(
             #    type=str,
             #    help="The CloudCheckr API key to use."

@@ -1,33 +1,35 @@
+"""
+Billing Line Item Aggregates
+"""
 import csv
 
 from cement.core import controller
 
-from .common import DDH, ToolkitDataController
+from ..cli.controllers import ZephyrData
 
-def data(cache="billing-monthly.csv"):
+def data(cache="billing-line-item-aggregates.csv"):
     with open(cache, "r") as f:
         reader = csv.DictReader(f)
         out = [reader.fieldnames] + [[row[col] for col in reader.fieldnames] for row in reader]
     return out
 
-class ToolkitBillingMonthly(ToolkitDataController):
+class ZephyrBillingLineItemAggregates(ZephyrData):
     class Meta:
-        label = "billing-monthly"
+        label = "billing-line-item-aggregates"
         stacked_on = "data"
         stacked_type = "nested"
-        description = "Get the monthly billing meta information."
+        description = "Get the billing line item aggregate totals."
 
-        arguments = ToolkitDataController.Meta.arguments #+ [(
-            #["--cache"], dict(
-            #     type=str,
-            #     help="The path to the cached response to use."
-            #)
+        arguments = ZephyrData.Meta.arguments #+ [(
+        #    ["--cache"], dict(
+        #         type=str,
+        #         help="The path to the cached response to use."
+        #    )
         #)]
-
     @controller.expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))
-
+     
     def run(self, **kwargs):
         cache = self.app.pargs.cache
         if(not cache):
@@ -35,8 +37,8 @@ class ToolkitBillingMonthly(ToolkitDataController):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
             reader = csv.DictReader(f)
-            header = reader.fieldnames
-            data = [[row[col] for col in header] for row in reader]
-        out = DDH(headers=header, data=data)
-        self.app.render(out)
-        return out
+            ddh = DDH(
+                headers=reader.fieldnames,
+                data=[list(row.values()) for row in reader]
+            )
+        self.app.render(ddh)

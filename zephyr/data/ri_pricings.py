@@ -3,17 +3,18 @@ import itertools
 from decimal import Decimal
 
 from cement.core import controller
-from .core import RecommendationsWarp
-from .common import ToolkitDataController
 
-class ToolkitRiPricings(ToolkitDataController):
+from ..cli.controllers import ZephyrData
+from .core import RecommendationsWarp
+
+class ZephyrRIPricings(ZephyrData):
     class Meta:
         label = "ri-pricings"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the detailed ri pricings meta information."
 
-        arguments = ToolkitDataController.Meta.arguments #+ [(
+        arguments = ZephyrData.Meta.arguments #+ [(
         #    ["--cc_api_key"], dict(
         #        type=str,
         #        help="The CloudCheckr API key to use."

@@ -5,19 +5,20 @@ import pandas as pd
 import sqlite3
 from requests.auth import HTTPBasicAuth
 
-from .common import DDH, timed, ToolkitDataController
+from ..cli.controllers import ZephyrData
+from .common import DDH
 from .core import Warp
 
 from cement.core import controller
 
-class ToolkitComputeAV(ToolkitDataController):
+class ZephyrComputeAV(ZephyrData):
     class Meta:
         label = "compute-av"
         stacked_on = "data"
         stacked_type = "nested"
         description = "Get the AV of instance meta information"
 
-        arguments = ToolkitDataController.Meta.arguments #+ [(
+        arguments = ZephyrData.Meta.arguments #+ [(
         #    ["--cc_api_key"], dict(
         #        type=str,
         #        help="The CloudCheckr API key to use."

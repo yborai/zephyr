@@ -19,7 +19,8 @@ class DDH(object):
         self.data = data or []
 
     def to_csv(self, *args, **kwargs):
-        del(kwargs["template"])
+        if("template" in kwargs):
+            del(kwargs["template"])
         fieldnames = self.header
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=fieldnames, *args, **kwargs)
@@ -29,7 +30,8 @@ class DDH(object):
         return out.getvalue()
 
     def to_json(self, *args, **kwargs):
-        del(kwargs["template"])
+        if("template" in kwargs):
+            del(kwargs["template"])
         out = dict(header=self.header, data=self.data)
         return json.dumps(out, cls=DecimalEncoder, *args, **kwargs)
 

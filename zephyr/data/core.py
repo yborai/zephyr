@@ -8,28 +8,34 @@ from .common import DDH
 
 class Warp(object):
     def __init__(self, json_string):
-        self.parsed_details = json.loads(json_string)
+        self.raw_json = json.loads(json_string)
+        self.data = {}
+        key = self._key()
+        self.data = self.raw_json[0]
+        if(len(self.raw_json) > 1):
+            self.merge_results(self.raw_json)
 
-    def get_data(self):
-        out = list(self._fieldnames())
-        rows = self.parsed_details[self._data_key()]
-        data = [self._filter_row(row) for row in rows]
-        out.extend(data)
-        return out
+    def merge_results(self, pages):
+        out = []
+        key = self._key()
+        for page in pages:
+            out += page[key]
+        self.data[key] = out
+        return self.data
 
     def write_csv(self, csv_filename):
         with open(csv_filename, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self._fieldnames())
 
             writer.writeheader()
-            for details_row in self.parsed_details[self._data_key()]:
+            for details_row in self.data[self._key()]:
                 writer.writerow(self._filter_row(details_row))
 
         return csv_filename
 
     def to_ddh(self):
         header = self._fieldnames()
-        parsed = self.parsed_details[self._data_key()]
+        parsed = self.data[self._key()]
         data = [
             [self._filter_row(row)[col] for col in header]
             for row in parsed
@@ -39,7 +45,7 @@ class Warp(object):
     def _fieldnames(self):
         raise NotImplementedError
 
-    def _data_key(self):
+    def _key(self):
         raise NotImplementedError
 
     def _filter_row(self, details_row):
@@ -48,16 +54,20 @@ class Warp(object):
 
 class RecommendationsWarp(Warp):
     def __init__(self, json_string, bpc_id=None):
+        super().__init__(self._remove_links(json_string))
         self.bpc_id = bpc_id
-        raw_details = json.loads(self._escape_json_string(json_string))
+
+        self.data = self.raw_json[0]
+        if(len(self.raw_json) > 1):
+            self.merge_results(self.raw_json)
 
         parsed_data = []
-        bpcs = raw_details['BestPracticeChecks']
+        bpcs = self.data['BestPracticeChecks']
         bpcs_n = len(bpcs)
-        for raw_detail_row in raw_details['BestPracticeChecks']:
+        for raw_detail_row in bpcs:
             if(bpcs_n > 1 and raw_detail_row['CheckId'] != self.bpc_id):
                 continue
-            for raw_data in raw_detail_row[self._data_key()]:
+            for raw_data in raw_detail_row[self._key()]:
                 parsed_data.append(
                     {
                         self._left_side(pair): self._right_side(pair)
@@ -65,7 +75,7 @@ class RecommendationsWarp(Warp):
                     }
                 )
 
-        self.parsed_details = {self._data_key(): parsed_data}
+        self.data = {self._key(): parsed_data}
 
     def _left_side(self, pair):
         return pair.split(':')[0].strip()
@@ -93,10 +103,10 @@ class RecommendationsWarp(Warp):
     def _parse_money(self, money_string):
         return Decimal(sub(r'[^\d\-.]', '', money_string))
 
-    def _escape_json_string(self, json_string):
-        return json_string.replace('<a href=\"', '').replace('\" target=\"_blank\"', '')
+    def _remove_links(self, string):
+        return string.replace('<a href=\"', '').replace('\" target=\"_blank\"', '')
 
-    def _data_key(self):
+    def _key(self):
         return 'Results'
 
 

@@ -44,12 +44,13 @@ def create_sheet(json_string, csv_filename='service_requests.csv'):
 
 class ServiceRequestWarp(Warp):
     def __init__(self, json_string):
-        parsed_result = json.loads(json_string)
-        self.parsed_details = {"result": []}
+        self.raw_json = json.loads(json_string)
+        self.data = {"result": []}
+        header = self.raw_json["header"]
 
-        for row in parsed_result["data"]:
-            self.parsed_details["result"].append(
-                dict(zip(parsed_result["header"], row))
+        for row in self.raw_json["data"]:
+            self.data["result"].append(
+                dict(zip(header, row))
             )
 
         self.grouped_by_area = self._group_by("area")
@@ -84,7 +85,7 @@ class ServiceRequestWarp(Warp):
 
     def _group_by(self, group_identifier):
         rows = sorted(
-            self.parsed_details[self._data_key()],
+            self.data[self._key()],
             key=lambda row: row[group_identifier], reverse=False
         )
         return groupby(rows, lambda row: row[group_identifier])
@@ -104,7 +105,7 @@ class ServiceRequestWarp(Warp):
 
         return row
 
-    def _data_key(self):
+    def _key(self):
         return "result"
 
     def _fieldnames(self):

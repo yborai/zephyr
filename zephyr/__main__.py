@@ -24,11 +24,11 @@ from .data.compute_underutilized import ZephyrComputeUnderutilized
 from .data.compute_underutilized_breakdown import ZephyrComputeUnderutilizedBreakdown
 from .data.db_details import ZephyrDBDetails
 from .data.db_idle import ZephyrDBIdle
+from .data.iam_users import ZephyrIAMUsers
 from .data.lb_idle import ZephyrLBIdle
 from .data.ri_pricings import ZephyrRIPricings
 from .data.service_requests import ZephyrServiceRequests
 from .data.storage_detached import ZephyrStorageDetached
-from .data.iam_users import ZephyrIAMUsers
 from .etl.dbr_ri import ZephyrDBRRI
 
 
@@ -56,11 +56,11 @@ class Zephyr(CementApp):
                     ZephyrComputeUnderutilizedBreakdown,
                     ZephyrDBDetails,
                     ZephyrDBIdle,
+                    ZephyrIAMUsers,
                     ZephyrLBIdle,
                     ZephyrRIPricings,
                     ZephyrServiceRequests,
                     ZephyrStorageDetached,
-                    ZephyrIAMUsers,
                 ZephyrETL,
                     ZephyrDBRRI,
                 ZephyrReport,

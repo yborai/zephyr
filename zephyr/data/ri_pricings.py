@@ -45,7 +45,7 @@ class RIPricingWarp(RecommendationsWarp):
         self._read_from_csv(csv_filepath)
 
         grouped_csv_data = self._prepare_csv_total_data()
-        self.parsed_details = {self._data_key(): grouped_csv_data}
+        self.data = {self._key(): grouped_csv_data}
 
     def _filter_row(self, details_row):
         filtered_row = {

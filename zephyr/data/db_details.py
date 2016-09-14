@@ -37,10 +37,11 @@ def create_sheet(json_string, csv_filename='db-details.csv'):
 
 
 class DBDetailsWarp(Warp):
-    def _data_key(self):
+    def _key(self):
         return 'RdsDbInstances'
 
     def _filter_row(self, details_row):
+        #import pdb;pdb.set_trace()
         return {
             key: details_row[key] for key in self._fieldnames() if key in details_row.keys()
         }

@@ -39,7 +39,7 @@ def create_sheet(json_string, csv_filename="compute-details.csv"):
 
 
 class ComputeDetailsWarp(Warp):
-    def _data_key(self):
+    def _key(self):
         return "Ec2Instances"
 
     def _filter_row(self, details_row):

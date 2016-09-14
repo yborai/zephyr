@@ -57,7 +57,7 @@ class ComputeUnderutilizedBreakdownWarp(SplitInstanceWarp):
     def write_csv(self, csv_filename):
         filtered_rows = (
             self._filter_row(details_row)
-            for details_row in self.parsed_details[self._data_key()]
+            for details_row in self.data[self._key()]
         )
 
         grouped_rows = self._group_rows(filtered_rows)

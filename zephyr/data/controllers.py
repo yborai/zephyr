@@ -40,15 +40,16 @@ class ZephyrData(CementBaseController):
         self.app.args.print_help()
 
 class DataRun(ZephyrData):
+    class Meta:
+        stacked_on = "data"
+        stacked_type = "nested"
+        arguments = ZephyrData.Meta.arguments
+
     @expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))
 
 class Billing(DataRun):
-    class Meta:
-        stacked_on = "data"
-        stacked_type = "nested"
-
     def run(self, **kwargs):
         cache = self.app.pargs.cache
         if(not cache):
@@ -80,8 +81,6 @@ class BillingLineItemAggregates(Billing):
 class ComputeAV(DataRun):
     class Meta:
         label = "compute-av"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "Get the AV of instance meta information"
 
         arguments = DataRun.Meta.arguments + [(
@@ -107,8 +106,6 @@ class ComputeAV(DataRun):
 class ComputeDetails(DataRun):
     class Meta:
         label = "compute-details"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "Get the detailed instance meta information."
 
     def run(self, **kwargs):
@@ -124,8 +121,6 @@ class ComputeDetails(DataRun):
 class ComputeMigration(DataRun):
     class Meta:
         label = "compute-migration"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "Get the migration recommendations meta information"
 
     def run(self, **kwargs):
@@ -141,8 +136,6 @@ class ComputeMigration(DataRun):
 class ComputeRI(DataRun):
     class Meta:
         label = "compute-ri"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "Get the ri recommendations meta information."
 
     def run(self, **kwargs):
@@ -158,8 +151,6 @@ class ComputeRI(DataRun):
 class ComputeUnderutilized(DataRun):
     class Meta:
         label = "compute-underutilized"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "Get the underutilized instance meta information"
 
     def run(self, **kwargs):
@@ -175,8 +166,6 @@ class ComputeUnderutilized(DataRun):
 class ComputeUnderutilizedBreakdown(DataRun):
     class Meta:
         label = "compute-underutilized-breakdown"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "Get the underutilized instance breakdown meta information"
 
     def run(self, **kwargs):
@@ -192,8 +181,6 @@ class ComputeUnderutilizedBreakdown(DataRun):
 class DBDetails(DataRun):
     class Meta:
         label = "db-details"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "Get the detailed rds meta information"
 
     def run(self, **kwargs):
@@ -209,8 +196,6 @@ class DBDetails(DataRun):
 class DBIdle(DataRun):
     class Meta:
         label = "db-idle"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "List idle database instances."
 
     def run(self, **kwargs):
@@ -226,8 +211,6 @@ class DBIdle(DataRun):
 class IAMUsers(DataRun):
     class Meta:
         label = "iam-users"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "Get the IAM Users meta information"
 
     def run(self, **kwargs):
@@ -242,8 +225,6 @@ class IAMUsers(DataRun):
 class LBIdle(DataRun):
     class Meta:
         label = "lb-idle"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "List idle load balancers."
 
     def run(self, **kwargs):
@@ -259,8 +240,6 @@ class LBIdle(DataRun):
 class RIPricings(DataRun):
     class Meta:
         label = "ri-pricings"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "Get the detailed ri pricings meta information."
 
     def run(self, **kwargs):
@@ -276,8 +255,6 @@ class RIPricings(DataRun):
 class ServiceRequests(DataRun):
     class Meta:
         label = "service-requests"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "get the detailed service requests meta information."
 
     def run(self, **kwargs):
@@ -293,8 +270,6 @@ class ServiceRequests(DataRun):
 class StorageDetached(DataRun):
     class Meta:
         label = "storage-detached"
-        stacked_on = "data"
-        stacked_type = "nested"
         description = "List detached storage volumes."
 
     def run(self, **kwargs):

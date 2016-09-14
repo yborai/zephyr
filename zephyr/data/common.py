@@ -8,9 +8,6 @@ import json
 
 from decimal import Decimal
 
-# A temporary salve while controllers are migrated
-from ..cli.controllers import ZephyrData as ToolkitDataController
-
 DAY = datetime.timedelta(days=1)
 
 class DDH(object):

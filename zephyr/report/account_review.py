@@ -7,9 +7,7 @@ import xlsxwriter
 from cement.core import controller
 
 from ..data import (
-    billing_line_item_aggregates,
-    billing_line_items,
-    billing_monthly,
+    billing,
     compute_details,
     compute_migration,
     compute_ri,
@@ -124,9 +122,9 @@ def create_xlsx_account_review(
     workbook = xlsxwriter.Workbook(destination_filepath + '/' + xslx_filename)
     temp_filepath = create_temp_folder(destination_filepath, temporary_folder_name)
 
-    monthly_totals = billing_monthly.data(billing_monthly_cache)
-    line_items = billing_line_items.data(billing_line_items_cache)
-    line_item_aggs = billing_line_item_aggregates.data(billing_line_item_aggs_cache)
+    monthly_totals = billing.data(billing_monthly_cache)
+    line_items = billing.data(billing_line_items_cache)
+    line_item_aggs = billing.data(billing_line_item_aggs_cache)
 
     sheet_dy = workbook.add_worksheet("Billing")
 

@@ -200,7 +200,7 @@ class RIPricings(WarpRun):
     def run(self, **kwargs):
         self.warp_run(RIPricingWarp, **kwargs)
 
-class ServiceRequests(DataRun):
+class ServiceRequests(WarpRun):
     class Meta:
         label = "service-requests"
         description = "get the detailed service requests meta information."

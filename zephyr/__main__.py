@@ -13,13 +13,16 @@ from .report.controllers import __ALL__ as ZephyrReportControllers
 defaults = init_defaults("zephyr", "log.logging")
 defaults["log.logging"]["level"] = os.environ.get("ZEPHYR_DEBUG_LEVEL", "INFO")
 defaults["log.colorlog"] = defaults["log.logging"]
-defaults["zephyr"]["data_dir"] = "~/.zephyr"
 
 class Zephyr(CementApp):
     class Meta:
         label = "zephyr"
         base_controller = "base"
         config_defaults = defaults
+        config_files = [
+            "~/.aws/config",
+            "~/.zephyr/config",
+        ]
         handlers = sum((
             ZephyrControllers,
             ZephyrDataControllers,

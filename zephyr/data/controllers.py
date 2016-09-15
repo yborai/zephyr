@@ -49,6 +49,17 @@ class DataRun(ZephyrData):
     def default(self):
         self.run(**vars(self.app.pargs))
 
+class WarpRun(DataRun):
+    def warp_run(self, WarpClass, **kwargs):
+        cache = self.app.pargs.cache
+        if(not cache):
+            raise NotImplementedError # We will add fetching later.
+        self.app.log.info("Using cached response: {cache}".format(cache=cache))
+        with open(cache, "r") as f:
+            response = f.read()
+        warp = WarpClass(response)
+        self.app.render(warp.to_ddh())
+
 class Billing(DataRun):
     def run(self, **kwargs):
         cache = self.app.pargs.cache
@@ -103,110 +114,61 @@ class ComputeAV(DataRun):
         self.app.render(out)
         return out
 
-class ComputeDetails(DataRun):
+class ComputeDetails(WarpRun):
     class Meta:
         label = "compute-details"
         description = "Get the detailed instance meta information."
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = ComputeDetailsWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(ComputeDetailsWarp, **kwargs)
 
-class ComputeMigration(DataRun):
+class ComputeMigration(WarpRun):
     class Meta:
         label = "compute-migration"
         description = "Get the migration recommendations meta information"
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = ComputeMigrationWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(ComputeMigrationWarp, **kwargs)
 
-class ComputeRI(DataRun):
+class ComputeRI(WarpRun):
     class Meta:
         label = "compute-ri"
         description = "Get the ri recommendations meta information."
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = ComputeRIWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(ComputeRIWarp, **kwargs)
 
-class ComputeUnderutilized(DataRun):
+class ComputeUnderutilized(WarpRun):
     class Meta:
         label = "compute-underutilized"
         description = "Get the underutilized instance meta information"
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We'll add fetching later
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = ComputeUnderutilizedWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(ComputeUnderutilizedWarp, **kwargs)
 
-class ComputeUnderutilizedBreakdown(DataRun):
+class ComputeUnderutilizedBreakdown(WarpRun):
     class Meta:
         label = "compute-underutilized-breakdown"
         description = "Get the underutilized instance breakdown meta information"
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We'll add fetching later
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = ComputeUnderutilizedBreakdownWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(ComputeUnderutilizedBreakdownWarp, **kwargs)
 
-class DBDetails(DataRun):
+class DBDetails(WarpRun):
     class Meta:
         label = "db-details"
         description = "Get the detailed rds meta information"
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError #We will add fetching later
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = DBDetailsWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(DBDetailsWarp, **kwargs)
 
-class DBIdle(DataRun):
+class DBIdle(WarpRun):
     class Meta:
         label = "db-idle"
         description = "List idle database instances."
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = DBIdleWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(DBIdleWarp, **kwargs)
 
 class IAMUsers(DataRun):
     class Meta:
@@ -222,35 +184,21 @@ class IAMUsers(DataRun):
         self.app.render(out)
         return out
 
-class LBIdle(DataRun):
+class LBIdle(WarpRun):
     class Meta:
         label = "lb-idle"
         description = "List idle load balancers."
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = LBIdleWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(LBIdleWarp, **kwargs)
 
-class RIPricings(DataRun):
+class RIPricings(WarpRun):
     class Meta:
         label = "ri-pricings"
         description = "Get the detailed ri pricings meta information."
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = RIPricingWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(RIPricingWarp, **kwargs)
 
 class ServiceRequests(DataRun):
     class Meta:
@@ -258,14 +206,7 @@ class ServiceRequests(DataRun):
         description = "get the detailed service requests meta information."
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # we will add fetching later
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache,"r") as f:
-            response = f.read()
-        warp = ServiceRequestWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(ServiceRequestWarp, **kwargs)
 
 class StorageDetached(DataRun):
     class Meta:
@@ -273,14 +214,7 @@ class StorageDetached(DataRun):
         description = "List detached storage volumes."
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
-        warp = StorageDetachedWarp(response)
-        self.app.render(warp.to_ddh())
+        self.warp_run(ServiceRequestWarp, **kwargs)
 
 __ALL__ = [
     ZephyrData,

@@ -1,4 +1,6 @@
-cement>=2.10.2
-colorlog>=2.6.0
-pystache>=0.5.4
-XlsxWriter==0.8.9
+cement==2.10.2
+colorlog==2.7.0
+pandas==0.18.1
+pystache==0.5.4
+requests==2.11.1
+XlsxWriter==0.9.3

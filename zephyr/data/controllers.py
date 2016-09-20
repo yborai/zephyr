@@ -11,6 +11,7 @@ from .compute_underutilized import ComputeUnderutilizedWarp
 from .compute_underutilized_breakdown import ComputeUnderutilizedBreakdownWarp
 from .db_details import DBDetailsWarp
 from .db_idle import DBIdleWarp
+from .domains import domains
 from .iam_users import iam_users
 from .lb_idle import LBIdleWarp
 from .ri_pricings import RIPricingWarp
@@ -170,6 +171,37 @@ class DBIdle(WarpRun):
     def run(self, **kwargs):
         self.warp_run(DBIdleWarp, **kwargs)
 
+class Domains(DataRun):
+    class Meta:
+        label = "domains"
+        description = "List route-53 domains"
+
+        arguments = DataRun.Meta.arguments + [(
+            ["--access-key"], dict(
+                type=str,
+                help="The AWS Access Key ID for the desired client"
+            )
+        ), (
+            ["--secret-key"], dict(
+                type=str,
+                help="The AWS Secret Access Key for the desired client"
+            )
+        ), (
+            ["--session-token"], dict(
+                type=str,
+                help="The AWS Session Token for the desired client"
+            )
+        )]
+
+    def run(self, **kwargs):
+        access_key_id = self.app.pargs.access_key
+        secret_key = self.app.pargs.secret_key
+        session_token = self.app.pargs.session_token
+        self.app.log.info("Checking for domains.")
+        out = domains(access_key_id, secret_key, session_token)
+        self.app.render(out)
+        return out
+
 class IAMUsers(DataRun):
     class Meta:
         label = "iam-users"
@@ -208,13 +240,13 @@ class ServiceRequests(WarpRun):
     def run(self, **kwargs):
         self.warp_run(ServiceRequestWarp, **kwargs)
 
-class StorageDetached(DataRun):
+class StorageDetached(WarpRun):
     class Meta:
         label = "storage-detached"
         description = "List detached storage volumes."
 
     def run(self, **kwargs):
-        self.warp_run(ServiceRequestWarp, **kwargs)
+        self.warp_run(StorageDetachedWarp, **kwargs)
 
 __ALL__ = [
     ZephyrData,
@@ -229,6 +261,7 @@ __ALL__ = [
     ComputeUnderutilizedBreakdown,
     DBDetails,
     DBIdle,
+    Domains,
     IAMUsers,
     LBIdle,
     RIPricings,

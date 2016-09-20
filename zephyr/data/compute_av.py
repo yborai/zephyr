@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 import sqlite3
 
-from .common import DDH
+from ..core.ddh import DDH
 
 def compute_av(cache, compute_details):
     with open(cache, "r") as f:
@@ -33,7 +33,7 @@ def compute_av(cache, compute_details):
     ccdf.to_sql('cc', con, if_exists='replace')
     bddf.to_sql('bd', con, if_exists='replace')
 
-    jodf = pd.read_sql(
+    join = DDH.read_sql(
         " SELECT"
         "     CASE"
         "         WHEN bd.'Product Outdated' = 0 THEN 'Present'"
@@ -47,7 +47,4 @@ def compute_av(cache, compute_details):
         con
     )
 
-    header = list(jodf.columns)
-    data = [list(row) for row in jodf.values]
-
-    return DDH(header=header, data=data)
+    return join

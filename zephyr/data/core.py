@@ -4,7 +4,7 @@ import json
 from decimal import Decimal
 from re import search, sub
 
-from .common import DDH
+from ..core.ddh import DDH
 
 class Warp(object):
     def __init__(self, json_string):

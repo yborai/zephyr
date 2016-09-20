@@ -1,6 +1,6 @@
 import json
 
-from .common import DDH
+from ..core.ddh import DDH
 
 def iam_users(cache):
     with open(cache, "r") as f:

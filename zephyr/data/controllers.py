@@ -2,7 +2,7 @@ import csv
 
 from cement.core.controller import CementBaseController, expose
 
-from .common import DDH
+from ..core.ddh import DDH
 from .compute_av import compute_av
 from .compute_details import ComputeDetailsWarp
 from .compute_migration import ComputeMigrationWarp

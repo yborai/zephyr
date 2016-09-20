@@ -1,4 +1,4 @@
-from .common import DecimalEncoder
+from ..core.utils import DecimalEncoder
 from .core import SplitInstanceWarp
 
 def create_sheet(json_string, csv_filename='compute-underutilized.csv'):

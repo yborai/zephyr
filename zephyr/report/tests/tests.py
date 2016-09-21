@@ -10,10 +10,6 @@ class TestingController(Zephyr):
 class TestZephyr(test.CementTestCase):
     app_class = TestingController
 
-    def test_myapp_default(self):
-        with self.app as app:
-            app.run()
-
-    def test_second_default(self):
-        with TestingController(argv=["data"]) as app:
+    def test_zephyr_report(self):
+        with TestingController(argv=["report"]) as app:
             app.run()

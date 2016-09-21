@@ -1,16 +1,20 @@
 import unittest
+
 from cement.utils import test
-from zephyr.__main__ import Zephyr
 
-class TestingController(Zephyr):
-    class Meta:
-        argv = []
-        config_files = []
+from ...__main__ import Zephyr
+from ...tests.tests import TestZephyr
 
-class TestZephyr(test.CementTestCase):
-    app_class = TestingController
+class TestZephyrETL(test.CementTestCase):
+    app_class = TestZephyr
 
     def test_zephyr_etl(self):
-        with TestingController(argv=["etl"]) as app:
-            with self.assertRaises(SystemExit):
-                app.run()
+        with TestZephyr(argv=["etl"]) as app:
+            app.run()
+
+    def test_dbr_ri(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "etl",
+            "dbr-ri",
+            "--help",
+        ])

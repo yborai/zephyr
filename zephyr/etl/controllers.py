@@ -8,7 +8,20 @@ class ZephyrETL(CementBaseController):
         stacked_on = "base"
         stacked_type = "nested"
         description = "Generate single table reports for an account."
-        arguments = CementBaseController.Meta.arguments + [
+        arguments = CementBaseController.Meta.arguments
+
+    @expose(hide=True)
+    def default(self):
+        self.app.args.print_help()
+
+class ZephyrDBRRI(ZephyrETL):
+    class Meta:
+        label = "dbr-ri"
+        stacked_on = "etl"
+        stacked_type = "nested"
+        description = "Filter the DBR for only reserved instances."
+
+        arguments = ZephyrETL.Meta.arguments + [
             (
                 ["--infile"], dict(
                     type=str,
@@ -23,20 +36,6 @@ class ZephyrETL(CementBaseController):
                     required=True,
                 ),
             ),
-        ]
-
-    @expose(hide=True)
-    def default(self):
-        self.app.args.print_help()
-
-class ZephyrDBRRI(ZephyrETL):
-    class Meta:
-        label = "dbr-ri"
-        stacked_on = "etl"
-        stacked_type = "nested"
-        description = "Filter the DBR for only reserved instances."
-
-        arguments = ZephyrETL.Meta.arguments + [
             (
                 ["--no-tags"], dict(
                      action="store_true",

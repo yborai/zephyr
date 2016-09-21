@@ -21,6 +21,6 @@ def domains(access_key_id, secret_key, session_token):
             domain["Id"],
             domain["ResourceRecordSetCount"],
             domain["CallerReference"],
-            ])
+        ])
 
     return DDH(header=header, data=data)

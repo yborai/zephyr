@@ -44,16 +44,3 @@ def rows_to_excel(sheet, rows, top=0, left=0):
         row = rows[i]
         for j in range(n_cells):
             sheet.write(top+i, left+j, row[j])
-
-def timed(func):
-    """
-    Wrap a function in a timer.
-    """
-    def timed_func(*args, **kwargs):
-        now = datetime.datetime.now
-        s_0 = now()
-        value = func(*args, **kwargs)
-        s_1 = now()
-        print('%s' % (s_1 - s_0))
-        return value
-    return timed_func

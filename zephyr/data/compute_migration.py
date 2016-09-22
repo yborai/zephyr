@@ -7,7 +7,12 @@ def create_sheet(json_string, csv_filename='compute-migration.csv'):
 
 class ComputeMigrationWarp(SplitInstanceWarp):
     def __init__(self, json_string):
-        super().__init__(json_string, bpc_id=240)
+        self.bpc_id = self.get_bpc_id()
+        super().__init__(json_string, bpc_id=self.bpc_id)
+
+    @staticmethod
+    def get_bpc_id():
+        return 240
 
     def _fieldnames(self):
         return (

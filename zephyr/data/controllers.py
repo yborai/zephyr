@@ -1,7 +1,10 @@
 import csv
 
+from urllib.parse import urlencode
+
 from cement.core.controller import CementBaseController, expose
 
+from ..core import cloudcheckr
 from ..core.ddh import DDH
 from .compute_av import compute_av
 from .compute_details import ComputeDetailsWarp
@@ -25,16 +28,29 @@ class ZephyrData(CementBaseController):
         stacked_type = "nested"
         description = "Generate single table reports for an account."
         arguments = CementBaseController.Meta.arguments + [(
-            ["--config"], dict(
-                type=str,
-                help="Path to configuration file"
+            ["--account"], dict(
+                 type=str,
+                 help="The desired account short name."
             )
-        ), (
+        ), 
+        (
             ["--cache"], dict(
                  type=str,
                  help="The path to the cached response to use."
             )
-        ), ]
+        ), 
+        (
+            ["--date"], dict(
+                type=str,
+                help="The report date to request."
+            )
+        ), 
+        (
+            ["--expire-cache"], dict(
+                action="store_true",
+                help="Forces the cached data to be refreshed."
+            )
+        )]
 
     @expose(hide=True)
     def default(self):
@@ -51,19 +67,24 @@ class DataRun(ZephyrData):
         self.run(**vars(self.app.pargs))
 
 class WarpRun(DataRun):
-    def warp_run(self, WarpClass, **kwargs):
-        cache = self.app.pargs.cache
+    def cache_policy(self, account, date, cache, expire):
         if(not cache):
             raise NotImplementedError # We will add fetching later.
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
-            response = f.read()
+            return f.read()
+
+    def warp_run(self, WarpClass, **kwargs):
+        account = self.app.pargs.account
+        date = self.app.pargs.date
+        cache = self.app.pargs.cache
+        expire_cache = self.app.pargs.expire_cache
+        response = self.cache_policy(account, date, WarpClass, cache, expire_cache)
         warp = WarpClass(response)
         self.app.render(warp.to_ddh())
 
 class Billing(DataRun):
-    def run(self, **kwargs):
-        cache = self.app.pargs.cache
+    def cache_policy(self, cache):
         if(not cache):
             raise NotImplementedError # We will add fetching later.
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
@@ -71,7 +92,11 @@ class Billing(DataRun):
             reader = csv.DictReader(f)
             header = reader.fieldnames
             data = [[row[col] for col in header] for row in reader]
-        out = DDH(header=header, data=data)
+        return DDH(header=header, data=data)
+
+    def run(self, **kwargs):
+        cache = self.app.pargs.cache
+        out = self.cache_policy(cache)
         self.app.render(out)
         return out
 
@@ -127,6 +152,31 @@ class ComputeMigration(WarpRun):
     class Meta:
         label = "compute-migration"
         description = "Get the migration recommendations meta information"
+
+    def cache_policy(self, account, date, WarpClass, cache, expire):
+        refresh = expire or not cache
+        if(not refresh):
+            self.app.log.info("Using cached response: {cache}".format(cache=cache))
+            with open(cache, "r") as f:
+                return f.read()
+        # get data from cloudcheckr
+        base = self.app.config.get("cloudcheckr", "base")
+        api_key = self.app.config.get("cloudcheckr", "api_key")
+        uri = "best_practice.json/get_best_practices"
+        params = dict(
+            access_key=api_key,
+            bpc_id=WarpClass.get_bpc_id(),
+            date=date,
+            use_account=account,
+        )
+        url = "".join([
+            base,
+            uri,
+            "?",
+            urlencode(params),
+        ])
+        self.app.log.info(url)
+        #response = cloudcheckr.cache(url, cache, "compute-details")
 
     def run(self, **kwargs):
         self.warp_run(ComputeMigrationWarp, **kwargs)

@@ -1,6 +1,7 @@
 import csv
 import os
 
+from datetime import datetime
 from urllib.parse import urlencode
 
 from cement.core.controller import CementBaseController, expose
@@ -74,11 +75,12 @@ class WarpRun(DataRun):
             self.app.log.info("Using cached response: {cache}".format(cache=cache))
             with open(cache, "r") as f:
                 return f.read()
-        # get data from cloudcheckr
         api_key = self.app.config.get("cloudcheckr", "api_key")
         base = self.app.config.get("cloudcheckr", "base")
-        cache_folder = self.app.config.get("zephyr", "cache")
-        params = WarpClass.get_params(api_key, account, date)
+        accounts = os.path.expanduser(self.app.config.get("zephyr", "accounts"))
+        cache_folder = os.path.expanduser(self.app.config.get("zephyr", "cache"))
+        cc_name = cloudcheckr.get_cloudcheckr_name(account, accounts)
+        params = WarpClass.get_params(api_key, cc_name, date)
         url = "".join([
             base,
             WarpClass.get_uri(),
@@ -86,7 +88,9 @@ class WarpRun(DataRun):
             urlencode(params),
         ])
         self.app.log.info(url)
-        folder = os.path.join(cache_folder, account, date)
+        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+        folder = os.path.join(cache_folder, account, month)
+        self.app.log.info(cache_folder)
         os.makedirs(folder, exist_ok=True)
         response = cloudcheckr.cache(
             url, folder, WarpClass.get_slug(), self.app.log.info

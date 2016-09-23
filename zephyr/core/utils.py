@@ -1,6 +1,10 @@
 import datetime
 import json
 
+def account_ids(accounts_json):
+    with open(accounts_json) as f:
+        return json.load(f)
+
 class DecimalEncoder(json.JSONEncoder):
     """Serialize decimal.Decimal objects into JSON as floats."""
     def default(self, obj):
@@ -18,6 +22,6 @@ def timed(func, log=print):
         s_0 = now()
         value = func(*args, **kwargs)
         s_1 = now()
-        log('%s' % (s_1 - s_0))
+        log("%s" % (s_1 - s_0))
         return value
     return timed_func

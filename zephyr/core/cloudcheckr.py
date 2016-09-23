@@ -3,7 +3,17 @@ import os
 
 import requests
 
-from .utils import timed
+from .utils import account_ids, timed
+
+def cache(url, cache, filename, log):
+    response = load_pages(url, timing=True, log=log)
+    with open(os.path.join(cache, filename + ".json"), "w") as f:
+        json.dump(response, f)
+    return json.dumps(response)
+
+def get_cloudcheckr_name(acc_short_name, accounts_json):
+    accounts = account_ids(accounts_json)
+    return accounts[acc_short_name]["cc"]["name"]
 
 def load_pages(url, timing=False, log=print):
     """
@@ -30,9 +40,3 @@ def load_pages(url, timing=False, log=print):
             token = obj["NextToken"]
         out.append(obj)
     return out
-
-def cache(url, cache, filename, log):
-    response = load_pages(url, timing=True, log=log)
-    with open(os.path.join(cache, filename + ".json"), "w") as f:
-        json.dump(response, f)
-    return json.dumps(response)

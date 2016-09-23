@@ -1,6 +1,11 @@
+import json
+import os
+
+import requests
+
 from .utils import timed
 
-def load_pages(url, timing=False):
+def load_pages(url, timing=False, log=print):
     """
     Pagination
     """
@@ -10,7 +15,7 @@ def load_pages(url, timing=False):
     out = list()
     def time(func):
         if(timing):
-            return timed(func)
+            return timed(func, log=log)
         return func
 
     while(page_next):
@@ -26,10 +31,8 @@ def load_pages(url, timing=False):
         out.append(obj)
     return out
 
-def cache(url, cache, filename):
-    print(url)
-    return
-    response = load_pages(url, timing=True)
-    with open(os.path.join(cache_folder, filename + ".json"), "w") as f:
+def cache(url, cache, filename, log):
+    response = load_pages(url, timing=True, log=log)
+    with open(os.path.join(cache, filename + ".json"), "w") as f:
         json.dump(response, f)
-    return response
+    return json.dumps(response)

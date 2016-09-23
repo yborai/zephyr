@@ -1,3 +1,4 @@
+import datetime
 import json
 
 class DecimalEncoder(json.JSONEncoder):
@@ -8,7 +9,7 @@ class DecimalEncoder(json.JSONEncoder):
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 
-def timed(func):
+def timed(func, log=print):
     """
     Wrap a function in a timer.
     """
@@ -17,6 +18,6 @@ def timed(func):
         s_0 = now()
         value = func(*args, **kwargs)
         s_1 = now()
-        print('%s' % (s_1 - s_0))
+        log('%s' % (s_1 - s_0))
         return value
     return timed_func

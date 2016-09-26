@@ -1,10 +1,10 @@
-from .core import RecommendationsWarp
+from .core import BestPracticesWarp
 
 def create_sheet(json_string, csv_filename='storage-detached.csv'):
     processor = StorageDetachedWarp(json_string)
     return processor.write_csv(csv_filename)
 
-class StorageDetachedWarp(RecommendationsWarp):
+class StorageDetachedWarp(BestPracticesWarp):
     def __init__(self, json_string):
         super().__init__(json_string, bpc_id=1)
 

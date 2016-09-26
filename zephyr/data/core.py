@@ -52,7 +52,7 @@ class Warp(object):
         raise NotImplementedError
 
 
-class RecommendationsWarp(Warp):
+class BestPracticesWarp(Warp):
     def __init__(self, json_string, bpc_id=None):
         super().__init__(self._remove_links(json_string))
         self.bpc_id = bpc_id
@@ -76,6 +76,19 @@ class RecommendationsWarp(Warp):
                 )
 
         self.data = {self._key(): parsed_data}
+
+    @staticmethod
+    def get_bpc_id():
+        raise NotImplementedError
+
+    @classmethod
+    def get_params(cls, api_key, name, date):
+        return dict(
+            access_key=api_key,
+            bpc_id=cls.get_bpc_id(),
+            date=date,
+            use_account=name,
+        )
 
     def _left_side(self, pair):
         return pair.split(':')[0].strip()
@@ -110,7 +123,7 @@ class RecommendationsWarp(Warp):
         return 'Results'
 
 
-class SplitInstanceWarp(RecommendationsWarp):
+class SplitInstanceWarp(BestPracticesWarp):
     def _filter_row(self, details_row):
         details_row["Instance ID"] = self._get_instance_id(details_row[self._instance_field()])
         details_row["Instance Name"] = self._get_instance_name(details_row[self._instance_field()])

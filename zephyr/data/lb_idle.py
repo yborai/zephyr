@@ -1,10 +1,10 @@
-from .core import RecommendationsWarp
+from .core import BestPracticesWarp
 
 def create_sheet(json_string, csv_filename='lb-idle.csv'):
     processor = LBIdleWarp(json_string)
     return processor.write_csv(csv_filename)
 
-class LBIdleWarp(RecommendationsWarp):
+class LBIdleWarp(BestPracticesWarp):
     def __init__(self, json_string):
         super().__init__(json_string, bpc_id=126)
 

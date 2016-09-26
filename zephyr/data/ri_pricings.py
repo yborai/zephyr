@@ -1,13 +1,13 @@
 import csv
 import itertools
 
-from .core import RecommendationsWarp
+from .core import BestPracticesWarp
 
 def create_sheet(csv_filepath, csv_filename='ri_pricing.csv'):
     processor = RIPricingWarp(csv_filepath)
     return processor.write_csv(csv_filename)
 
-class RIPricingWarp(RecommendationsWarp):
+class RIPricingWarp(BestPracticesWarp):
     def __init__(self, csv_filepath):
         self._read_from_csv(csv_filepath)
 

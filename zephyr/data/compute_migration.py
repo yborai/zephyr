@@ -16,15 +16,6 @@ class ComputeMigrationWarp(SplitInstanceWarp):
     def get_bpc_id():
         return 240
 
-    @classmethod
-    def get_params(cls, api_key, name, date):
-        return dict(
-            access_key=api_key,
-            bpc_id=cls.get_bpc_id(),
-            date=date,
-            use_account=name,
-        )
-
     @staticmethod
     def get_slug():
         return "compute-migration"

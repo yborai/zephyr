@@ -3,13 +3,27 @@ import os
 
 import requests
 
+from urllib.parse import urlencode
+
 from .utils import account_ids, timed
 
-def cache(url, cache, filename, log):
+def cache(WarpClass, base, api_key, cc_name, date, cache_file, log=print):
+    params = WarpClass.get_params(api_key, cc_name, date)
+    url = "".join([
+        base,
+        WarpClass.get_uri(),
+        "?",
+        urlencode(params),
+    ])
+    log(url)
     response = load_pages(url, timing=True, log=log)
-    with open(os.path.join(cache, filename + ".json"), "w") as f:
+    os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+    with open(cache_file, "w") as f:
         json.dump(response, f)
     return json.dumps(response)
+
+def cache_path(cache, filename):
+    return os.path.join(cache, "{}.json".format(filename))
 
 def get_cloudcheckr_name(acc_short_name, accounts_json):
     accounts = account_ids(accounts_json)

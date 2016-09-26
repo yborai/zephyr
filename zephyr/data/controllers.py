@@ -2,7 +2,6 @@ import csv
 import os
 
 from datetime import datetime
-from urllib.parse import urlencode
 
 from cement.core.controller import CementBaseController, expose
 
@@ -69,33 +68,49 @@ class DataRun(ZephyrData):
         self.run(**vars(self.app.pargs))
 
 class WarpRun(DataRun):
-    def cache_policy(self, WarpClass, account, date, cache, expire):
-        refresh = expire or not cache
-        if(not refresh):
-            self.app.log.info("Using cached response: {cache}".format(cache=cache))
-            with open(cache, "r") as f:
-                return f.read()
+    def cache_policy(self, WarpClass, account, date, cache_override, expired):
+        log = self.app.log.info
         api_key = self.app.config.get("cloudcheckr", "api_key")
         base = self.app.config.get("cloudcheckr", "base")
         accounts = os.path.expanduser(self.app.config.get("zephyr", "accounts"))
         cache_folder = os.path.expanduser(self.app.config.get("zephyr", "cache"))
-        cc_name = cloudcheckr.get_cloudcheckr_name(account, accounts)
-        params = WarpClass.get_params(api_key, cc_name, date)
-        url = "".join([
-            base,
-            WarpClass.get_uri(),
-            "?",
-            urlencode(params),
-        ])
-        self.app.log.info(url)
-        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        folder = os.path.join(cache_folder, account, month)
-        self.app.log.info(cache_folder)
-        os.makedirs(folder, exist_ok=True)
-        response = cloudcheckr.cache(
-            url, folder, WarpClass.get_slug(), self.app.log.info
-        )
-        return response
+
+        if(account):
+            cc_name = cloudcheckr.get_cloudcheckr_name(account, accounts)
+
+        cache_file = False
+        if(date):
+            month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+            folder = os.path.join(cache_folder, account, month)
+            cache_file = cloudcheckr.cache_path(folder, WarpClass.get_slug())
+
+        cache_local = cache_file and os.path.isfile(cache_file)
+        if(cache_override):
+            cache = cache_override
+        elif(cache_local):
+            cache = cache_file
+
+        fresh = cache_local and not expired
+        if(cache_override or fresh):
+            log("Using cached response: {cache}".format(cache=cache))
+            with open(cache, "r") as f:
+                return f.read()
+        cache_s3 = False # TODO: Check for S3 cache
+        if(cache_s3):
+            log("Using cached response from S3.")
+            return None # TODO: Download cache from S3
+        cached = (cache_s3 or cache_local)
+        if(expired or not cached):
+            log("Retrieving data from CloudCheckr.")
+            return cloudcheckr.cache(
+                WarpClass,
+                base,
+                api_key,
+                cc_name,
+                date,
+                cache_file=cache_file,
+                log=log
+            )
 
     def warp_run(self, WarpClass, **kwargs):
         account = self.app.pargs.account

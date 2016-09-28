@@ -1,9 +1,29 @@
+import os
 import unittest
 
 from cement.utils import test
 
 from ...__main__ import Zephyr
+
 from ...tests.tests import TestZephyr
+
+from ...core.ddh import DDH
+
+from ...data.compute_details import ComputeDetailsWarp
+from ...data.compute_migration import ComputeMigrationWarp
+from ...data.compute_ri import ComputeRIWarp
+from ...data.compute_underutilized import ComputeUnderutilizedWarp
+from ...data.compute_underutilized_breakdown import (
+    ComputeUnderutilizedBreakdownWarp
+)
+from ...data.db_details import DBDetailsWarp
+from ...data.db_idle import DBIdleWarp
+from ...data.domains import domains
+from ...data.iam_users import iam_users
+from ...data.lb_idle import LBIdleWarp
+from ...data.ri_pricings import RIPricingWarp
+from ...data.service_requests import ServiceRequestWarp
+from ...data.storage_detached import StorageDetachedWarp
 
 class TestZephyrData(test.CementTestCase):
     app_class = TestZephyr
@@ -131,3 +151,84 @@ class TestZephyrData(test.CementTestCase):
             "--help",
         ])
     
+class TestZephyrDataParams(test.CementTestCase):
+    app_class = TestZephyr
+
+    def assert_equal_iam(self, module):
+        modules = dict(
+            iam_users=iam_users,
+        )
+
+        with TestZephyr() as app:
+            files = os.path.expanduser(app.config.get("tests", "assets"))
+
+        infile = os.path.join(files, "{}_single.json".format(module))
+        outfile = os.path.join(files, "{}_gold.csv".format(module))
+        result = modules[module](infile)
+        csv_result = result.to_csv()
+        trans_csv = csv_result.replace("\r\n", "")
+        with open(outfile, "r") as f:
+            gold_result = f.read()
+        trans_gold = gold_result.replace("\n", "")
+        self.eq(trans_csv, trans_gold)
+
+    def assert_equal_warps(self, module):
+        modules = dict(
+            compute_details=ComputeDetailsWarp,
+            compute_migration=ComputeMigrationWarp,
+            compute_ri=ComputeRIWarp,
+            compute_underutilized=ComputeUnderutilizedWarp,
+            db_details=DBDetailsWarp,
+            db_idle=DBIdleWarp,
+            lb_idle=LBIdleWarp,
+            ri_pricings=RIPricingWarp,
+            service_requests=ServiceRequestWarp,
+            storage_detached=StorageDetachedWarp,
+        )
+
+        with TestZephyr() as app:
+            files = os.path.expanduser(app.config.get("tests", "assets"))
+
+        infile = os.path.join(files, "{}_single.json".format(module))
+        outfile = os.path.join(files, "{}_gold.csv".format(module))
+        with open(infile, "r") as f:
+            response = f.read()
+        warp = modules[module](response)
+        ddh_warp = warp.to_ddh()
+        csv_warp = ddh_warp.to_csv()
+        trans_csv = csv_warp.replace("\r\n", "")
+        with open(outfile, "r") as f:
+            gold_result = f.read()
+        trans_gold = gold_result.replace("\n", "")
+        self.eq(trans_csv, trans_gold)
+
+    def test_compute_details(self):
+        self.assert_equal_warps("compute_details")
+
+    def test_compute_migration(self):
+        self.assert_equal_warps("compute_migration")
+
+    def test_compute_ri(self):
+        self.assert_equal_warps("compute_ri")
+
+    def test_compute_underutilized(self):
+        self.assert_equal_warps("compute_underutilized")
+
+    def test_db_details(self):
+        self.assert_equal_warps("db_details")
+
+    def test_db_idle(self):
+        self.assert_equal_warps("db_idle")
+
+    def test_iam_users(self):
+        self.assert_equal_iam("iam_users")
+
+    def test_lb_idle(self):
+        self.assert_equal_warps("lb_idle")
+
+    def test_service_requests(self):
+        self.assert_equal_warps("service_requests")
+
+    def test_storage_detached(self):
+        self.assert_equal_warps("storage_detached")
+

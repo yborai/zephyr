@@ -7,7 +7,6 @@ from ..__main__ import Zephyr
 class TestZephyr(Zephyr):
     class Meta:
         argv = []
-        config_files = []
 
     @classmethod
     def assert_zephyr_success(cls, obj, args):

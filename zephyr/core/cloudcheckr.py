@@ -7,7 +7,18 @@ from urllib.parse import urlencode
 
 from .utils import account_ids, timed
 
-def cache(WarpClass, base, api_key, cc_name, date, cache_file, log=print):
+def cache(
+        WarpClass,
+        base,
+        api_key,
+        cc_name,
+        date,
+        cache_root,
+        cache_dir,
+        bucket,
+        session,
+        log=print
+    ):
     params = WarpClass.get_params(api_key, cc_name, date)
     url = "".join([
         base,
@@ -16,10 +27,15 @@ def cache(WarpClass, base, api_key, cc_name, date, cache_file, log=print):
         urlencode(params),
     ])
     log(url)
+    folder = os.path.join(cache_root, cache_dir)
     response = load_pages(url, timing=True, log=log)
-    os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+    cache_file = cache_path(folder, WarpClass.get_slug())
+    os.makedirs(folder, exist_ok=True)
     with open(cache_file, "w") as f:
         json.dump(response, f)
+    s3 = session.resource('s3')
+    s3_key = cache_path(cache_dir, WarpClass.get_slug())
+    s3.meta.client.upload_file(cache_file, bucket, s3_key)
     return json.dumps(response)
 
 def cache_path(cache, filename):

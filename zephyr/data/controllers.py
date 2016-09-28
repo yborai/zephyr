@@ -6,6 +6,7 @@ from datetime import datetime
 from cement.core.controller import CementBaseController, expose
 
 from ..core import cloudcheckr
+from ..core.aws import get_session, upload_file
 from ..core.ddh import DDH
 from .compute_av import compute_av
 from .compute_details import ComputeDetailsWarp
@@ -72,8 +73,11 @@ class WarpRun(DataRun):
         log = self.app.log.info
         api_key = self.app.config.get("cloudcheckr", "api_key")
         base = self.app.config.get("cloudcheckr", "base")
+        bucket = self.app.config.get("lw-aws", "s3_bucket")
+        key_id = self.app.config.get("lw-aws", "AWS_ACCESS_KEY_ID")
+        secret = self.app.config.get("lw-aws", "AWS_SECRET_ACCESS_KEY")
         accounts = os.path.expanduser(self.app.config.get("zephyr", "accounts"))
-        cache_folder = os.path.expanduser(self.app.config.get("zephyr", "cache"))
+        cache_root = os.path.expanduser(self.app.config.get("zephyr", "cache"))
 
         if(account):
             cc_name = cloudcheckr.get_cloudcheckr_name(account, accounts)
@@ -81,7 +85,8 @@ class WarpRun(DataRun):
         cache_file = False
         if(date):
             month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-            folder = os.path.join(cache_folder, account, month)
+            cache_dir = os.path.join(account, month)
+            folder = os.path.join(cache_root, cache_dir)
             cache_file = cloudcheckr.cache_path(folder, WarpClass.get_slug())
 
         cache_local = cache_file and os.path.isfile(cache_file)
@@ -95,6 +100,7 @@ class WarpRun(DataRun):
             log("Using cached response: {cache}".format(cache=cache))
             with open(cache, "r") as f:
                 return f.read()
+        session = get_session(key_id, secret)
         cache_s3 = False # TODO: Check for S3 cache
         if(cache_s3):
             log("Using cached response from S3.")
@@ -108,8 +114,11 @@ class WarpRun(DataRun):
                 api_key,
                 cc_name,
                 date,
-                cache_file=cache_file,
-                log=log
+                cache_root=cache_root,
+                cache_dir=cache_dir,
+                bucket=bucket,
+                session=session,
+                log=log,
             )
 
     def warp_run(self, WarpClass, **kwargs):

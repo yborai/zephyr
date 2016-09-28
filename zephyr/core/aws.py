@@ -6,13 +6,6 @@ import pandas as pd
 
 from .ddh import DDH
 
-def sdb_flatten(item):
-    cells = item['Attributes']
-    out = dict()
-    for cell in cells:
-        out[cell['Name']] = cell['Value']
-    return out
-
 def get_accounts_aws(key_id, secret):
     sdb = boto3.client(
         'sdb',
@@ -60,3 +53,21 @@ def get_accounts(key_id, secret, cache, log):
         accts = DDH.read_sql(query, con)
 
     return accts
+
+def get_session(key_id, secret):
+    return boto3.session.Session(
+        aws_access_key_id=key_id,
+        aws_secret_access_key=secret,
+    )
+
+def sdb_flatten(item):
+    cells = item['Attributes']
+    out = dict()
+    for cell in cells:
+        out[cell['Name']] = cell['Value']
+    return out
+
+def upload_file(file_path, bucket, key, session):
+    s3 = session.resource('s3')
+    s3.meta.client.upload_file(file_path, bucket, key)
+

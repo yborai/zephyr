@@ -1,8 +1,10 @@
 import csv
+import io
 import os
 
 from datetime import datetime
 
+from botocore.exceptions import ClientError
 from cement.core.controller import CementBaseController, expose
 
 from ..core import cloudcheckr
@@ -101,10 +103,22 @@ class WarpRun(DataRun):
             with open(cache, "r") as f:
                 return f.read()
         session = get_session(key_id, secret)
-        cache_s3 = False # TODO: Check for S3 cache
-        if(cache_s3):
-            log("Using cached response from S3.")
-            return None # TODO: Download cache from S3
+        s3_key = cloudcheckr.cache_path(cache_dir, WarpClass.get_slug())
+        s3 = session.resource('s3')
+        cache_s3 = False
+        with open(cache_file, "wb+") as cache_s3:
+            try:
+                s3.meta.client.download_fileobj(
+                    bucket,
+                    s3_key,
+                    cache_s3
+                )
+            except ClientError as e:
+                pass
+            if(cache_s3 and not expired):
+                log("Using cached response from S3.")
+                cache_s3.seek(0)
+                return cache_s3.read().decode("utf-8")
         cached = (cache_s3 or cache_local)
         if(expired or not cached):
             log("Retrieving data from CloudCheckr.")
@@ -123,9 +137,12 @@ class WarpRun(DataRun):
 
     def warp_run(self, WarpClass, **kwargs):
         account = self.app.pargs.account
+        cache_arg = self.app.pargs.cache
         date = self.app.pargs.date
-        cache = self.app.pargs.cache
         expire_cache = self.app.pargs.expire_cache
+        cache = None
+        if(cache_arg):
+            cache = os.path.expanduser(cache_arg)
         response = self.cache_policy(WarpClass, account, date, cache, expire_cache)
         warp = WarpClass(response)
         self.app.render(warp.to_ddh())

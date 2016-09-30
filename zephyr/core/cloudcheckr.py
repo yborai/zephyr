@@ -22,19 +22,19 @@ def cache(
     params = WarpClass.get_params(api_key, cc_name, date)
     url = "".join([
         base,
-        WarpClass.get_uri(),
+        WarpClass.uri,
         "?",
         urlencode(params),
     ])
     log(url)
     folder = os.path.join(cache_root, cache_dir)
     response = load_pages(url, timing=True, log=log)
-    cache_file = cache_path(folder, WarpClass.get_slug())
+    cache_file = cache_path(folder, WarpClass.slug)
     os.makedirs(folder, exist_ok=True)
     with open(cache_file, "w") as f:
         json.dump(response, f)
-    s3 = session.resource('s3')
-    s3_key = cache_path(cache_dir, WarpClass.get_slug())
+    s3 = session.resource("s3")
+    s3_key = cache_path(cache_dir, WarpClass.slug)
     s3.meta.client.upload_file(cache_file, bucket, s3_key)
     return json.dumps(response)
 

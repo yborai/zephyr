@@ -89,7 +89,7 @@ class WarpRun(DataRun):
             month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
             cache_dir = os.path.join(account, month)
             folder = os.path.join(cache_root, cache_dir)
-            cache_file = cloudcheckr.cache_path(folder, WarpClass.get_slug())
+            cache_file = cloudcheckr.cache_path(folder, WarpClass.slug)
 
         cache_local = cache_file and os.path.isfile(cache_file)
         if(cache_override):
@@ -103,22 +103,24 @@ class WarpRun(DataRun):
             with open(cache, "r") as f:
                 return f.read()
         session = get_session(key_id, secret)
-        s3_key = cloudcheckr.cache_path(cache_dir, WarpClass.get_slug())
-        s3 = session.resource('s3')
+        s3_key = cloudcheckr.cache_path(cache_dir, WarpClass.slug)
+        s3 = session.resource("s3")
         cache_s3 = False
-        with open(cache_file, "wb+") as cache_s3:
-            try:
-                s3.meta.client.download_fileobj(
-                    bucket,
-                    s3_key,
-                    cache_s3
-                )
-            except ClientError as e:
-                pass
-            if(cache_s3 and not expired):
+        cache_temp = io.BytesIO()
+        try:
+            s3.meta.client.download_fileobj(
+                bucket,
+                s3_key,
+                cache_temp
+            )
+        except ClientError as e:
+            pass
+        cache_s3 = cache_temp.getvalue()
+        if(cache_s3 and not expired):
+            with open(cache_file, "wb") as cache_fd:
                 log("Using cached response from S3.")
-                cache_s3.seek(0)
-                return cache_s3.read().decode("utf-8")
+                cache_fd.write(cache_s3)
+                return cache_s3.decode("utf-8")
         cached = (cache_s3 or cache_local)
         if(expired or not cached):
             log("Retrieving data from CloudCheckr.")

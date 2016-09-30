@@ -2,14 +2,17 @@ from cement.core import controller
 
 from .core import BestPracticesWarp
 
-def create_sheet(json_string, csv_filename='compute-ri.csv'):
+def create_sheet(json_string, csv_filename="compute-ri.csv"):
     processor = ComputeRIWarp(json_string)
     return processor.write_csv(csv_filename)
 
 
 class ComputeRIWarp(BestPracticesWarp):
+    bpc_id = 190
+    slug = "compute-ri"
+
     def __init__(self, json_string):
-        super().__init__(json_string, bpc_id=190)
+        super().__init__(json_string, bpc_id=self.bpc_id)
 
     def _fieldnames(self):
         return (

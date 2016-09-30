@@ -24,7 +24,7 @@ class Warp(object):
         return self.data
 
     def write_csv(self, csv_filename):
-        with open(csv_filename, 'w') as csvfile:
+        with open(csv_filename, "w") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self._fieldnames())
 
             writer.writeheader()
@@ -53,6 +53,8 @@ class Warp(object):
 
 
 class BestPracticesWarp(Warp):
+    uri = "best_practice.json/get_best_practices"
+
     def __init__(self, json_string, bpc_id=None):
         super().__init__(self._remove_links(json_string))
         self.bpc_id = bpc_id
@@ -62,39 +64,35 @@ class BestPracticesWarp(Warp):
             self.merge_results(self.raw_json)
 
         parsed_data = []
-        bpcs = self.data['BestPracticeChecks']
+        bpcs = self.data["BestPracticeChecks"]
         bpcs_n = len(bpcs)
         for raw_detail_row in bpcs:
-            if(bpcs_n > 1 and raw_detail_row['CheckId'] != self.bpc_id):
+            if(bpcs_n > 1 and raw_detail_row["CheckId"] != self.bpc_id):
                 continue
             for raw_data in raw_detail_row[self._key()]:
                 parsed_data.append(
                     {
                         self._left_side(pair): self._right_side(pair)
-                        for pair in raw_data.split('|')
+                        for pair in raw_data.split("|")
                     }
                 )
 
         self.data = {self._key(): parsed_data}
 
-    @staticmethod
-    def get_bpc_id():
-        raise NotImplementedError
-
     @classmethod
     def get_params(cls, api_key, name, date):
         return dict(
             access_key=api_key,
-            bpc_id=cls.get_bpc_id(),
+            bpc_id=cls.bpc_id,
             date=date,
             use_account=name,
         )
 
     def _left_side(self, pair):
-        return pair.split(':')[0].strip()
+        return pair.split(":")[0].strip()
 
     def _right_side(self, pair):
-        return pair.split(':')[1].strip()
+        return pair.split(":")[1].strip()
 
     def _filter_row(self, details_row):
         filtered_row = {
@@ -114,13 +112,13 @@ class BestPracticesWarp(Warp):
         raise NotImplementedError
 
     def _parse_money(self, money_string):
-        return Decimal(sub(r'[^\d\-.]', '', money_string))
+        return Decimal(sub(r"[^\d\-.]", "", money_string))
 
     def _remove_links(self, string):
-        return string.replace('<a href=\"', '').replace('\" target=\"_blank\"', '')
+        return string.replace("<a href=\"", "").replace("\" target=\"_blank\"", "")
 
     def _key(self):
-        return 'Results'
+        return "Results"
 
 
 class SplitInstanceWarp(BestPracticesWarp):
@@ -131,13 +129,13 @@ class SplitInstanceWarp(BestPracticesWarp):
         return super()._filter_row(details_row)
 
     def _get_instance_id(self, instance_string):
-        return instance_string.strip().split(' ')[0]
+        return instance_string.strip().split(" ")[0]
 
     def _get_instance_name(self, instance_string):
-        regex = search('\((.*?)\)', instance_string)
+        regex = search("\((.*?)\)", instance_string)
         if regex is not None:
-            return search('\((.*?)\)', instance_string).group(0)[1:-1]
-        return ''
+            return search("\((.*?)\)", instance_string).group(0)[1:-1]
+        return ""
 
     def _instance_field(self):
         return "Instance"

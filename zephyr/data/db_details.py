@@ -1,12 +1,15 @@
 from .core import Warp
 
-def create_sheet(json_string, csv_filename='db-details.csv'):
+def create_sheet(json_string, csv_filename="db-details.csv"):
     processor = DBDetailsWarp(json_string)
     return processor.write_csv(csv_filename)
 
 class DBDetailsWarp(Warp):
+    slug = "db-details"
+    uri = "inventory.json/get_resources_rds_details"
+
     def _key(self):
-        return 'RdsDbInstances'
+        return "RdsDbInstances"
 
     def _filter_row(self, details_row):
         return {
@@ -15,8 +18,8 @@ class DBDetailsWarp(Warp):
 
     def _fieldnames(self):
         return (
-            'DbInstanceId', 'DbInstanceName', 'MonthlyCost', 'RegionName',
-            'DbInstanceClass', 'Engine', 'EngineVersion', 'LicenseModel',
-            'AllocatedStorageGB', 'FreeStorageSpaceBytes', 'Endpoint',
-            'BackupRetentionPeriod'
+            "DbInstanceId", "DbInstanceName", "MonthlyCost", "RegionName",
+            "DbInstanceClass", "Engine", "EngineVersion", "LicenseModel",
+            "AllocatedStorageGB", "FreeStorageSpaceBytes", "Endpoint",
+            "BackupRetentionPeriod"
         )

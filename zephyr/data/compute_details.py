@@ -7,6 +7,9 @@ def create_sheet(json_string, csv_filename="compute-details.csv"):
     return processor.write_csv(csv_filename)
 
 class ComputeDetailsWarp(Warp):
+    slug = "compute-details"
+    uri = "inventory.json/get_resources_ec2_details"
+
     def _key(self):
         return "Ec2Instances"
 

@@ -15,6 +15,14 @@ class Warp(object):
         if(len(self.raw_json) > 1):
             self.merge_results(self.raw_json)
 
+    @classmethod
+    def get_params(cls, api_key, name, date):
+        return dict(
+            access_key=api_key,
+            date=date,
+            use_account=name,
+        )
+
     def merge_results(self, pages):
         out = []
         key = self._key()

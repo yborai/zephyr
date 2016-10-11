@@ -42,12 +42,9 @@ class ServiceRequestWarp(Warp):
             writer = csv.DictWriter(csvfile, fieldnames=(review_type, "total"))
 
             writer.writeheader()
-            grand_total = 0
             for grouper, rows in data:
                 total = len(list(rows))
-                grand_total += total
                 writer.writerow({review_type: grouper, "total": total})
-            writer.writerow({review_type: "Grand Total", "total": grand_total})
 
         return review_csv_filepath
 

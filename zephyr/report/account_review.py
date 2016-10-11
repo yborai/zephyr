@@ -218,6 +218,6 @@ def create_xlsx_account_review(
                 workbook, ec2_underutilized_instances_xls_sheet, ec2_underutilized_breakdown_sheet, 1, 8, "Breakdown"
             )
 
-    #remove_temp_folder(temp_filepath)
+    remove_temp_folder(temp_filepath)
     workbook.close()
 

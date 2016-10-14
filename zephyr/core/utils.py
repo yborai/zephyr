@@ -1,6 +1,8 @@
 import datetime
 import json
 
+from decimal import Decimal
+
 def account_ids(accounts_json):
     with open(accounts_json) as f:
         return json.load(f)

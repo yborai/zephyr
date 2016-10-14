@@ -12,7 +12,15 @@ from .data.controllers import __ALL__ as ZephyrDataControllers
 from .etl.controllers import __ALL__ as ZephyrETLControllers
 from .report.controllers import __ALL__ as ZephyrReportControllers
 
-defaults = init_defaults("zephyr", "aws", "log.logging")
+defaults = init_defaults(
+    "aws",
+    "cloudcheckr",
+    "log.logging",
+    "lw-aws",
+    "lw-sf",
+    "tests",
+    "zephyr",
+)
 defaults["log.logging"]["level"] = os.environ.get("ZEPHYR_DEBUG_LEVEL", "INFO")
 defaults["log.colorlog"] = defaults["log.logging"]
 defaults["aws"]["AWS_ACCESS_KEY_ID"] = os.environ.get("AWS_ACCESS_KEY_ID")

@@ -32,28 +32,6 @@ def get_accounts_aws(key_id, secret):
     data = [row(item) for item in items]
     return DDH(header=header, data=data)
 
-def get_accounts(key_id, secret, cache, log):
-    db = os.path.join(cache, "local.db")
-    db_exists = os.path.isfile(db)
-    con = sqlite3.connect(db)
-    if(not db_exists):
-        # If the local cache does not exist then retrieve from S3
-        # TODO: Add S3 cache functionality
-        # If the S3 cache does not exist then
-        #  * retrieve from SDB
-        #  * save locally
-        #  * TODO: upload to S3
-        log.info("Reading accounts from SDB.")
-        accts = get_accounts_aws(key_id, secret)
-        df = pd.DataFrame(accts.data, columns=accts.header)
-        df.to_sql("clients", con)
-    else:
-        log.info("Reading accounts from cache.")
-        query = "SELECT acc_short_name, account_id, client from clients"
-        accts = DDH.read_sql(query, con)
-
-    return accts
-
 def get_session(key_id, secret):
     return boto3.session.Session(
         aws_access_key_id=key_id,

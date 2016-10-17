@@ -33,6 +33,7 @@ class ZephyrMeta(ZephyrCLI):
 
     def run(self, **kwargs):
         self.app.log.info("Collecting client metadata.")
+        self.line_width = int(self.app.config.get("zephyr", "line_width"))
         aws_config_keys = (
             "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "s3_bucket",
         )
@@ -54,7 +55,7 @@ class ZephyrMeta(ZephyrCLI):
             aws_config=aws_config,
             sf_config=sf_config,
         )
-        self.app.render(meta.get_all_projects(database))
+        self.app.render(meta.get_all_projects(database), line_width=self.line_width)
 
 __ALL__ = [
     ZephyrCLI,

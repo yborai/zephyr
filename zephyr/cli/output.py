@@ -4,33 +4,35 @@ from cement.utils.misc import minimal_logger
 
 LOG = minimal_logger(__name__)
 
-class CSVOutputHandler(output.CementOutputHandler):
+class OutputHandler(output.CementOutputHandler):
     class Meta:
         interface = output.IOutput
-        label = 'csv'
         overridable = True
 
-    def __init__(self, *args, **kw):
-        super(CSVOutputHandler, self).__init__(*args, **kw)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def _setup(self, app):
-        super(CSVOutputHandler, self)._setup(app)
+        super()._setup(app)
+
+class CSVOutputHandler(OutputHandler):
+    class Meta:
+        label = 'csv'
 
     def render(self, ddh, *args, **kwargs):
         LOG.debug("Rendering a DDH as a CSV")
         return ddh.to_csv(*args, **kwargs)
 
-class JSONOutputHandler(output.CementOutputHandler):
+class DefaultOutputHandler(OutputHandler):
     class Meta:
-        interface = output.IOutput
+        label = 'default'
+
+    def render(self, ddh, *args, **kwargs):
+        return ddh.to_table(*args, **kwargs)
+
+class JSONOutputHandler(OutputHandler):
+    class Meta:
         label = 'json'
-        overridable = True
-
-    def __init__(self, *args, **kw):
-        super(JSONOutputHandler, self).__init__(*args, **kw)
-
-    def _setup(self, app):
-        super(JSONOutputHandler, self)._setup(app)
 
     def render(self, ddh, *args, **kwargs):
         LOG.debug("Rendering a DDH as JSON")
@@ -38,4 +40,5 @@ class JSONOutputHandler(output.CementOutputHandler):
 
 def load(app):
     handler.register(CSVOutputHandler)
+    handler.register(DefaultOutputHandler)
     handler.register(JSONOutputHandler)

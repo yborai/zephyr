@@ -7,6 +7,7 @@ from datetime import datetime
 from botocore.exceptions import ClientError
 from cement.core.controller import CementBaseController, expose
 
+from ..cli.controllers import ZephyrCLI
 from ..core import cloudcheckr
 from ..core.aws import get_session, upload_file
 from ..core.ddh import DDH
@@ -25,7 +26,7 @@ from .ri_pricings import RIPricingWarp
 from .service_requests import ServiceRequestWarp
 from .storage_detached import StorageDetachedWarp
 
-class ZephyrData(CementBaseController):
+class ZephyrData(ZephyrCLI):
     class Meta:
         label = "data"
         stacked_on = "base"

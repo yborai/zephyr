@@ -31,6 +31,7 @@ defaults["aws"]["AWS_SESSION_TOKEN"] = os.environ.get("AWS_SESSION_TOKEN")
 class Zephyr(CementApp):
     class Meta:
         label = "zephyr"
+        arguments_override_config = True
         base_controller = "base"
         config_defaults = defaults
         config_files = [
@@ -46,18 +47,16 @@ class Zephyr(CementApp):
         extensions = [
             "zephyr.cli.output",
             "colorlog",
-            "mustache",
         ]
-        output_handler = "mustache"
+        output_handler = "default" # See .cli.output
         log_handler = "colorlog"
 
 def main():
     with Zephyr() as app:
         try:
+            app.args.add_argument('--line_width', action='store', dest='line_width')
             app.run()
         except FrameworkError as e:
-            if not getattr(app.pargs, "output_handler_override", True):
-                app.log.error("No output handler specified. Set with the -o flag.")
             raise e
 
 if __name__ == "__main__":

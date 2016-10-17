@@ -5,4 +5,5 @@ pandas==0.18.1
 pystache==0.5.4
 requests==2.11.1
 simple-salesforce==0.70
+texttable==0.8.5
 XlsxWriter==0.9.3

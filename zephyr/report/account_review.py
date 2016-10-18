@@ -37,11 +37,12 @@ def create_review_sheet(
         write_csv_to_worksheet(workbook, sheet_name, review_sheet, table_name, sheet_name)
         return review_sheet
 
-def create_headers(workbook, csv_reader):
+def create_headers(workbook, csv_reader, total_row):
     header_format = workbook.add_format({"font_color": "#000000", "bg_color": "#DCE6F1", "bottom": 2})
     headers = next(csv_reader)
     header = [{"header": col, "header_format": header_format} for col in headers]
-    header[0]["total_string"] = "Total"
+    if total_row == True:
+        header[0]["total_string"] = "Total"
     return header
 
 def write_csv_to_worksheet(workbook, worksheet_name, csv_filepath, table_name, title):
@@ -57,13 +58,12 @@ def write_csv_to_worksheet(workbook, worksheet_name, csv_filepath, table_name, t
 
     with open(csv_filepath, "r") as f:
         reader = csv.reader(f)
-        header = create_headers(workbook, reader)
+        header = create_headers(workbook, reader, True)
         f.seek(0)
         row_index = 1
         column_index = 0
-        insert_label_to_worksheet(workbook, current_worksheet, 0, 0, title)
+        insert_label(workbook, current_worksheet, 0, 0, title)
         for row in reader:
-            print(row)
             column_index = 0
             for col in row:
                 current_worksheet.write(row_index, column_index, col)
@@ -87,7 +87,7 @@ def insert_csv_to_worksheet(workbook, worksheet, csv_filepath, start_row, start_
     """
     with open(csv_filepath, "r") as f:
         reader = csv.reader(f)
-        header = create_headers(workbook, reader)
+        header = create_headers(workbook, reader, False)
         f.seek(0)
         row_index = start_row
         for row in reader:
@@ -105,9 +105,9 @@ def insert_csv_to_worksheet(workbook, worksheet, csv_filepath, start_row, start_
         )
 
 
-def insert_label_to_worksheet(workbook, worksheet, row, col, label):
+def insert_label(workbook, worksheet, row, col, label):
     """
-    insert_label_to_worksheet fucntion inserts
+    insert_label fucntion inserts
     given label to the given worksheet
     on the provided coordinates.
     """
@@ -157,7 +157,7 @@ def create_xlsx_account_review(
 
     sheet_dy = workbook.add_worksheet("Billing")
 
-    insert_label_to_worksheet(workbook, sheet_dy, 0, 0, "Billing")
+    insert_label(workbook, sheet_dy, 0, 0, "Billing")
     rows_to_excel(workbook, sheet_dy, line_items, "LineItems")
     rows_to_excel(workbook, sheet_dy, line_item_aggs, "LineItemAggs", top=1, left=8)
     rows_to_excel(workbook, sheet_dy, monthly_totals, "Monthly", top=len(line_item_aggs)+2, left=8)
@@ -189,7 +189,7 @@ def create_xlsx_account_review(
             service_requests_json, temp_filepath + "/" + "service_requests.csv"
         )
         service_requests_sheet = write_csv_to_worksheet(workbook, "Service Requests", service_sheet, "SRs", "Service Requests")
-        insert_label_to_worksheet(workbook, service_requests_sheet, 0, 7, "Summary")
+        insert_label(workbook, service_requests_sheet, 0, 7, "Summary")
 
         insert_csv_to_worksheet(workbook, service_requests_sheet, area_sheet, 1, 7, "Area")
         insert_csv_to_worksheet(workbook, service_requests_sheet, severity_sheet, 12, 7, "Severity")
@@ -210,7 +210,7 @@ def create_xlsx_account_review(
                 temp_filepath + "/" + "ec2_underutilized_instances_breakdown.csv"
             )
 
-            insert_label_to_worksheet(
+            insert_label(
                 workbook, ec2_underutilized_instances_xls_sheet, 0, 8,
                 "Breakdown of Underutilized EC2 Instances"
             )

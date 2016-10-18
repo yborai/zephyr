@@ -4,8 +4,17 @@ import pandas as pd
 import xlsxwriter
 
 from ..data.new_service_requests import ServiceRequests
-from .account_review import insert_label
+#from .account_review import insert_label
 
+def create_headers(workbook, headers, total_row):
+    header_format = workbook.add_format(
+        {"font_color": "#000000", "bg_color": "#DCE6F1", "bottom": 2}
+    )
+    header = [{"header": col, "header_format": header_format} for col in headers]
+    if total_row:
+        header[0]["total_string"] = "Total"
+        header[1]["total_function"] = "sum"
+    return header
 
 def group_data(header, data, review_type):
     con = sqlite3.connect(":memory:")
@@ -27,15 +36,16 @@ def group_data(header, data, review_type):
 
     return header, data
 
-def create_headers(workbook, headers, total_row):
-    header_format = workbook.add_format(
-        {"font_color": "#000000", "bg_color": "#DCE6F1", "bottom": 2}
-    )
-    header = [{"header": col, "header_format": header_format} for col in headers]
-    if total_row:
-        header[0]["total_string"] = "Total"
-        header[1]["total_function"] = "sum"
-    return header
+def insert_label(workbook, worksheet, row, col, label):
+    cell_format = workbook.add_format({"bold": True, "font_size": 16, "font_color": "#000000"})
+    worksheet.write(row, col, label, cell_format)
+
+def service_request_xlsx(json_string, workbook=None):
+    info = ServiceRequests(json_string).to_ddh()
+    if not workbook:
+        with xlsxwriter.Workbook("cache/mls/srs.xlsx", {"strings_to_numbers": True}) as workbook:
+            return write_xlsx(workbook, info)
+    return write_xlsx(workbook, info)
 
 def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col, instance):
     headers, data = group_data(instance.header, instance.data, review_type)
@@ -81,11 +91,3 @@ def write_xlsx(workbook, instance):
     write_grouped_tables(workbook, current_worksheet, "Severity", 12, 7, instance)
 
     return current_worksheet
-
-def service_request_xlsx(json_string, workbook=None):
-    info = ServiceRequests(json_string).to_ddh()
-    if not workbook:
-        with xlsxwriter.Workbook("cache/mls/srs.xlsx", {"strings_to_numbers": True}) as workbook:
-            return write_xlsx(workbook, info)
-    return write_xlsx(workbook, info)
-

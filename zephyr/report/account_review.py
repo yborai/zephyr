@@ -19,6 +19,7 @@ from ..data import (
 )
 
 from ..data.common import rows_to_excel
+from .service_requests import service_request_xlsx
 
 def create_review_sheet(
         workbook, review_json, module, sheet_name, temp_filepath, table_name,
@@ -41,7 +42,7 @@ def create_headers(workbook, csv_reader, total_row):
     header_format = workbook.add_format({"font_color": "#000000", "bg_color": "#DCE6F1", "bottom": 2})
     headers = next(csv_reader)
     header = [{"header": col, "header_format": header_format} for col in headers]
-    if total_row == True:
+    if total_row:
         header[0]["total_string"] = "Total"
     return header
 
@@ -185,14 +186,7 @@ def create_xlsx_account_review(
     )
 
     if service_requests_json is not None:
-        service_sheet, area_sheet, severity_sheet = service_requests.create_sheet(
-            service_requests_json, temp_filepath + "/" + "service_requests.csv"
-        )
-        service_requests_sheet = write_csv_to_worksheet(workbook, "Service Requests", service_sheet, "SRs", "Service Requests")
-        insert_label(workbook, service_requests_sheet, 0, 7, "Summary")
-
-        insert_csv_to_worksheet(workbook, service_requests_sheet, area_sheet, 1, 7, "Area")
-        insert_csv_to_worksheet(workbook, service_requests_sheet, severity_sheet, 12, 7, "Severity")
+        service_request_xlsx(service_requests_json, workbook)
 
     if ec2_underutilized_instances_json is not None:
         ec2_underutilized_instances_sheet = compute_underutilized.create_sheet(

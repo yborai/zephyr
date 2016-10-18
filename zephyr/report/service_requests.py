@@ -43,7 +43,7 @@ def insert_label(workbook, worksheet, row, col, label):
 def service_request_xlsx(json_string, workbook=None):
     info = ServiceRequests(json_string).to_ddh()
     if not workbook:
-        with xlsxwriter.Workbook("cache/mls/srs.xlsx", {"strings_to_numbers": True}) as workbook:
+        with xlsxwriter.Workbook("srs.xlsx", {"strings_to_numbers": True}) as workbook:
             return write_xlsx(workbook, info)
     return write_xlsx(workbook, info)
 
@@ -52,7 +52,6 @@ def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col,
     header = create_headers(workbook, headers, True)
     row_index = start_row
     for row in data:
-        print(row)
         column_index = start_col
         for col in row:
             worksheet.write(row_index+1, column_index, col)

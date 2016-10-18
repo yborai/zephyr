@@ -1,8 +1,11 @@
+import io
 import os
 import sqlite3
 
 import boto3
 import pandas as pd
+
+from botocore.exceptions import ClientError
 
 from .ddh import DDH
 
@@ -31,6 +34,18 @@ def get_accounts_aws(key_id, secret):
         )
     data = [row(item) for item in items]
     return DDH(header=header, data=data)
+
+def get_object_from_s3(bucket, key, s3_client):
+    temp = io.BytesIO()
+    try:
+        s3_client.meta.client.download_fileobj(
+            bucket,
+            key,
+            temp
+        )
+    except ClientError as e:
+        pass
+    return temp.getvalue()
 
 def get_session(key_id, secret):
     return boto3.session.Session(

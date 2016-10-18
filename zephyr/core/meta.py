@@ -1,6 +1,4 @@
-import io
 import os
-
 import sqlite3
 
 from . import aws
@@ -12,17 +10,17 @@ def get_local_db_connection(cachedir, expired, log=None, aws_config=None, sf_con
     Obtains a local database connection,
     retrieving data from S3 or Salesforce as necessary.
     """
-    aws_key_id, aws_secret, aws_bucket = aws_config
     metadir = os.path.join(cachedir, "meta/")
     os.makedirs(metadir, exist_ok=True)
     s3_key = "meta/local.db"
     db = os.path.join(cachedir, s3_key)
-    session = aws.get_session(aws_key_id, aws_secret)
     db_exists = os.path.isfile(db)
     # If a local cache exists and it is not expired then use that.
     if(db_exists and not expired):
         log.info("Database exists locally.")
         return sqlite3.connect(db)
+    aws_key_id, aws_secret, aws_bucket = aws_config
+    session = aws.get_session(aws_key_id, aws_secret)
     s3 = session.resource("s3")
     """
     If a local cache does not exist and the cache is not expired
@@ -30,23 +28,13 @@ def get_local_db_connection(cachedir, expired, log=None, aws_config=None, sf_con
     """
     if(not db_exists and not expired):
         log.info("Checking S3 for cached copy of database.")
-        session = aws.get_session(aws_key_id, aws_secret)
-        cache_temp = io.BytesIO()
-        try:
-            s3.meta.client.download_fileobj(
-                aws_bucket,
-                s3_key,
-                cache_temp
-            )
-        except ClientError as e:
-            log.info("Cached database not found on S3.")
-            pass
-        cache_s3 = cache_temp.getvalue()
+        cache_s3 = aws.get_object_from_s3(aws_bucket, s3_key, s3)
         if(cache_s3):
             log.info("Downloaded cached database from S3.")
             with open(db, "wb") as cache_fd:
                 cache_fd.write(cache_s3)
             return sqlite3.connect(db)
+        log.info("Cached database not found on S3.")
     """
     If there is no local database, no S3 cache or the cache is expired
     then get metadata from Salesforce.

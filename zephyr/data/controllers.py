@@ -4,12 +4,10 @@ import os
 
 from datetime import datetime
 
-from botocore.exceptions import ClientError
 from cement.core.controller import CementBaseController, expose
 
 from ..cli.controllers import ZephyrCLI
-from ..core import cloudcheckr
-from ..core.aws import get_session, upload_file
+from ..core import aws, cloudcheckr
 from ..core.ddh import DDH
 from .compute_av import compute_av
 from .compute_details import ComputeDetailsWarp
@@ -103,20 +101,10 @@ class WarpRun(DataRun):
             log("Using cached response: {cache}".format(cache=cache))
             with open(cache, "r") as f:
                 return f.read()
-        session = get_session(key_id, secret)
+        session = aws.get_session(key_id, secret)
         s3_key = cloudcheckr.cache_path(cache_dir, WarpClass.slug)
         s3 = session.resource("s3")
-        cache_s3 = False
-        cache_temp = io.BytesIO()
-        try:
-            s3.meta.client.download_fileobj(
-                bucket,
-                s3_key,
-                cache_temp
-            )
-        except ClientError as e:
-            pass
-        cache_s3 = cache_temp.getvalue()
+        cache_s3 = aws.get_object_from_s3(bucket, s3_key, s3)
         if(cache_s3 and not expired):
             with open(cache_file, "wb") as cache_fd:
                 log("Using cached response from S3.")

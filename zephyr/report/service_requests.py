@@ -67,11 +67,11 @@ def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col,
     chart = workbook.add_chart({"type": "pie"})
     chart.add_series(
         {
-            "values": [
-                "Service Requests", start_row, start_col, row_index, column_index-1
-            ],
             "categories": [
                 "Service Requests", start_row+1, start_col, row_index, start_col
+            ],
+            "values": [
+                "Service Requests", start_row+1, column_index-1, row_index, column_index-1
             ],
             "data_labels": {
                 "category": True, "percentage": True, "position": "outside_end"
@@ -80,7 +80,7 @@ def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col,
     )
     chart.set_style(10)
     chart.set_title({"name": review_type})
-    chart.set_legend({"none": True})
+#    chart.set_legend({"none": True})
     worksheet.insert_chart(start_row, column_index+1, chart)
 
 

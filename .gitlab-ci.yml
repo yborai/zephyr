@@ -1,6 +1,10 @@
 # https://hub.docker.com/_/python/
 image: python:3-onbuild
 
+stages:
+  - build
+  - test
+
 build:
   stage: build
   script: 
@@ -10,7 +14,3 @@ test:
   stage: test
   script:
     - nosetests -x
-    
-stages:
-  - build
-  - test

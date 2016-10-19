@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/python/
-image: python:3-onbuild
+image: python:3.5
 
 stages:
   - build
@@ -8,9 +8,10 @@ stages:
 build:
   stage: build
   script: 
-    - pip install nose
+    - pip install -r requirements.txt
 
 test:
   stage: test
   script:
+    - pip install nose
     - nosetests -x

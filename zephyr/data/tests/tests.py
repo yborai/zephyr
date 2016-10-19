@@ -154,25 +154,7 @@ class TestZephyrData(test.CementTestCase):
 class TestZephyrDataParams(test.CementTestCase):
     app_class = TestZephyr
 
-    def assert_equal_iam(self, module):
-        modules = dict(
-            iam_users=iam_users,
-        )
-
-        with TestZephyr() as app:
-            files = os.path.expanduser(app.config.get("tests", "assets"))
-
-        infile = os.path.join(files, "{}_single.json".format(module))
-        outfile = os.path.join(files, "{}_gold.csv".format(module))
-        result = modules[module](infile)
-        csv_result = result.to_csv()
-        trans_csv = csv_result.replace("\r\n", "")
-        with open(outfile, "r") as f:
-            gold_result = f.read()
-        trans_gold = gold_result.replace("\n", "")
-        self.eq(trans_csv, trans_gold)
-
-    def assert_equal_warps(self, module):
+    def assert_equal_out(self, module):
         modules = dict(
             compute_details=ComputeDetailsWarp,
             compute_migration=ComputeMigrationWarp,
@@ -180,55 +162,60 @@ class TestZephyrDataParams(test.CementTestCase):
             compute_underutilized=ComputeUnderutilizedWarp,
             db_details=DBDetailsWarp,
             db_idle=DBIdleWarp,
+            iam_users=iam_users,
             lb_idle=LBIdleWarp,
             ri_pricings=RIPricingWarp,
             service_requests=ServiceRequestWarp,
             storage_detached=StorageDetachedWarp,
         )
 
-        with TestZephyr() as app:
-            files = os.path.expanduser(app.config.get("tests", "assets"))
+        files = os.path.join(os.path.dirname(__file__), "assets")
 
         infile = os.path.join(files, "{}_single.json".format(module))
         outfile = os.path.join(files, "{}_gold.csv".format(module))
-        with open(infile, "r") as f:
-            response = f.read()
-        warp = modules[module](response)
-        ddh_warp = warp.to_ddh()
-        csv_warp = ddh_warp.to_csv()
-        trans_csv = csv_warp.replace("\r\n", "")
+
+        if(module == "iam_users"):
+            result = modules[module](infile)
+            csv_out = result.to_csv()
+        else:
+            with open(infile, "r") as f:
+                response = f.read()
+            warp = modules[module](response)
+            csv_out = warp.to_ddh().to_csv()
+        trans_csv = csv_out.replace("\r\n", "")
+
         with open(outfile, "r") as f:
             gold_result = f.read()
         trans_gold = gold_result.replace("\n", "")
         self.eq(trans_csv, trans_gold)
 
     def test_compute_details(self):
-        self.assert_equal_warps("compute_details")
+        self.assert_equal_out("compute_details")
 
     def test_compute_migration(self):
-        self.assert_equal_warps("compute_migration")
+        self.assert_equal_out("compute_migration")
 
     def test_compute_ri(self):
-        self.assert_equal_warps("compute_ri")
+        self.assert_equal_out("compute_ri")
 
     def test_compute_underutilized(self):
-        self.assert_equal_warps("compute_underutilized")
+        self.assert_equal_out("compute_underutilized")
 
     def test_db_details(self):
-        self.assert_equal_warps("db_details")
+        self.assert_equal_out("db_details")
 
     def test_db_idle(self):
-        self.assert_equal_warps("db_idle")
+        self.assert_equal_out("db_idle")
 
     def test_iam_users(self):
-        self.assert_equal_iam("iam_users")
+        self.assert_equal_out("iam_users")
 
     def test_lb_idle(self):
-        self.assert_equal_warps("lb_idle")
+        self.assert_equal_out("lb_idle")
 
     def test_service_requests(self):
-        self.assert_equal_warps("service_requests")
+        self.assert_equal_out("service_requests")
 
     def test_storage_detached(self):
-        self.assert_equal_warps("storage_detached")
+        self.assert_equal_out("storage_detached")
 

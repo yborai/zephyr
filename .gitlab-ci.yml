@@ -10,3 +10,7 @@ test:
   stage: test
   script:
     - nosetests -x
+    
+stages:
+  - build
+  - test

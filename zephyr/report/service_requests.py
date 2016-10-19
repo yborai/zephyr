@@ -64,6 +64,25 @@ def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col,
             "style": "Table Style Light 1", "total_row": True
         }
     )
+    chart = workbook.add_chart({"type": "pie"})
+    chart.add_series(
+        {
+            "values": [
+                "Service Requests", start_row, start_col, row_index, column_index-1
+            ],
+            "categories": [
+                "Service Requests", start_row+1, start_col, row_index, start_col
+            ],
+            "data_labels": {
+                "category": True, "percentage": True, "position": "outside_end"
+            }
+        }
+    )
+    chart.set_style(10)
+    chart.set_title({"name": review_type})
+    chart.set_legend({"none": True})
+    worksheet.insert_chart(start_row, column_index+1, chart)
+
 
 def write_xlsx(workbook, instance):
     current_worksheet = workbook.add_worksheet("Service Requests")
@@ -86,6 +105,7 @@ def write_xlsx(workbook, instance):
     insert_label(workbook, current_worksheet, 0, 7, "Summary")
 
     write_grouped_tables(workbook, current_worksheet, "Area", 1, 7, instance)
+
 
     write_grouped_tables(workbook, current_worksheet, "Severity", 12, 7, instance)
 

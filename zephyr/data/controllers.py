@@ -21,7 +21,7 @@ from .domains import domains
 from .iam_users import iam_users
 from .lb_idle import LBIdleWarp
 from .ri_pricings import RIPricingWarp
-from .service_requests import ServiceRequestWarp
+from .service_requests import ServiceRequests
 from .storage_detached import StorageDetachedWarp
 
 class ZephyrData(ZephyrCLI):
@@ -195,6 +195,22 @@ class ComputeAV(DataRun):
         self.app.render(out)
         return out
 
+class ServiceRequestsRun(DataRun):
+    class Meta:
+        label = "service-requests"
+        description = "get the detailed service requests meta information."
+
+    def run(self, **kwargs):
+        cache = self.app.pargs.cache
+        if(not cache):
+            raise NotImplementedError #We will add fetching later.
+        self.app.log.info("Using cached response: {cache}".format(cache=cache))
+        with open(cache, "r") as f:
+            response = f.read()
+        out = ServiceRequests(response)
+        self.app.render(out.to_ddh())
+        return out
+
 class ComputeDetails(WarpRun):
     class Meta:
         label = "compute-details"
@@ -312,14 +328,6 @@ class RIPricings(WarpRun):
     def run(self, **kwargs):
         self.warp_run(RIPricingWarp, **kwargs)
 
-class ServiceRequests(WarpRun):
-    class Meta:
-        label = "service-requests"
-        description = "get the detailed service requests meta information."
-
-    def run(self, **kwargs):
-        self.warp_run(ServiceRequestWarp, **kwargs)
-
 class StorageDetached(WarpRun):
     class Meta:
         label = "storage-detached"
@@ -345,6 +353,6 @@ __ALL__ = [
     IAMUsers,
     LBIdle,
     RIPricings,
-    ServiceRequests,
+    ServiceRequestsRun,
     StorageDetached,
 ]

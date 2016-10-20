@@ -1,84 +1,32 @@
-import os
 import csv
 import json
-from datetime import datetime
-from itertools import groupby
+from collections import OrderedDict
 
-from .core import Warp
+from ..core.ddh import DDH
 
-def create_sheet(json_string, csv_filename='service_requests.csv'):
-    processor = ServiceRequestWarp(json_string)
-    return processor.write_csv(csv_filename)
-
-class ServiceRequestWarp(Warp):
+class ServiceRequests(object):
+    header_hash = OrderedDict([
+        ("summary", "Summary"),
+        ("status", "Status"),
+        ("severity", "Severity"),
+        ("area", "Area"),
+        ("created_date", "Created Date"),
+        ("created_by", "Created By"),
+    ])
+    
     def __init__(self, json_string):
-        self.raw_json = json.loads(json_string)
-        self.data = {"result": []}
-        header = self.raw_json["header"]
+        self.response = json.loads(json_string)
+        header_raw = self.response["header"]
+        data_raw = self.response["data"]
+        
+        self.header = list(self.header_hash.values())
+        self.column_indexes = [header_raw.index(key) for key in list(self.header_hash.keys())]
+        self.data = [[row[index] for index in self.column_indexes] for row in data_raw]
+        
+    def to_ddh(self):
+        header = self.header
+        data = self.data
+        
+        return DDH(header=header, data=data)
 
-        for row in self.raw_json["data"]:
-            self.data["result"].append(
-                dict(zip(header, row))
-            )
 
-        self.grouped_by_area = self._group_by("area")
-        self.grouped_by_severity = self._group_by("severity")
-
-    def write_csv(self, csv_filename):
-        super().write_csv(csv_filename)
-
-        area_csv_filepath = self._write_grouped_review_csv(
-            csv_filename, "area", self.grouped_by_area
-        )
-        severity_csv_filepath = self._write_grouped_review_csv(
-            csv_filename, "severity", self.grouped_by_severity
-        )
-
-        return csv_filename, area_csv_filepath, severity_csv_filepath
-
-    def _write_grouped_review_csv(self, csv_filename, review_type, data):
-        review_csv_filepath = os.path.splitext(csv_filename)[0] + "_" + review_type + "_total.csv"
-        with open(review_csv_filepath, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=(review_type, "total"))
-
-            writer.writeheader()
-            for grouper, rows in data:
-                total = len(list(rows))
-                writer.writerow({review_type: grouper, "total": total})
-
-        return review_csv_filepath
-
-    def _group_by(self, group_identifier):
-        rows = sorted(
-            self.data[self._key()],
-            key=lambda row: row[group_identifier], reverse=False
-        )
-        return groupby(rows, lambda row: row[group_identifier])
-
-    def _filter_row(self, details_row):
-        filtered_row = {
-            key: details_row[key] for key in self._fieldnames() if key in details_row.keys()
-        }
-
-        return self._format_datefields(filtered_row)
-
-    def _format_datefields(self, row):
-        for datefields in self._datetime_fields():
-            row[datefields] = datetime.strptime(
-                row[datefields], '%Y-%m-%d %H:%M:%S'
-            ).strftime('%m/%d/%y %H:%M')
-
-        return row
-
-    def _key(self):
-        return "result"
-
-    def _fieldnames(self):
-        return (
-            "summary", "status", "severity", "area", "created_date", "created_by"
-        )
-
-    def _datetime_fields(self):
-        return (
-            "created_date",
-        )

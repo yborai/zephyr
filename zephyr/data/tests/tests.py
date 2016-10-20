@@ -22,7 +22,7 @@ from ...data.domains import domains
 from ...data.iam_users import iam_users
 from ...data.lb_idle import LBIdleWarp
 from ...data.ri_pricings import RIPricingWarp
-from ...data.service_requests import ServiceRequestWarp
+from ...data.service_requests import ServiceRequests
 from ...data.storage_detached import StorageDetachedWarp
 
 class TestZephyrData(test.CementTestCase):
@@ -165,7 +165,7 @@ class TestZephyrDataParams(test.CementTestCase):
             iam_users=iam_users,
             lb_idle=LBIdleWarp,
             ri_pricings=RIPricingWarp,
-            service_requests=ServiceRequestWarp,
+            service_requests=ServiceRequests,
             storage_detached=StorageDetachedWarp,
         )
 

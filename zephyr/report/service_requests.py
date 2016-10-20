@@ -3,7 +3,7 @@ import sqlite3
 import pandas as pd
 import xlsxwriter
 
-from ..data.new_service_requests import ServiceRequests
+from ..data.service_requests import ServiceRequests
 
 def create_headers(workbook, headers, total_row):
     header_format = workbook.add_format(

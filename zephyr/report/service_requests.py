@@ -4,7 +4,6 @@ import pandas as pd
 import xlsxwriter
 
 from ..data.new_service_requests import ServiceRequests
-#from .account_review import insert_label
 
 def create_headers(workbook, headers, total_row):
     header_format = workbook.add_format(
@@ -78,13 +77,19 @@ def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col,
             }
         }
     )
-    chart.set_style(10)
+
     chart.set_title({"name": review_type})
-#    chart.set_legend({"none": True})
-    worksheet.insert_chart(start_row, column_index+1, chart)
+    chart.set_legend({"none": True})
+
+    return chart
 
 
 def write_xlsx(workbook, instance):
+    # 480 x 288 is the default size of the xlsxwriter chart.
+    # 64 x 20 is the default size of each cell.
+    chart_width_cell = 480/64
+    chart_height_cell = 288/20
+
     current_worksheet = workbook.add_worksheet("Service Requests")
     row_index = 1
     insert_label(workbook, current_worksheet, 0, 0, "Service Requests")
@@ -102,11 +107,27 @@ def write_xlsx(workbook, instance):
         }
     )
 
-    insert_label(workbook, current_worksheet, 0, 7, "Summary")
+    table_height = row_index + 1
+    cell_spacing = 1
+    chart_start_row = table_height + cell_spacing
+    chart_row_index = chart_start_row + int(chart_height_cell) + 1
+    chart_col_index = int(chart_width_cell) + 1
 
-    write_grouped_tables(workbook, current_worksheet, "Area", 1, 7, instance)
+    insert_label(
+        workbook, current_worksheet, table_height, chart_col_index, "Summary"
+    )
+
+    area_chart = write_grouped_tables(
+        workbook, current_worksheet, "Area", chart_start_row,
+        chart_col_index, instance
+    )
+    current_worksheet.insert_chart(chart_start_row, 0, area_chart)
 
 
-    write_grouped_tables(workbook, current_worksheet, "Severity", 12, 7, instance)
+    severity_chart = write_grouped_tables(
+        workbook, current_worksheet, "Severity", chart_row_index,
+        chart_col_index, instance
+    )
+    current_worksheet.insert_chart(chart_row_index, 0, severity_chart)
 
     return current_worksheet

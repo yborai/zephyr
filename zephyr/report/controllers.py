@@ -1,7 +1,7 @@
 from cement.core.controller import CementBaseController, expose
 
 from . import account_review
-from .service_requests import service_request_xlsx
+from .sr import service_request_xlsx
 
 class ZephyrReport(CementBaseController):
     class Meta:
@@ -41,7 +41,7 @@ class ZephyrAccountReview(ZephyrReport):
 
 class ServiceRequestReport(ZephyrReport):
     class Meta:
-        label = "sr-report"
+        label = "sr"
         stacked_on = "report"
         stacked_type = "nested"
         description = "Generate the service-requests worksheet for a given account."

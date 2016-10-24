@@ -1,8 +1,8 @@
-import csv
 import sqlite3
 import pandas as pd
 import xlsxwriter
 
+from .common import insert_label
 from ..data.service_requests import ServiceRequests
 
 def create_headers(workbook, headers, total_row):
@@ -34,10 +34,6 @@ def group_data(header, data, review_type):
     data = [list(row) for row in sql_group.values]
 
     return header, data
-
-def insert_label(workbook, worksheet, row, col, label):
-    cell_format = workbook.add_format({"bold": True, "font_size": 16, "font_color": "#000000"})
-    worksheet.write(row, col, label, cell_format)
 
 def service_request_xlsx(json_string, workbook=None):
     info = ServiceRequests(json_string).to_ddh()

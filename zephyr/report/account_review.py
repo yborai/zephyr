@@ -18,8 +18,9 @@ from ..data import (
     service_requests,
 )
 
+from .common import insert_label
 from ..data.common import rows_to_excel
-from .service_requests import service_request_xlsx
+from .sr import service_request_xlsx
 
 def create_review_sheet(
         workbook, review_json, module, sheet_name, temp_filepath, table_name,
@@ -104,17 +105,6 @@ def insert_csv_to_worksheet(workbook, worksheet, csv_filepath, start_row, start_
                 "style": "Table Style Light 1", "total_row": True
             }
         )
-
-
-def insert_label(workbook, worksheet, row, col, label):
-    """
-    insert_label fucntion inserts
-    given label to the given worksheet
-    on the provided coordinates.
-    """
-    cell_format = workbook.add_format({"bold": True, "font_size": 16, "font_color": "#000000"})
-    worksheet.write(row, col, label, cell_format)
-
 
 def create_temp_folder(destination_filepath, temporary_folder_name):
     path = destination_filepath + "/" + temporary_folder_name

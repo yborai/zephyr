@@ -1,5 +1,5 @@
 """
-Common code for zephyr
+Common code for zephyr data
 """
 import datetime
 

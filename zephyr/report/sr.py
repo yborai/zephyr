@@ -5,10 +5,9 @@ import xlsxwriter
 from .common import insert_label
 from ..data.service_requests import ServiceRequests
 
-def create_headers(workbook, headers, total_row):
-    header_format = workbook.add_format(
-        {"font_color": "#000000", "bg_color": "#DCE6F1", "bottom": 2}
-    )
+
+def create_headers(workbook, headers, total_row, formatting=None):
+    header_format = workbook.add_format(formatting)
     header = [{"header": col, "header_format": header_format} for col in headers]
     if total_row:
         header[0]["total_string"] = "Total"
@@ -35,16 +34,18 @@ def group_data(header, data, review_type):
 
     return header, data
 
-def service_request_xlsx(json_string, workbook=None):
+def service_request_xlsx(workbook=None, json_string=None, formatting=None):
     info = ServiceRequests(json_string).to_ddh()
+    title = "Service Requests"
     if not workbook:
-        with xlsxwriter.Workbook("srs.xlsx", {"strings_to_numbers": True}) as workbook:
-            return write_xlsx(workbook, info)
-    return write_xlsx(workbook, info)
+        options = formatting["wkbk_options"]
+        with xlsxwriter.Workbook("srs.xlsx", workbook_options) as workbook:
+            return write_xlsx(workbook, info, title, formatting=formatting)
+    return write_xlsx(workbook, info, title, formatting=formatting)
 
-def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col, instance):
+def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col, instance, formatting=formatting):
     headers, data = group_data(instance.header, instance.data, review_type)
-    header = create_headers(workbook, headers, True)
+    header = create_headers(workbook, headers, True, formatting=formatting)
     row_index = start_row
     for row in data:
         column_index = start_col
@@ -80,15 +81,15 @@ def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col,
     return chart
 
 
-def write_xlsx(workbook, instance):
-    # 480 x 288 is the default size of the xlsxwriter chart.
-    # 64 x 20 is the default size of each cell.
-    chart_width_cell = 480/64
-    chart_height_cell = 288/20
+def write_xlsx(workbook, instance, title, formatting=formatting):
+    cell = formatting["cell_options"]
+    chart = formatting["chart_options"]
+    chart_width_cell = chart["width"]/cell["width"]
+    chart_height_cell = chart["height"]/cell["height"]
 
-    current_worksheet = workbook.add_worksheet("Service Requests")
+    current_worksheet = workbook.add_worksheet(title)
     row_index = 1
-    insert_label(workbook, current_worksheet, 0, 0, "Service Requests")
+    insert_label(workbook, current_worksheet, 0, 0, title)
     header = create_headers(workbook, instance.header, False)
     for row in instance.data:
         column_index = 0

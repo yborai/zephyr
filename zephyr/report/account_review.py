@@ -18,8 +18,8 @@ from ..data import (
     service_requests,
 )
 
-from .common import insert_label
 from ..data.common import rows_to_excel
+from .common import insert_label
 from .sr import service_request_xlsx
 
 def create_review_sheet(
@@ -176,7 +176,7 @@ def create_xlsx_account_review(
     )
 
     if service_requests_json is not None:
-        service_request_xlsx(service_requests_json, workbook)
+        service_request_xlsx(workbook, service_requests_json)
 
     if ec2_underutilized_instances_json is not None:
         ec2_underutilized_instances_sheet = compute_underutilized.create_sheet(

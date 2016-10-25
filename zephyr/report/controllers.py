@@ -64,7 +64,32 @@ class ServiceRequestReport(ZephyrReport):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
             srs = f.read()
-        service_request_xlsx(srs)
+        # 480 x 288 is the default size of the xlsxwriter chart.
+        # 64 x 20 is the default size of each cell.
+        formatting = {
+            "chart_options" : {
+                "height" : 288,
+                "width" : 480,
+            },
+            "cell_options" : {
+                "height" : 20,
+                "width" : 64,
+            },
+            "data_labels": {
+                "category": True,
+                "percentage": True,
+                "position": "outside_end",
+            },
+            "header_format" : {
+                "font_color" : "#000000",
+                "bg_color" : "#DCE6F1",
+                "bottom=2",
+            },
+            "wkbk_options" : {
+                "strings_to_numbers": True,
+            },
+        }
+        service_request_xlsx(json_string=srs, formatting=formatting)
 
 
 

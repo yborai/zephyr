@@ -21,6 +21,7 @@ class ComputeDetailsWarp(Warp):
         return self._format_datefields(filtered_row)
 
     def _format_datefields(self, row):
+        field = self._datetime_fields()
         for field in self._datetime_fields():
             if(row[field] is None):
                 continue
@@ -32,18 +33,16 @@ class ComputeDetailsWarp(Warp):
 
     def _fieldnames(self):
         return (
-            "InstanceId", "InstanceName", "PrivateIpAddress", "Status", "Region", "PricingPlatform",
-            "InstanceType", "LaunchTime", "AvgCpuforLast7Days", "AvgCpuforLast30Days",
-            "AvgCpuforLast90Days", "AvgNetworkInLast30Days", "AvgNetworkOutLast30Days",
-            "HighCpuPercent", "LowCpuPercent", "HoursCpuUtilAbove80", "HoursCpuUtilBelow80",
-            "HoursCpuUtilBelow60", "HoursCpuUtilBelow40", "HoursCpuUtilBelow20",
-            "HoursHighCpuLast7Days", "HoursHighCpuLast30Days", "HoursHighCpuLast90Days",
-            "HoursLowCpuLast7Days", "HoursLowCpuLast30Days", "HoursRunningLast7Days",
-            "HoursRunningLast30Days", "HoursRunningLast90Days", "MinimumCpuUtilization",
-            "MinimumCpuUtilizationDateTime", "PeakCpuUtilization", "PeakCpuUtilizationDateTime"
+            "InstanceId",
+            "InstanceName",
+            "PrivateIpAddress",
+            "Status",
+            "Region",
+            "PricingPlatform",
+            "InstanceType",
+            "LaunchTime"
         )
 
     def _datetime_fields(self):
-        return (
-            "MinimumCpuUtilizationDateTime", "PeakCpuUtilizationDateTime", "LaunchTime"
-        )
+        return ("LaunchTime",)
+

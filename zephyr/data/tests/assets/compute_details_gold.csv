@@ -1,2 +1,2 @@
-InstanceId,InstanceName,PrivateIpAddress,Status,Region,PricingPlatform,InstanceType,LaunchTime,AvgCpuforLast7Days,AvgCpuforLast30Days,AvgCpuforLast90Days,AvgNetworkInLast30Days,AvgNetworkOutLast30Days,HighCpuPercent,LowCpuPercent,HoursCpuUtilAbove80,HoursCpuUtilBelow80,HoursCpuUtilBelow60,HoursCpuUtilBelow40,HoursCpuUtilBelow20,HoursHighCpuLast7Days,HoursHighCpuLast30Days,HoursHighCpuLast90Days,HoursLowCpuLast7Days,HoursLowCpuLast30Days,HoursRunningLast7Days,HoursRunningLast30Days,HoursRunningLast90Days,MinimumCpuUtilization,MinimumCpuUtilizationDateTime,PeakCpuUtilization,PeakCpuUtilizationDateTime
-i-0272f78b,AVID-TESTING-SSO-HAP01,10.72.69.137,running,US East (Northern Virginia),LinuxVpc,m4.large,03/28/16 23:58,,,,,,,,,,,,,,,,,,,,,,,,
+InstanceId,InstanceName,PrivateIpAddress,Status,Region,PricingPlatform,InstanceType,LaunchTime
+i-0272f78b,AVID-TESTING-SSO-HAP01,10.72.69.137,running,US East (Northern Virginia),LinuxVpc,m4.large,03/28/16 23:58

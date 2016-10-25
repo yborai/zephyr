@@ -83,7 +83,7 @@ class ServiceRequestReport(ZephyrReport):
             "header_format" : {
                 "font_color" : "#000000",
                 "bg_color" : "#DCE6F1",
-                "bottom=2",
+                "bottom" : "2",
             },
             "wkbk_options" : {
                 "strings_to_numbers": True,

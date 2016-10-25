@@ -43,7 +43,7 @@ def service_request_xlsx(workbook=None, json_string=None, formatting=None):
             return write_xlsx(workbook, info, title, formatting=formatting)
     return write_xlsx(workbook, info, title, formatting=formatting)
 
-def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col, instance, formatting=formatting):
+def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col, instance, formatting=None):
     headers, data = group_data(instance.header, instance.data, review_type)
     header = create_headers(workbook, headers, True, formatting=formatting)
     row_index = start_row
@@ -81,7 +81,7 @@ def write_grouped_tables(workbook, worksheet, review_type, start_row, start_col,
     return chart
 
 
-def write_xlsx(workbook, instance, title, formatting=formatting):
+def write_xlsx(workbook, instance, title, formatting=None):
     cell = formatting["cell_options"]
     chart = formatting["chart_options"]
     chart_width_cell = chart["width"]/cell["width"]

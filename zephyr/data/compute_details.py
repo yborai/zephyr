@@ -21,7 +21,6 @@ class ComputeDetailsWarp(Warp):
         return self._format_datefields(filtered_row)
 
     def _format_datefields(self, row):
-        field = self._datetime_fields()
         for field in self._datetime_fields():
             if(row[field] is None):
                 continue
@@ -45,4 +44,3 @@ class ComputeDetailsWarp(Warp):
 
     def _datetime_fields(self):
         return ("LaunchTime",)
-

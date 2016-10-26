@@ -67,13 +67,16 @@ class ServiceRequestReport(ZephyrReport):
         # 480 x 288 is the default size of the xlsxwriter chart.
         # 64 x 20 is the default size of each cell.
         formatting = {
+            "cell_options" : {
+                "height" : 20,
+                "width" : 64,
+            },
             "chart_options" : {
                 "height" : 288,
                 "width" : 480,
             },
-            "cell_options" : {
-                "height" : 20,
-                "width" : 64,
+            "chart_type" : {
+                "type" : "pie",
             },
             "data_labels": {
                 "category": True,
@@ -83,7 +86,20 @@ class ServiceRequestReport(ZephyrReport):
             "header_format" : {
                 "font_color" : "#000000",
                 "bg_color" : "#DCE6F1",
-                "bottom" : "2",
+                "bottom" : 2,
+                "total_row" : True
+            },
+            "label_format" : {
+                "bold": True,
+                "font_size": 16,
+                "font_color": "#000000",
+            },
+            "legend_options" : {
+                "none" : True,
+            },
+            "table_options" : {
+                "style" : "Table Style Light 1",
+                "total_row" : True, 
             },
             "wkbk_options" : {
                 "strings_to_numbers": True,

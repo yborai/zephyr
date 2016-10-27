@@ -38,7 +38,7 @@ def write_grouped_table(
         columns=header,
         name=review_type,
         style=table_options["style"],
-        total_row=table_options["total_row"],
+        total_row=table_options["total_row_t"],
     )
 
     row_index = start_row
@@ -102,7 +102,7 @@ def write_xlsx(workbook, instance, title, formatting=None):
         columns=header,
         name="SRs",
         style=table_options["style"],
-        total_row=table_options["total_row"],
+        total_row=table_options["total_row_f"],
     )
 
     current_worksheet = workbook.add_worksheet(title)
@@ -124,6 +124,7 @@ def write_xlsx(workbook, instance, title, formatting=None):
     chart_row_index = chart_start_row + int(chart_height) + 1
     chart_col_index = int(chart_width) + 1
 
+    header_format["total_row"] = True
     insert_label(
         workbook,
         current_worksheet,

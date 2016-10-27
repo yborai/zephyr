@@ -106,6 +106,10 @@ class ServiceRequestReport(ZephyrReport):
                 "Service Requests" : "srs",
                 "EC2 Details" : "ec2",
             },
+            "titles" : {
+                "Service Requests" : "srs",
+                "EC2 Details" : "ec2",
+            },
             "wkbk_options" : {
                 "strings_to_numbers": True,
             },

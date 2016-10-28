@@ -117,6 +117,31 @@ def create_temp_folder(destination_filepath, temporary_folder_name):
 def remove_temp_folder(temp_filepath):
     shutil.rmtree(temp_filepath)
 
+def billing_table(book, sheet, rows, table_name, top=1, left=0):
+    """
+    Take rows, an iterable of iterables, and write it to a given sheet
+    with the top, left cell at (top, left).
+    """
+    header = rows[0]
+    header_format = book.add_format({
+		"font_color": "#000000",
+		"bg_color": "#DCE6F1",
+		"bottom": 2}
+	)
+    header = [{"header": name, "header_format": header_format} for name in header]
+
+	rows_to_excel(sheet, rows, top=top, left=left)
+
+	n_rows = len(rows)
+	n_cols = len(header)
+    sheet.add_table(top, left, top+n_rows-1, left+n_cols-1,
+        {
+            "columns": header, "name": table_name,
+            "style": "Table Style Light 1"
+        }
+    )
+	return book
+
 def create_xlsx_account_review(
         destination_filepath,
         xslx_filename="account_review.xlsx",
@@ -149,9 +174,9 @@ def create_xlsx_account_review(
     sheet_dy = workbook.add_worksheet("Billing")
 
     insert_label(workbook, sheet_dy, 0, 0, "Billing")
-    rows_to_excel(workbook, sheet_dy, line_items, "LineItems")
-    rows_to_excel(workbook, sheet_dy, line_item_aggs, "LineItemAggs", top=1, left=8)
-    rows_to_excel(workbook, sheet_dy, monthly_totals, "Monthly", top=len(line_item_aggs)+2, left=8)
+    billing_table(workbook, sheet_dy, line_items, "LineItems")
+    billing_table(workbook, sheet_dy, line_item_aggs, "LineItemAggs", top=1, left=8)
+    billing_table(workbook, sheet_dy, monthly_totals, "Monthly", top=len(line_item_aggs)+2, left=8)
 
     create_review_sheet(
         workbook, ec2_details_json, compute_details, "EC2 Details", temp_filepath, "EC2s"

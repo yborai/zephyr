@@ -24,7 +24,7 @@ def create_xlsx(workbook=None, class_ddh=None, formatting=None, title=None):
             return write_xlsx(workbook, class_ddh, title, formatting)
     return write_xlsx(workbook, class_ddh, title, formatting)
 
-def group_data(header, data, review_type):
+def group_data(header, data, column):
     con = sqlite3.connect(":memory:")
     srs = pd.DataFrame(data, columns=header)
 
@@ -36,7 +36,7 @@ def group_data(header, data, review_type):
          FROM
              srs
          GROUP BY {col}
-    """.format(col=review_type)
+    """.format(col=column)
     
     sql_group = pd.read_sql(query, con)
     header = list(sql_group)

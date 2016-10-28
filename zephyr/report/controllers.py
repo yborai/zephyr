@@ -97,7 +97,7 @@ class ServiceRequestReport(ZephyrReport):
             "legend_options" : {
                 "none" : True,
             },
-            "table_options" : {
+            "table_style" : {
                 "style" : "Table Style Light 1",
                 "total_row_t" : True,
                 "total_row_f" : False

@@ -33,23 +33,15 @@ def month_range(date):
 def percent(numer, denom, digits=2):
     return round(Decimal(100.) * numer / denom, digits)
 
-def rows_to_excel(workbook, sheet, rows, table_name, top=1, left=0):
+def rows_to_excel(sheet, rows, top=1, left=0):
     """
     Take rows, an iterable of iterables, and write it to a given sheet
     with the top, left cell at (top, left).
     """
-    headers = rows[0]
-    header_format = workbook.add_format({"font_color": "#000000", "bg_color": "#DCE6F1", "bottom": 2})
-    header = [{"header": name, "header_format": header_format} for name in headers]
     n_rows = len(rows)
     n_cells = len(rows[0])
     for i in range(n_rows):
         row = rows[i]
         for j in range(n_cells):
             sheet.write(top+i, left+j, row[j])
-    sheet.add_table(top, left, top+i, left+j,
-        {
-            "columns": header, "name": table_name,
-            "style": "Table Style Light 1"
-        }
-    )
+	return sheet

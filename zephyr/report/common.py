@@ -16,6 +16,14 @@ def create_headers(workbook, headers, formatting=None):
         header[1]["total_function"] = "sum"
     return header
 
+def create_xlsx(workbook=None, class_ddh=None, formatting=None, title=None):
+    if not workbook:
+        options = formatting["wkbk_options"]
+        file_name = "{}.xlsx".format(formatting["titles"][title])
+        with xlsxwriter.Workbook(file_name, options) as workbook:
+            return write_xlsx(workbook, class_ddh, title, formatting)
+    return write_xlsx(workbook, class_ddh, title, formatting)
+
 def group_data(header, data, review_type):
     con = sqlite3.connect(":memory:")
     srs = pd.DataFrame(data, columns=header)
@@ -45,13 +53,16 @@ def insert_label(workbook, worksheet, row, col, label, formatting=None):
     cell_format = workbook.add_format(formatting["label_format"])
     worksheet.write(row, col, label, cell_format)
 
-def create_xlsx(workbook=None, class_ddh=None, formatting=None, title=None):
-    if not workbook:
-        options = formatting["wkbk_options"]
-        file_name = "{}.xlsx".format(formatting["titles"][title])
-        with xlsxwriter.Workbook("srs.xlsx", options) as workbook:
-            return write_xlsx(workbook, class_ddh, title, formatting)
-    return write_xlsx(workbook, class_ddh, title, formatting)
+def parse_formatting(formatting=None):
+    table_options = formatting["table_options"]
+    table_name = formatting["titles"][title]
+
+    cell = formatting["cell_options"]
+    chart = formatting["chart_options"]
+    chart_width = chart["width"]/cell["width"]
+    chart_height = chart["height"]/cell["height"]
+
+    return table_options, table_name, chart_width, chart_height
 
 def write_grouped_table(
         workbook, worksheet, review_type, start_row, start_col,
@@ -117,13 +128,7 @@ def write_grouped_table(
     return chart
 
 def write_xlsx(workbook, instance, title, formatting=None):
-    table_options = formatting["table_options"]
-    table_name = formatting["titles"][title]
-
-    cell = formatting["cell_options"]
-    chart = formatting["chart_options"]
-    chart_width = chart["width"]/cell["width"]
-    chart_height = chart["height"]/cell["height"]
+    table_options, table_name, chart_width, chart_height = parse_formatting(formatting)
 
     header_format = formatting["header_format"]
     header_format["total_row"] = False
@@ -154,6 +159,8 @@ def write_xlsx(workbook, instance, title, formatting=None):
     chart_start_row = table_height + cell_spacing
     chart_row_index = chart_start_row + int(chart_height) + 1
     chart_col_index = int(chart_width) + 1
+
+    return current_worksheet, table_height, chart_row_index, chart_col_index
 
     insert_label(
         workbook,

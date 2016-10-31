@@ -37,10 +37,15 @@ class ZephyrMeta(ZephyrCLI):
         aws_config_keys = (
             "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "s3_bucket",
         )
+        lo_config_keys = ("login", "passphrase")
         sf_config_keys = ("SF_USERNAME", "SF_PASSWD", "SF_TOKEN")
         aws_config = [
             self.app.config.get("lw-aws", key)
             for key in aws_config_keys
+        ]
+        lo_config = [
+            self.app.config.get("lw-lo", key)
+            for key in lo_config_keys
         ]
         sf_config = [
             self.app.config.get("lw-sf", key)
@@ -53,6 +58,7 @@ class ZephyrMeta(ZephyrCLI):
             expire_cache,
             log=self.app.log,
             aws_config=aws_config,
+            lo_config=lo_config,
             sf_config=sf_config,
         )
         self.app.render(meta.get_all_projects(database), line_width=self.line_width)

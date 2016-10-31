@@ -1,5 +1,6 @@
 import csv
 import io
+import sqlite3
 import os
 
 from datetime import datetime
@@ -7,7 +8,7 @@ from datetime import datetime
 from cement.core.controller import CementBaseController, expose
 
 from ..cli.controllers import ZephyrCLI
-from ..core import aws, cloudcheckr
+from ..core import aws, cloudcheckr, lo
 from ..core.ddh import DDH
 from .compute_av import compute_av
 from .compute_details import ComputeDetailsWarp
@@ -33,7 +34,7 @@ class ZephyrData(ZephyrCLI):
         arguments = CementBaseController.Meta.arguments + [(
             ["--account"], dict(
                  type=str,
-                 help="The desired account short name."
+                 help="The desired account slug."
             )
         ),
         (
@@ -202,11 +203,27 @@ class ServiceRequestsRun(DataRun):
 
     def run(self, **kwargs):
         cache = self.app.pargs.cache
-        if(not cache):
-            raise NotImplementedError #We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            response = f.read()
+        account = self.app.pargs.account
+        lo_config_keys = ("login", "passphrase")
+        username, password = [
+            self.app.config.get("lw-lo", key)
+            for key in lo_config_keys
+        ]
+        if(cache):
+            self.app.log.info("Using cached response: {cache}".format(cache=cache))
+            with open(cache, "r") as f:
+                response = f.read()
+        else:
+            # TODO: Add S3 and local caching functionality.
+            cachedir = os.path.expanduser(self.app.config.get("zephyr", "cache"))
+            metadir = os.path.join(cachedir, "meta/")
+            os.makedirs(metadir, exist_ok=True)
+            s3_key = "meta/local.db"
+            db = os.path.join(cachedir, s3_key)
+            database = sqlite3.connect(db)
+            cookies = lo.get_cookies(username, password)
+            lo_acct = lo.get_account_by_slug(account, database)
+            response = ServiceRequests.read_srs(lo_acct, cookies=cookies)
         out = ServiceRequests(response)
         self.app.render(out.to_ddh())
         return out

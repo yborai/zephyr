@@ -71,9 +71,9 @@ def write_csv_to_worksheet(workbook, worksheet_name, csv_filepath, table_name, t
                 current_worksheet.write(row_index, column_index, col)
                 column_index += 1
             row_index += 1
-        current_worksheet.add_table(1, 0,row_index, column_index-1, 
+        current_worksheet.add_table(1, 0,row_index, column_index-1,
             {
-                "columns": header, "name": table_name, 
+                "columns": header, "name": table_name,
                 "style": "Table Style Light 1", "total_row": True
             }
         )
@@ -124,23 +124,23 @@ def billing_table(book, sheet, rows, table_name, top=1, left=0):
     """
     header = rows[0]
     header_format = book.add_format({
-		"font_color": "#000000",
-		"bg_color": "#DCE6F1",
-		"bottom": 2}
-	)
+        "font_color": "#000000",
+        "bg_color": "#DCE6F1",
+        "bottom": 2}
+    )
     header = [{"header": name, "header_format": header_format} for name in header]
 
-	rows_to_excel(sheet, rows, top=top, left=left)
+    rows_to_excel(sheet, rows, top=top, left=left)
 
-	n_rows = len(rows)
-	n_cols = len(header)
+    n_rows = len(rows)
+    n_cols = len(header)
     sheet.add_table(top, left, top+n_rows-1, left+n_cols-1,
         {
             "columns": header, "name": table_name,
             "style": "Table Style Light 1"
         }
     )
-	return book
+    return book
 
 def create_xlsx_account_review(
         destination_filepath,

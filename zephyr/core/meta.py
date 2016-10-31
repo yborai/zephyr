@@ -1,11 +1,10 @@
 import os
 import sqlite3
 
-from . import aws
-from . import sf
+from . import aws, lo, sf
 from .ddh import DDH
 
-def get_local_db_connection(cachedir, expired, log=None, aws_config=None, sf_config=None):
+def get_local_db_connection(cachedir, expired, log=None, aws_config=None, lo_config=None, sf_config=None):
     """
     Obtains a local database connection,
     retrieving data from S3 or Salesforce as necessary.
@@ -37,10 +36,14 @@ def get_local_db_connection(cachedir, expired, log=None, aws_config=None, sf_con
         log.info("Cached database not found on S3.")
     """
     If there is no local database, no S3 cache or the cache is expired
-    then get metadata from Salesforce.
+    then get metadata from Logicops and Salesforce.
     """
     log.info("Loading account metadata from Salesforce.")
     database = sf.cache(db, config=sf_config)
+    database = sqlite3.connect(db)
+    log.info("Loading account metadata from Logicops.")
+    log.info(lo.get_accounts(database, config=lo_config))
+    log.info("Caching account metadata in S3.")
     s3.meta.client.upload_file(db, aws_bucket, s3_key)
     return database
 
@@ -53,6 +56,7 @@ def get_all_projects(database):
         p.Dynamics_ID__c AS dynamics,
         p.JIRAKey__c AS jira,
         p.LogicOps_ID__c AS logicops,
+        lo.name AS logicops_name,
         p.Planned_Spend__c AS planned_spend,
         aws.Name AS slug,
         aws.Acct_Number__c AS aws_account,
@@ -62,6 +66,7 @@ def get_all_projects(database):
     FROM accounts AS a
         LEFT OUTER JOIN projects AS p ON (a.Id=p.Account__c)
         LEFT OUTER JOIN aws ON (p.Id=aws.Assoc_Project__c)
+        LEFT OUTER JOIN logicops_accounts as lo ON (p.LogicOps_ID__c=lo.id)
     WHERE 1
         AND aws.Name IS NOT NULL
     ORDER BY client

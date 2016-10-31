@@ -18,7 +18,7 @@ def create_headers(workbook, headers, formatting=None):
 def service_request_xlsx(book=None, json_string=None, formatting=None):
     info = ServiceRequests(json_string).to_ddh()
     title = "Service Requests"
-	name = "SRs"
+    name = "SRs"
     if not book:
         options = formatting["wkbk_options"]
         with xlsxwriter.Workbook("srs.xlsx", options) as book:
@@ -97,10 +97,10 @@ def table_options(formatting):
     chart_width = chart["width"]/cell["width"]
     chart_height = chart["height"]/cell["height"]
 
-	return table, chart_width, chart_height
+    return table, chart_width, chart_height
 
 def write_table(sheet, table, top=0, left=0, title=None, name=None, formatting=None, cell_format=None):
-	table_fmt, chart_width, chart_height = table_options(formatting)
+    table_fmt, chart_width, chart_height = table_options(formatting)
 
     header_format = formatting["header_format"]
     header_format["total_row"] = False
@@ -115,39 +115,39 @@ def write_table(sheet, table, top=0, left=0, title=None, name=None, formatting=N
 
     sheet.write(top, left, title, cell_format)
 
-	n_rows = len(table.data)
-	n_cols = len(table.data[0])
+    n_rows = len(table.data)
+    n_cols = len(table.data[0])
 
-	sheet = rows_to_excel(sheet, table.data)
+    sheet = rows_to_excel(sheet, table.data)
 
     sheet.add_table(top+1, left, n_rows+top+1, n_cols, table_format)
-	return sheet
+    return sheet
 
 def write_xlsx(book, instance, title, name=None, formatting=None):
-    sheet = book.add_sheet(title)
+    sheet = book.add_worksheet(title)
     cell_format = book.add_format(formatting["label_format"])
 
-	sheet = write_table(sheet, instance, name=name, formatting, cell_format)
+    sheet = write_table(sheet, instance, name=name, formatting=formatting, cell_format=cell_format)
 
-	n_rows = len(instance.data)
+    n_rows = len(instance.data)
     table_height = n_rows + 1
     cell_spacing = 1
     chart_start_row = table_height + cell_spacing
     chart_row_index = chart_start_row + int(chart_height) + 1
     chart_col_index = int(chart_width) + 1
-	summary_left = chart_width + cell_spacing
+    summary_left = chart_width + cell_spacing
 
     area_header, area_data = group_data(instance.header, instance.data, "Area")
-	area_ddh = DDH(header=area_header, data=area_data)
-	sheet = write_table(
-		book,
-		area_ddh,
-		top=chart_start_row,
-		left=summary_left
-		name="sr_area",
-		formatting=formatting,
-		cell_format=cell_format
-	)
+    area_ddh = DDH(header=area_header, data=area_data)
+    sheet = write_table(
+        book,
+        area_ddh,
+        top=chart_start_row,
+        left=summary_left,
+        name="sr_area",
+        formatting=formatting,
+        cell_format=cell_format
+    )
 
     header_format["total_row"] = True
     insert_label(

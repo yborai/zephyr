@@ -87,7 +87,6 @@ class ServiceRequestReport(ZephyrReport):
                 "font_color" : "#000000",
                 "bg_color" : "#DCE6F1",
                 "bottom" : 2,
-                "total_row" : True,
             },
             "label_format" : {
                 "bold": True,
@@ -99,17 +98,15 @@ class ServiceRequestReport(ZephyrReport):
             },
             "table_style" : {
                 "style" : "Table Style Light 1",
-                "total_row_t" : True,
-                "total_row_f" : False
             },
             "titles" : {
                 "Service Requests" : "srs",
                 "EC2 Details" : "ec2",
             },
-            "titles" : {
-                "Service Requests" : "srs",
-                "EC2 Details" : "ec2",
-            },
+            "total_row" : [
+                {"total_string" : "Total"},
+                {"total_function" : "sum"},
+            ],
             "wkbk_options" : {
                 "strings_to_numbers": True,
             },

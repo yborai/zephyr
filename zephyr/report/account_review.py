@@ -19,8 +19,17 @@ from ..data import (
 )
 
 from ..data.common import rows_to_excel
-from .common import insert_label
+from .common import formatting
 from .sr import service_request_xlsx
+
+def insert_label(workbook, worksheet, row, col, label, formatting=None):
+    """
+    insert_label fucntion inserts
+    given label to the given worksheet
+    on the provided coordinates.
+    """
+    cell_format = workbook.add_format({"bold": True, "font_size": 16, "font_color": "#000000"})
+    worksheet.write(row, col, label, cell_format)
 
 def create_review_sheet(
         workbook, review_json, module, sheet_name, temp_filepath, table_name,
@@ -54,7 +63,6 @@ def write_csv_to_worksheet(workbook, worksheet_name, csv_filepath, table_name, t
     and writes data from csv file to it.
     Workseet object is returned.
     """
-    #write_csv_to_worksheet(workbook, "Service Requests", service_sheet, "SRs", "Service Requests")
 
     current_worksheet = workbook.add_worksheet(worksheet_name)
 

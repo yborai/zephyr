@@ -3,7 +3,7 @@ import xlsxwriter
 from ..core.ddh import DDH
 from ..data.common import rows_to_excel
 from ..data.service_requests import ServiceRequests
-from .common import insert_label, group_data
+from .common import group_data
 
 def service_request_xlsx(book=None, json_string=None, formatting=None):
     info = ServiceRequests(json_string).to_ddh()
@@ -51,7 +51,7 @@ def write_xlsx(book, instance, title, name=None, formatting=None):
     n_rows = len(instance.data)
     table_height = n_rows + 1
     cell_spacing = 1
-    chart_start_row = table_height + cell_spacing
+    chart_start_row = table_height + cell_spacing + 1
     chart_row_index = chart_start_row + int(chart_height) + 1
     chart_col_index = int(chart_width) + 1
     summary_left = int(chart_width) + cell_spacing
@@ -70,13 +70,14 @@ def write_xlsx(book, instance, title, name=None, formatting=None):
         total_row=total_row,
         cell_format=cell_format,
     )
+    data_loc_area_top = chart_start_row+1
     data_loc_area = (
-        chart_start_row,
-        chart_start_row + len(area_data)
+        data_loc_area_top + 1,
+        data_loc_area_top + len(area_data),
         summary_left,
         summary_left+1,
     )
-    insert_chart(sheet, title, chart_start_row, 0, data_loc_area, formatting)
+    add_chart(book, sheet, "Area", data_loc_area_top, 0, data_loc_area, formatting)
 
     sev_header, sev_data = group_data(instance.header, instance.data, "Severity")
     sev_ddh = DDH(header=sev_header, data=sev_data)
@@ -92,7 +93,22 @@ def write_xlsx(book, instance, title, name=None, formatting=None):
         total_row=total_row,
         cell_format=cell_format,
     )
-    insert_chart(sheet, data, top, left)
+    data_loc_sev_top = chart_start_row+int(chart_height)+1+cell_spacing+1
+    data_loc_sev = (
+        data_loc_sev_top + 1,
+        data_loc_sev_top + len(sev_data),
+        summary_left,
+        summary_left+1,
+    )
+    add_chart(
+        book,
+        sheet,
+        "Severity",
+        data_loc_sev_top,
+        0,
+        data_loc_sev,
+        formatting
+    )
 
     return sheet
 
@@ -128,7 +144,7 @@ def write_table(
     n_cols = len(table.data[0])
 
     # Tell Excel this array is a table.
-    sheet.add_table(top+1, left, n_rows+top+1, n_cols+left, table_format)
+    sheet.add_table(top+1, left, n_rows+top+1, n_cols+left-1, table_format)
     return sheet
 
 def create_headers(headers, header_format, total_row):
@@ -136,8 +152,10 @@ def create_headers(headers, header_format, total_row):
     [header[i].update(total_row[i]) for i in range(len(total_row))]
     return header
 
-def insert_chart(
+def add_chart(
+        book,
         sheet,
+        title,
         top,
         left,
         data_loc,
@@ -146,7 +164,7 @@ def insert_chart(
 
     legend_options = formatting["legend_options"]
 
-    chart = workbook.add_chart(formatting["chart_type"])
+    chart = book.add_chart(formatting["chart_type"])
 
     top, bottom, col_categories, col_values = data_loc
     series_categories = [
@@ -170,7 +188,7 @@ def insert_chart(
     )
     chart.add_series(series)
 
-    chart.set_title({"name": review_type})
+    chart.set_title({"name": title})
     chart.set_legend(legend_options)
 
     sheet.insert_chart(top, left, chart)

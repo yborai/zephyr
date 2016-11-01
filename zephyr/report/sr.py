@@ -33,7 +33,6 @@ def table_options(formatting):
 def write_xlsx(book, instance, title, name=None, formatting=None):
     sheet = book.add_worksheet(title)
     header_format, total_row, cell_format = main_formats(book, formatting)
-
     table_fmt, chart_width, chart_height = table_options(formatting)
 
     # Raw report data
@@ -55,7 +54,7 @@ def write_xlsx(book, instance, title, name=None, formatting=None):
     chart_start_row = table_height + cell_spacing
     chart_row_index = chart_start_row + int(chart_height) + 1
     chart_col_index = int(chart_width) + 1
-    summary_left = chart_width + cell_spacing
+    summary_left = int(chart_width) + cell_spacing
 
     area_header, area_data = group_data(instance.header, instance.data, "Area")
     area_ddh = DDH(header=area_header, data=area_data)
@@ -64,43 +63,36 @@ def write_xlsx(book, instance, title, name=None, formatting=None):
         area_ddh,
         top=chart_start_row,
         left=summary_left,
+        title="Area",
         name="sr_area",
-        cell_format=cell_format
+        table_fmt=table_fmt,
+        header_format=header_format,
+        total_row=total_row,
+        cell_format=cell_format,
     )
-
-    header_format["total_row"] = True
-    insert_label(
-        book,
-        sheet,
-        table_height,
-        chart_col_index,
-        "Summary",
-        formatting
-    )
-
-    area_chart = write_grouped_table(
-        book,
-        sheet,
-        "Area",
+    data_loc_area = (
         chart_start_row,
-        chart_col_index,
-        instance,
-        formatting
+        chart_start_row + len(area_data)
+        summary_left,
+        summary_left+1,
     )
+    insert_chart(sheet, title, chart_start_row, 0, data_loc_area, formatting)
 
-    sheet.insert_chart(chart_start_row, 0, area_chart)
-
-    severity_chart = write_grouped_table(
-        book,
+    sev_header, sev_data = group_data(instance.header, instance.data, "Severity")
+    sev_ddh = DDH(header=sev_header, data=sev_data)
+    sheet = write_table(
         sheet,
-        "Severity",
-        chart_row_index,
-        chart_col_index,
-        instance,
-        formatting
+        sev_ddh,
+        top=chart_start_row+int(chart_height)+1+cell_spacing,
+        left=summary_left,
+        title="Severity",
+        name="sr_sev",
+        table_fmt=table_fmt,
+        header_format=header_format,
+        total_row=total_row,
+        cell_format=cell_format,
     )
-
-    sheet.insert_chart(chart_row_index, 0, severity_chart)
+    insert_chart(sheet, data, top, left)
 
     return sheet
 
@@ -120,7 +112,7 @@ def write_table(
     sheet.write(top, left, title, cell_format)
 
     # Write data to sheet
-    sheet = rows_to_excel(sheet, table.data)
+    sheet = rows_to_excel(sheet, table.data, top=top+2, left=left)
 
     # Create format dict for xlsxwriter
     header = create_headers(table.header, header_format, total_row)
@@ -136,7 +128,7 @@ def write_table(
     n_cols = len(table.data[0])
 
     # Tell Excel this array is a table.
-    sheet.add_table(top+1, left, n_rows+top+1, n_cols, table_format)
+    sheet.add_table(top+1, left, n_rows+top+1, n_cols+left, table_format)
     return sheet
 
 def create_headers(headers, header_format, total_row):
@@ -144,56 +136,32 @@ def create_headers(headers, header_format, total_row):
     [header[i].update(total_row[i]) for i in range(len(total_row))]
     return header
 
-def write_grouped_table(
-        workbook, worksheet, column, start_row, start_col,
-        instance, formatting=None
+def insert_chart(
+        sheet,
+        top,
+        left,
+        data_loc,
+        formatting
     ):
-    headers, data = group_data(instance.header, instance.data, column)
 
-    header_format = formatting["header_format"]
-    table_style = formatting["table_style"]
     legend_options = formatting["legend_options"]
-
-    header = create_headers(workbook, headers, header_format)
-
-    table_format = dict(
-        columns=header,
-        name=column,
-        style=table_style["style"],
-        total_row=table_style["total_row"],
-    )
-
-    row_index = start_row
-    for row in data:
-        column_index = start_col
-        for col in row:
-            worksheet.write(row_index+1, column_index, col)
-            column_index += 1
-        row_index += 1
-
-    worksheet.add_table(
-        start_row,
-        start_col,
-        row_index+1,
-        column_index-1,
-        table_format
-    )
 
     chart = workbook.add_chart(formatting["chart_type"])
 
+    top, bottom, col_categories, col_values = data_loc
     series_categories = [
-        "Service Requests",
-        start_row+1,
-        start_col,
-        row_index,
-        start_col,
+        sheet.name,
+        top,
+        col_categories,
+        bottom,
+        col_categories,
     ]
-    series_values =[
-        "Service Requests",
-        start_row+1,
-        column_index-1,
-        row_index,
-        column_index-1,
+    series_values = [
+        sheet.name,
+        top,
+        col_values,
+        bottom,
+        col_values,
     ]
     series = dict(
         categories=series_categories,
@@ -205,6 +173,8 @@ def write_grouped_table(
     chart.set_title({"name": review_type})
     chart.set_legend(legend_options)
 
-    return chart
+    sheet.insert_chart(top, left, chart)
+
+    return sheet
 
 

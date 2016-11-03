@@ -18,8 +18,7 @@ from ..data import (
     service_requests,
 )
 
-from ..data.common import rows_to_excel
-from .common import formatting
+from .common import formatting, rows_to_excel
 from .sr import service_request_xlsx
 
 def insert_label(workbook, worksheet, row, col, label, formatting=None):

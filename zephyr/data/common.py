@@ -32,16 +32,3 @@ def month_range(date):
 
 def percent(numer, denom, digits=2):
     return round(Decimal(100.) * numer / denom, digits)
-
-def rows_to_excel(sheet, rows, top=1, left=0):
-    """
-    Take rows, an iterable of iterables, and write it to a given sheet
-    with the top, left cell at (top, left).
-    """
-    n_rows = len(rows)
-    n_cells = len(rows[0])
-    for i in range(n_rows):
-        row = rows[i]
-        for j in range(n_cells):
-            sheet.write(top+i, left+j, row[j])
-    return sheet

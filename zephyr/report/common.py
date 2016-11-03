@@ -63,9 +63,10 @@ def count_by(header, data, column):
     query = """
         SELECT
              {col},
-             count({col}) as Total
+             COUNT({col}) as Total
          FROM df
          GROUP BY {col}
+         ORDER BY COUNT({col}) DESC
     """.format(col=column)
 
     sql_group = pd.read_sql(query, con)

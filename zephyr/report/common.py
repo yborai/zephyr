@@ -55,17 +55,16 @@ formatting = {
     },
 }
 
-def group_data(header, data, column):
+def count_by(header, data, column):
+    """Count rows in data grouping by values in the column specified"""
     con = sqlite3.connect(":memory:")
-    srs = pd.DataFrame(data, columns=header)
-
-    sr_sql = srs.to_sql("srs", con, if_exists="replace")
+    df = pd.DataFrame(data, columns=header)
+    df.to_sql("df", con, if_exists="replace")
     query = """
         SELECT
              {col},
              count({col}) as Total
-         FROM
-             srs
+         FROM df
          GROUP BY {col}
     """.format(col=column)
 

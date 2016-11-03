@@ -19,7 +19,7 @@ from ..data import (
 )
 
 from .common import formatting, rows_to_excel
-from .sr import service_request_xlsx
+from .sr import sr_xlsx
 
 def insert_label(workbook, worksheet, row, col, label, formatting=None):
     """
@@ -208,7 +208,7 @@ def create_xlsx_account_review(
     )
 
     if service_requests_json is not None:
-        service_request_xlsx(workbook, service_requests_json, formatting)
+        sr_xlsx(workbook, service_requests_json, formatting)
 
     if ec2_underutilized_instances_json is not None:
         ec2_underutilized_instances_sheet = compute_underutilized.create_sheet(

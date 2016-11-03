@@ -2,7 +2,7 @@ from cement.core.controller import CementBaseController, expose
 
 from . import account_review
 from .common import formatting
-from .sr import service_request_xlsx
+from .sr import sr_xlsx
 
 class ZephyrReport(CementBaseController):
     class Meta:
@@ -65,7 +65,7 @@ class ServiceRequestReport(ZephyrReport):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
             srs = f.read()
-        service_request_xlsx(json_string=srs, formatting=formatting)
+        sr_xlsx(json_string=srs, formatting=formatting)
 
 
 

@@ -3,6 +3,7 @@ from cement.core.controller import CementBaseController, expose
 
 from ..data.service_requests import ServiceRequests
 from .common import formatting
+from .ec2 import ec2_xlsx
 from .sr import sr_xlsx
 
 class ZephyrReport(CementBaseController):
@@ -59,6 +60,33 @@ class ZephyrAccountReview(ZephyrReport):
             raise NotImplementedError # We will add fetching later.
         self.app.log.info("Using cached response: {cache}".format(cache=cache_folder))
 
+class ComputeDetailsReport(ZephyrReport):
+    class Meta:
+        label = "ec2"
+        stacked_on = "report"
+        stacked_type = "nested"
+        description = "Generate the compute-details worksheet for a given account."
+
+        arguments = CementBaseController.Meta.arguments + [(
+            ["--cache"], dict(
+                type=str,
+                help="The path to the json cached file."
+            )
+        )]
+
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        cache = self.app.pargs.cache
+        if not cache:
+            raise NotImplementedError
+        self.app.log.info("Using cached response: {cache}".format(cache=cache))
+        with open(cache, "r") as f:
+            srs = f.read()
+        ec2_xlsx(json_string=srs, formatting=formatting)
+
 class ServiceRequestReport(ZephyrReport):
     class Meta:
         label = "sr"
@@ -84,5 +112,6 @@ class ServiceRequestReport(ZephyrReport):
 __ALL__ = [
     ZephyrReport,
     ZephyrAccountReview,
-    ServiceRequestReport
+    ComputeDetailsReport,
+    ServiceRequestReport,
 ]

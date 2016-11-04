@@ -1,6 +1,7 @@
 from cement.core.controller import CementBaseController, expose
 
-from . import account_review
+
+from ..data.service_requests import ServiceRequests
 from .common import formatting
 from .sr import sr_xlsx
 
@@ -11,6 +12,24 @@ class ZephyrReport(CementBaseController):
         stacked_type = "nested"
         description = "Generate advanced reports."
         parser_options = {}
+        arguments = CementBaseController.Meta.arguments + [(
+            ["--account"], dict(
+                 type=str,
+                 help="The desired account slug."
+            )
+        ),
+        (
+            ["--cache"], dict(
+                type=str,
+                help="The path to the json cached file."
+            )
+        ),
+        (
+            ["--expire-cache"], dict(
+                action="store_true",
+                help="Forces the cached data to be refreshed."
+            )
+        )]
 
     @expose(hide=True)
     def default(self):
@@ -47,26 +66,19 @@ class ServiceRequestReport(ZephyrReport):
         stacked_type = "nested"
         description = "Generate the service-requests worksheet for a given account."
 
-        arguments = CementBaseController.Meta.arguments + [(
-            ["--cache"], dict(
-                type=str,
-                help="The path to the json cached file."
-            )
-        )]
-
     @expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))
 
     def run(self, **kwargs):
+        account = self.app.pargs.account
         cache = self.app.pargs.cache
-        if not cache:
-            raise NotImplementedError
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            srs = f.read()
-        sr_xlsx(json_string=srs, formatting=formatting)
-
+        expire_cache = self.app.pargs.expire_cache
+        date = None
+        response = ServiceRequests.cache(
+            account, date, cache, expire_cache, config=self.app.config, log=self.app.log
+        )
+        sr_xlsx(json_string=response, formatting=formatting)
 
 
 __ALL__ = [

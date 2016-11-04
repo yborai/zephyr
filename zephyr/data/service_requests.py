@@ -1,11 +1,21 @@
 import json
+import os
+import sqlite3
 
 import requests
 
 from collections import OrderedDict
+from datetime import datetime
 from urllib.parse import urlencode
 
+from ..core import aws, lo
 from ..core.ddh import DDH
+from .common import get_config_values
+
+def cache_key(account, date):
+    month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+    filename = "service-requests.{date}.json".format(date=date)
+    return os.path.join(account, month, filename)
 
 class ServiceRequests(object):
     base = "https://logicops.logicworks.net/api/v1/"
@@ -19,6 +29,57 @@ class ServiceRequests(object):
         ("created_date", "Created Date"),
         ("created_by", "Created By"),
     ])
+
+    @classmethod
+    def cache(cls, account, date, cache_file, expired, config=None, log=None):
+        cache_root = os.path.expanduser(config.get("zephyr", "cache"))
+        # If no date is given then default to the first of last month.
+        # TODO: Specifying a date which is not cached should fail.
+        if(not date):
+            now = datetime.now()
+            date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
+        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+
+        # If cache_file is specified then use that
+        if(cache_file):
+            log.info("Using specified cached response: {cache}".format(cache=cache_file))
+            with open(cache_file, "r") as f:
+                return f.read()
+        # If local exists and expired is false then use the local cache
+        cache_key_ = cache_key(account, date)
+        cache_local = os.path.join(cache_root, cache_key_)
+        os.makedirs(os.path.dirname(cache_local), exist_ok=True)
+        cache_local_exists = os.path.isfile(cache_local)
+        if(cache_local_exists and not expired):
+            log.info("Using cached response: {cache}".format(cache=cache_local))
+            with open(cache_local, "r") as f:
+                return f.read()
+        # If local does not exist and expired is false then check s3
+        aws_config_keys = ("s3_bucket", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
+        bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, config)
+        session = aws.get_session(key_id, secret)
+        s3 = session.resource("s3")
+        cache_s3 = aws.get_object_from_s3(bucket, cache_key_, s3)
+        if(cache_s3 and not expired):
+            log.info("Using cached response from S3.")
+            with open(cache_local, "wb") as cache_fd:
+                cache_fd.write(cache_s3)
+            return cache_s3.decode("utf-8")
+        # If we are this far then contact the API and cache the result
+        lo_config_keys = ("login", "passphrase")
+        user, passwd = get_config_values("lw-lo", lo_config_keys, config)
+        db = os.path.join(cache_root, config.get("zephyr", "database"))
+        database = sqlite3.connect(db)
+        cookies = lo.get_cookies(user, passwd)
+        lo_acct = lo.get_account_by_slug(account, database)
+        log.info("Loading service-requests from Logicops.")
+        response = ServiceRequests.read_srs(lo_acct, cookies=cookies)
+        log.info("Caching service-requests response locally.")
+        with open(cache_local, "w") as f:
+            f.write(response)
+        log.info("Caching service-requests response in S3.")
+        s3.meta.client.upload_file(cache_local, bucket, cache_key_)
+        return response
 
     @classmethod
     def read_srs(cls, account, cookies=None):

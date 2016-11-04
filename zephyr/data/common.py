@@ -16,6 +16,9 @@ def end_of_month_before(date):
     fom = datetime.datetime(year=date_y, month=date_m, day=1)
     return fom - DAY
 
+def get_config_values(section, keys, config):
+    return [config.get(section, key) for key in keys]
+
 def month_range(date):
     """
     Returns a tuple of datetimes corresponding to

@@ -96,7 +96,7 @@ def ec2_sheet(book, ddh, title, name=None, formatting=None):
     )
 
     # Insert instances by type
-    instance_top = chart_start_row + (chart_ceil*2) + cell_spacing # Account for second chart
+    instance_top = platform_top + chart_ceil + cell_spacing # Account for second chart
     count_by_column_chart(
         book, sheet, "InstanceType", ddh, instance_top, 0, "instance_type", formatting
     )

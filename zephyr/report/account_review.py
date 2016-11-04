@@ -19,6 +19,7 @@ from ..data import (
 )
 
 from .common import formatting, rows_to_excel
+from .ec2 import ec2_xlsx
 from .sr import sr_xlsx
 
 def insert_label(workbook, worksheet, row, col, label, formatting=None):
@@ -185,9 +186,8 @@ def create_xlsx_account_review(
     billing_table(workbook, sheet_dy, line_item_aggs, "LineItemAggs", top=1, left=8)
     billing_table(workbook, sheet_dy, monthly_totals, "Monthly", top=len(line_item_aggs)+2, left=8)
 
-    create_review_sheet(
-        workbook, ec2_details_json, compute_details, "EC2 Details", temp_filepath, "EC2s"
-    )
+    ec2_xlsx(workbook, ec2_details_json, formatting)
+
     create_review_sheet(
         workbook, rds_details_json, db_details, "RDS Details", temp_filepath, "RDS"
     )

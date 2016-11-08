@@ -1,17 +1,11 @@
 import xlsxwriter
 
-from ..core.ddh import DDH
 from ..data.service_requests import ServiceRequests
 from .common import ( 
-    book_formats,
     chart_dimensions,
-    count_by,
     count_by_pie_chart,
-    header_format_xlsx,
-    put_chart,
     put_label,
     put_table,
-    rows_to_excel
 )
 
 def sr_xlsx(book=None, json_string=None, formatting=None):
@@ -40,7 +34,6 @@ def sr_sheet(book, ddh, title, name=None, formatting=None):
     n_rows = len(ddh.data)
     table_height = n_rows + 1
     chart_start_row = 1 + table_height + cell_spacing # Label, table, spacing
-    table_left = int(chart_width) + cell_spacing
     chart_ceil = int(chart_height) + 1
 
     # Insert SRs by Area pie chart.

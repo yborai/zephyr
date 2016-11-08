@@ -4,6 +4,7 @@ from cement.core.controller import CementBaseController, expose
 from ..data.service_requests import ServiceRequests
 from .common import formatting
 from .ec2 import ec2_xlsx
+from .rds import rds_xlsx
 from .sr import sr_xlsx
 
 class ZephyrReport(CementBaseController):
@@ -67,12 +68,25 @@ class ComputeDetailsReport(ZephyrReport):
         stacked_type = "nested"
         description = "Generate the compute-details worksheet for a given account."
 
-        arguments = CementBaseController.Meta.arguments + [(
-            ["--cache"], dict(
-                type=str,
-                help="The path to the json cached file."
-            )
-        )]
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        cache = self.app.pargs.cache
+        if not cache:
+            raise NotImplementedError
+        self.app.log.info("Using cached response: {cache}".format(cache=cache))
+        with open(cache, "r") as f:
+            ec2 = f.read()
+        ec2_xlsx(json_string=ec2, formatting=formatting)
+
+class DBDetailsReport(ZephyrReport):
+    class Meta:
+        label = "rds"
+        stacked_on = "report"
+        stacked_type = "nested"
+        description = "Generate the db-details worksheet for a given account."
 
     @expose(hide=True)
     def default(self):
@@ -84,8 +98,8 @@ class ComputeDetailsReport(ZephyrReport):
             raise NotImplementedError
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
-            srs = f.read()
-        ec2_xlsx(json_string=srs, formatting=formatting)
+            rds = f.read()
+        rds_xlsx(json_string=rds, formatting=formatting)
 
 class ServiceRequestReport(ZephyrReport):
     class Meta:
@@ -113,5 +127,6 @@ __ALL__ = [
     ZephyrReport,
     ZephyrAccountReview,
     ComputeDetailsReport,
+    DBDetailsReport,
     ServiceRequestReport,
 ]

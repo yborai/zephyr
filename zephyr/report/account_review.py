@@ -8,18 +8,17 @@ from cement.core import controller
 
 from ..data import (
     billing,
-    compute_details,
     compute_migration,
     compute_ri,
     compute_underutilized,
     compute_underutilized_breakdown,
     db_details,
     ri_pricings,
-    service_requests,
 )
 
 from .common import formatting, rows_to_excel
 from .ec2 import ec2_xlsx
+from .rds import rds_xlsx
 from .sr import sr_xlsx
 
 def insert_label(workbook, worksheet, row, col, label, formatting=None):
@@ -188,9 +187,7 @@ def create_xlsx_account_review(
 
     ec2_xlsx(workbook, ec2_details_json, formatting)
 
-    create_review_sheet(
-        workbook, rds_details_json, db_details, "RDS Details", temp_filepath, "RDS"
-    )
+    rds_xlsx(workbook, rds_details_json, formatting)
 
     create_review_sheet(
         workbook, ec2_ri_recommendations_json, compute_ri,

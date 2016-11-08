@@ -2,8 +2,6 @@ import datetime
 import json
 from decimal import Decimal
 
-from decimal import Decimal
-
 def account_ids(accounts_json):
     with open(accounts_json) as f:
         return json.load(f)
@@ -28,3 +26,6 @@ def timed(func, log=print):
         log("%s" % (s_1 - s_0))
         return value
     return timed_func
+
+class ZephyrException(Exception):
+    pass

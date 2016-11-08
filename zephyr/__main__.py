@@ -2,11 +2,13 @@
 The zephyr CLI entrypoint
 """
 import os
+import sys
 
 from cement.core.foundation import CementApp
 from cement.core.exc import FrameworkError
 from cement.utils.misc import init_defaults
 
+from .core.utils import ZephyrException
 from .cli.controllers import __ALL__ as ZephyrControllers
 from .data.controllers import __ALL__ as ZephyrDataControllers
 from .etl.controllers import __ALL__ as ZephyrETLControllers
@@ -56,8 +58,10 @@ def main():
         try:
             app.args.add_argument('--line_width', action='store', dest='line_width')
             app.run()
-        except FrameworkError as e:
-            raise e
+        except ZephyrException as e:
+            message = e.args[0]
+            app.log.error(message)
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()

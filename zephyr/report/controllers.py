@@ -107,6 +107,13 @@ class ServiceRequestReport(ZephyrReport):
         stacked_on = "report"
         stacked_type = "nested"
         description = "Generate the service-requests worksheet for a given account."
+        arguments = ZephyrReport.Meta.arguments + [(
+            ["--date"], dict(
+                 type=str,
+                 help="The report date to request."
+            )
+        )]
+
 
     @expose(hide=True)
     def default(self):
@@ -115,8 +122,8 @@ class ServiceRequestReport(ZephyrReport):
     def run(self, **kwargs):
         account = self.app.pargs.account
         cache = self.app.pargs.cache
+        date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
-        date = None
         response = ServiceRequests.cache(
             account, date, cache, expire_cache, config=self.app.config, log=self.app.log
         )

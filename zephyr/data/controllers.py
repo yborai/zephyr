@@ -205,7 +205,7 @@ class ServiceRequestsRun(DataRun):
     def run(self, **kwargs):
         account = self.app.pargs.account
         cache = self.app.pargs.cache
-        date = None
+        date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
         response = ServiceRequests.cache(
             account, date, cache, expire_cache, config=self.app.config, log=self.app.log

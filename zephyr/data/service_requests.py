@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 
 from ..core import aws, lo
 from ..core.ddh import DDH
+from ..core.utils import ZephyrException
 from .common import get_config_values
 
 def cache_key(account, date):
@@ -34,12 +35,10 @@ class ServiceRequests(object):
     def cache(cls, account, date, cache_file, expired, config=None, log=None):
         cache_root = os.path.expanduser(config.get("zephyr", "cache"))
         # If no date is given then default to the first of last month.
-        # TODO: Specifying a date which is not cached should fail.
+        now = datetime.now()
         if(not date):
-            now = datetime.now()
             date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
         month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-
         # If cache_file is specified then use that
         if(cache_file):
             log.info("Using specified cached response: {cache}".format(cache=cache_file))
@@ -65,6 +64,14 @@ class ServiceRequests(object):
             with open(cache_local, "wb") as cache_fd:
                 cache_fd.write(cache_s3)
             return cache_s3.decode("utf-8")
+        today = now.strftime("%Y-%m-%d")
+        # If no cache exists and the report is not for today then break.
+        if(date != today and not expired):
+            raise ZephyrException(
+                "Cache not found for date {}. "
+                "Specify today's date to run this report "
+                "for current Service Requests.".format(date)
+        )
         # If we are this far then contact the API and cache the result
         lo_config_keys = ("login", "passphrase")
         user, passwd = get_config_values("lw-lo", lo_config_keys, config)

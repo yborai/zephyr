@@ -39,7 +39,7 @@ class ZephyrData(ZephyrCLI):
             )
         ),
         (
-            ["--cache"], dict(
+            ["--cache-file"], dict(
                  type=str,
                  help="The path to the cached response to use."
             )
@@ -73,18 +73,22 @@ class DataRun(ZephyrData):
 
 class WarpRun(DataRun):
     def cache_policy(self, WarpClass, account, date, cache_override, expired):
-        log = self.app.log.info
+        log = self.app.log
+        # If cache_override is specified then use that
+        if(cache_override):
+            log.info("Using specified cached response: {cache}".format(cache=cache_override))
+            with open(cache_override, "r") as f:
+                return f.read()
+
         config = self.app.config
         cc_config_keys = ("api_key", "base")
         api_key, base = get_config_values("cloudcheckr", cc_config_keys, config)
-        zephyr_config_keys = ("accounts", "cache", "database")
-        accounts, cache_root, db = [
+        zephyr_config_keys = ("cache", "database")
+        cache_root, db = [
             os.path.expanduser(path)
             for path in get_config_values("zephyr", zephyr_config_keys, config)
         ]
         database = sqlite3.connect(os.path.join(cache_root, db))
-
-        cc_name = cc.get_account_by_slug(account, database)
 
         # If no date is given then default to the first of last month.
         now = datetime.now()
@@ -95,11 +99,6 @@ class WarpRun(DataRun):
         cache_dir = os.path.join(account, month)
         folder = os.path.join(cache_root, cache_dir)
 
-        # If cache_override is specified then use that
-        if(cache_override):
-            log.info("Using specified cached response: {cache}".format(cache=cache_override))
-            with open(cache_override, "r") as f:
-                return f.read()
         # If local exists and expired is false then use the local cache
         #
         cache_local = cc.cache_path(folder, WarpClass.slug)
@@ -121,25 +120,25 @@ class WarpRun(DataRun):
             with open(cache_local, "wb") as cache_fd:
                 cache_fd.write(cache_s3)
                 return cache_s3.decode("utf-8")
-        cached = (cache_s3 or cache_local)
-        if(expired or not cached):
-            log("Retrieving data from CloudCheckr.")
-            return cc.cache(
-                WarpClass,
-                base,
-                api_key,
-                cc_name,
-                date,
-                cache_root=cache_root,
-                cache_dir=cache_dir,
-                bucket=bucket,
-                session=session,
-                log=log,
-            )
+        # If we are this far then contact the API and cache the result
+        cc_name = cc.get_account_by_slug(account, database)
+        log("Retrieving data from CloudCheckr.")
+        return cc.cache(
+            WarpClass,
+            base,
+            api_key,
+            cc_name,
+            date,
+            cache_root=cache_root,
+            cache_dir=cache_dir,
+            bucket=bucket,
+            session=session,
+            log=log,
+        )
 
     def warp_run(self, WarpClass, **kwargs):
         account = self.app.pargs.account
-        cache_arg = self.app.pargs.cache
+        cache_arg = self.app.pargs.cache_file
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
         cache = None
@@ -161,7 +160,7 @@ class Billing(DataRun):
         return DDH(header=header, data=data)
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
+        cache = self.app.pargs.cache_file
         out = self.cache_policy(cache)
         self.app.render(out)
         return out
@@ -194,7 +193,7 @@ class ComputeAV(DataRun):
         )]
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
+        cache = self.app.pargs.cache_file
         compute_details = self.app.pargs.compute_details
         if(not cache):
             raise NotImplementedError # We will add fetching later.
@@ -213,7 +212,7 @@ class ServiceRequestsRun(DataRun):
 
     def run(self, **kwargs):
         account = self.app.pargs.account
-        cache = self.app.pargs.cache
+        cache = self.app.pargs.cache_file
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
         response = ServiceRequests.cache(
@@ -316,7 +315,7 @@ class IAMUsers(DataRun):
         description = "Get the IAM Users meta information"
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
+        cache = self.app.pargs.cache_file
         if (not cache):
             raise NotImplementedError # We will add fetching later
         self.app.log.info("Using cached response: {cache}".format(cache=cache))

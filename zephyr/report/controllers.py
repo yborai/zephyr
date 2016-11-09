@@ -21,7 +21,7 @@ class ZephyrReport(CementBaseController):
             )
         ),
         (
-            ["--cache"], dict(
+            ["--cache-file"], dict(
                 type=str,
                 help="The path to the json cached file."
             )
@@ -56,7 +56,7 @@ class ZephyrAccountReview(ZephyrReport):
         self.run(**vars(self.app.pargs))
 
     def run(self, **kwargs):
-        cache_folder = self.app.pargs.cache_folder
+        cache_folder = self.app.pargs.cache_file_folder
         if(not cache_folder):
             raise NotImplementedError # We will add fetching later.
         self.app.log.info("Using cached response: {cache}".format(cache=cache_folder))
@@ -73,7 +73,7 @@ class ComputeDetailsReport(ZephyrReport):
         self.run(**vars(self.app.pargs))
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
+        cache = self.app.pargs.cache_file
         if not cache:
             raise NotImplementedError
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
@@ -93,7 +93,7 @@ class DBDetailsReport(ZephyrReport):
         self.run(**vars(self.app.pargs))
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
+        cache = self.app.pargs.cache_file
         if not cache:
             raise NotImplementedError
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
@@ -113,7 +113,7 @@ class ComputeRIReport(ZephyrReport):
         self.run(**vars(self.app.pargs))
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache
+        cache = self.app.pargs.cache_file
         if not cache:
             raise NotImplementedError
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
@@ -141,7 +141,7 @@ class ServiceRequestReport(ZephyrReport):
 
     def run(self, **kwargs):
         account = self.app.pargs.account
-        cache = self.app.pargs.cache
+        cache = self.app.pargs.cache_file
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
         response = ServiceRequests.cache(

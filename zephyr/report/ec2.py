@@ -92,8 +92,14 @@ def ec2_sheet(book, ddh, title, name=None, formatting=None):
         book, sheet, "PricingPlatform", ddh, platform_top, 0, "pric_plat", formatting
     )
 
+    # Insert instances by status
+    status_top = platform_top + chart_ceil + cell_spacing
+    count_by_pie_chart(
+        book, sheet, "Status", ddh, status_top, 0, "status", formatting
+    )
+
     # Insert instances by type
-    instance_top = platform_top + chart_ceil + cell_spacing # Account for second chart
+    instance_top = status_top + chart_ceil + cell_spacing # Account for second chart
     count_by_column_chart(
         book, sheet, "InstanceType", ddh, instance_top, 0, "instance_type", formatting
     )

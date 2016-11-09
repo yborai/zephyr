@@ -1,10 +1,10 @@
 from cement.core.controller import CementBaseController, expose
 
-
 from ..data.service_requests import ServiceRequests
 from .common import formatting
 from .ec2 import ec2_xlsx
 from .rds import rds_xlsx
+from .ri_recs import ri_xlsx
 from .sr import sr_xlsx
 
 class ZephyrReport(CementBaseController):
@@ -101,6 +101,26 @@ class DBDetailsReport(ZephyrReport):
             rds = f.read()
         rds_xlsx(json_string=rds, formatting=formatting)
 
+class ComputeRIReport(ZephyrReport):
+    class Meta:
+        label = "ri-recs"
+        stacked_on = "report"
+        stacked_type = "nested"
+        description = "Generate the compute-ri worksheet for a given account."
+
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        cache = self.app.pargs.cache
+        if not cache:
+            raise NotImplementedError
+        self.app.log.info("Using cached response: {cache}".format(cache=cache))
+        with open(cache, "r") as f:
+            ri = f.read()
+        ri_xlsx(json_string=ri, formatting=formatting)
+
 class ServiceRequestReport(ZephyrReport):
     class Meta:
         label = "sr"
@@ -134,6 +154,7 @@ __ALL__ = [
     ZephyrReport,
     ZephyrAccountReview,
     ComputeDetailsReport,
+    ComputeRIReport,
     DBDetailsReport,
     ServiceRequestReport,
 ]

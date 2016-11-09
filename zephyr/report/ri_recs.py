@@ -155,5 +155,5 @@ def sum_by_column_chart(
         legend_options=formatting["legend_options"],
         data_labels=dlf
     )
-    put_two_col_chart(book, sheet, column_name, top, left, table_loc, "column", ccf)
+    put_ri_chart(book, sheet, column_name, top, left, table_loc, "column", ccf)
     return book

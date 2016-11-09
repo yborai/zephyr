@@ -8,7 +8,7 @@ from datetime import datetime
 from cement.core.controller import CementBaseController, expose
 
 from ..cli.controllers import ZephyrCLI
-from ..core import aws, cloudcheckr, lo
+from ..core import aws, cloudcheckr as cc, lo
 from ..core.ddh import DDH
 from .common import get_config_values
 from .compute_av import compute_av
@@ -74,48 +74,57 @@ class DataRun(ZephyrData):
 class WarpRun(DataRun):
     def cache_policy(self, WarpClass, account, date, cache_override, expired):
         log = self.app.log.info
-        api_key = self.app.config.get("cloudcheckr", "api_key")
-        base = self.app.config.get("cloudcheckr", "base")
-        bucket = self.app.config.get("lw-aws", "s3_bucket")
-        key_id = self.app.config.get("lw-aws", "AWS_ACCESS_KEY_ID")
-        secret = self.app.config.get("lw-aws", "AWS_SECRET_ACCESS_KEY")
-        accounts = os.path.expanduser(self.app.config.get("zephyr", "accounts"))
-        cache_root = os.path.expanduser(self.app.config.get("zephyr", "cache"))
+        config = self.app.config
+        cc_config_keys = ("api_key", "base")
+        api_key, base = get_config_values("cloudcheckr", cc_config_keys, config)
+        zephyr_config_keys = ("accounts", "cache", "database")
+        accounts, cache_root, db = [
+            os.path.expanduser(path)
+            for path in get_config_values("zephyr", zephyr_config_keys, config)
+        ]
+        database = sqlite3.connect(os.path.join(cache_root, db))
 
-        if(account):
-            cc_name = cloudcheckr.get_cloudcheckr_name(account, accounts)
+        cc_name = cc.get_account_by_slug(account, database)
 
-        cache_file = False
-        if(date):
-            month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-            cache_dir = os.path.join(account, month)
-            folder = os.path.join(cache_root, cache_dir)
-            cache_file = cloudcheckr.cache_path(folder, WarpClass.slug)
+        # If no date is given then default to the first of last month.
+        now = datetime.now()
+        if(not date):
+            date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
 
-        cache_local = cache_file and os.path.isfile(cache_file)
+        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+        cache_dir = os.path.join(account, month)
+        folder = os.path.join(cache_root, cache_dir)
+
+        # If cache_override is specified then use that
         if(cache_override):
-            cache = cache_override
-        elif(cache_local):
-            cache = cache_file
-
-        fresh = cache_local and not expired
-        if(cache_override or fresh):
-            log("Using cached response: {cache}".format(cache=cache))
-            with open(cache, "r") as f:
+            log.info("Using specified cached response: {cache}".format(cache=cache_override))
+            with open(cache_override, "r") as f:
                 return f.read()
+        # If local exists and expired is false then use the local cache
+        #
+        cache_local = cc.cache_path(folder, WarpClass.slug)
+        #
+        cache_local_exists = os.path.isfile(cache_local)
+        if(cache_local_exists and not expired):
+            log("Using cached response: {cache}".format(cache=cache_local))
+            with open(cache_local, "r") as f:
+                return f.read()
+        # If local does not exist and expired is false then check s3
+        aws_config_keys = ("s3_bucket", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
+        bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, config)
         session = aws.get_session(key_id, secret)
-        s3_key = cloudcheckr.cache_path(cache_dir, WarpClass.slug)
         s3 = session.resource("s3")
+        s3_key = cc.cache_path(cache_dir, WarpClass.slug)
         cache_s3 = aws.get_object_from_s3(bucket, s3_key, s3)
         if(cache_s3 and not expired):
-            with open(cache_file, "wb") as cache_fd:
-                log("Using cached response from S3.")
+            log("Using cached response from S3.")
+            with open(cache_local, "wb") as cache_fd:
                 cache_fd.write(cache_s3)
                 return cache_s3.decode("utf-8")
         cached = (cache_s3 or cache_local)
         if(expired or not cached):
             log("Retrieving data from CloudCheckr.")
-            return cloudcheckr.cache(
+            return cc.cache(
                 WarpClass,
                 base,
                 api_key,

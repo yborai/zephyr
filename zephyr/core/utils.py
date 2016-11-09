@@ -14,10 +14,12 @@ class DecimalEncoder(json.JSONEncoder):
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 
-def timed(func, log=print):
+def timed(func, log=None):
     """
     Wrap a function in a timer.
     """
+    if log is None:
+        log = print
     def timed_func(*args, **kwargs):
         now = datetime.datetime.now
         s_0 = now()

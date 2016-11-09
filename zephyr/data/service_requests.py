@@ -58,6 +58,7 @@ class ServiceRequests(object):
         bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, config)
         session = aws.get_session(key_id, secret)
         s3 = session.resource("s3")
+        #
         cache_s3 = aws.get_object_from_s3(bucket, cache_key_, s3)
         if(cache_s3 and not expired):
             log.info("Using cached response from S3.")

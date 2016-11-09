@@ -1,6 +1,7 @@
 import json
 import os
 
+import pandas as pd
 import requests
 
 from urllib.parse import urlencode
@@ -41,9 +42,41 @@ def cache(
 def cache_path(cache, filename):
     return os.path.join(cache, "{}.json".format(filename))
 
-def get_cloudcheckr_name(acc_short_name, accounts_json):
-    accounts = account_ids(accounts_json)
-    return accounts[acc_short_name]["cc"]["name"]
+def get_accounts(database, config, log=None):
+    base = "https://api.cloudcheckr.com/api/"
+    uri_accts = "account.json/get_accounts_v2"
+    api_key = config[0]
+    params = dict(access_key=api_key)
+    url = "".join([
+        base,
+        uri_accts,
+        "?",
+        urlencode(params),
+    ])
+    r = timed(lambda:requests.get(url), log=log)()
+    accts = r.json()
+    header = ["aws_account", "id", "name"]
+    data = [[
+            acct["aws_account_id"],
+            acct["cc_account_id"],
+            acct["account_name"],
+        ]
+        for acct in accts["accounts_and_users"]
+    ]
+    df = pd.DataFrame(data, columns=header)
+    df.to_sql("cloudcheckr_accounts", database, if_exists="replace")
+
+def get_account_by_slug(acc_short_name, database):
+    return pd.read_sql("""
+        SELECT a.name AS slug, c.name AS cc_name
+        FROM
+            aws AS a LEFT OUTER JOIN
+            cloudcheckr_accounts AS c ON (c.aws_account = a."Acct_Number__c")
+        WHERE a.name = '{slug}'
+        """.format(slug=acc_short_name),
+        database
+    )["cc_name"][0]
+
 
 def load_pages(url, timing=False, log=print):
     """

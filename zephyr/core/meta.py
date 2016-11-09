@@ -1,10 +1,13 @@
 import os
 import sqlite3
 
-from . import aws, lo, sf
+from . import aws, cloudcheckr as cc, lo, sf
 from .ddh import DDH
 
-def get_local_db_connection(cachedir, expired, log=None, aws_config=None, lo_config=None, sf_config=None):
+def get_local_db_connection(
+    cachedir, expired,
+    log=None, aws_config=None, cc_config=None, lo_config=None, sf_config=None
+):
     """
     Obtains a local database connection,
     retrieving data from S3 or Salesforce as necessary.
@@ -41,8 +44,10 @@ def get_local_db_connection(cachedir, expired, log=None, aws_config=None, lo_con
     log.info("Loading account metadata from Salesforce.")
     database = sf.cache(db, config=sf_config)
     database = sqlite3.connect(db)
+    log.info("Loading account metadata from Cloudcheckr.")
+    cc.get_accounts(database, config=cc_config, log=log.info)
     log.info("Loading account metadata from Logicops.")
-    log.info(lo.get_accounts(database, config=lo_config))
+    lo.get_accounts(database, config=lo_config)
     log.info("Caching account metadata in S3.")
     s3.meta.client.upload_file(db, aws_bucket, s3_key)
     return database

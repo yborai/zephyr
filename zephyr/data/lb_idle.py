@@ -8,7 +8,7 @@ class LBIdleWarp(BestPracticesWarp):
     bpc_id = 126
     slug = "lb-idle"
 
-    def __init__(self, json_string):
+    def __init__(self, json_string=None, config=None):
         super().__init__(json_string, bpc_id=self.bpc_id)
 
     def _fieldnames(self):

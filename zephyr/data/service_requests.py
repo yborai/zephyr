@@ -10,8 +10,7 @@ from urllib.parse import urlencode
 
 from ..core import aws, lo
 from ..core.ddh import DDH
-from ..core.utils import ZephyrException
-from .common import get_config_values
+from ..core.utils import get_config_values, ZephyrException
 
 def cache_key(account, date):
     month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
@@ -40,19 +39,13 @@ class ServiceRequests(object):
             log.info("Using specified cached response: {cache}".format(cache=cache_file))
             with open(cache_file, "r") as f:
                 return f.read()
-        zephyr_config_keys = ("cache", "database")
-        cache_root, db = [
-            os.path.expanduser(path)
-            for path in get_config_values("zephyr", zephyr_config_keys, config)
-        ]
+        cache_root = os.path.expanduser(config.get("zephyr", "cache"))
+        db = os.path.expanduser(config.get("zephyr", "database"))
         database = sqlite3.connect(os.path.join(cache_root, db))
-        #
-        #
         # If no date is given then default to the first of last month.
         now = datetime.now()
         if(not date):
             date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
-        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
         # If local exists and expired is false then use the local cache
         cache_key_ = cache_key(account, date)
         cache_local = os.path.join(cache_root, cache_key_)
@@ -73,8 +66,8 @@ class ServiceRequests(object):
             with open(cache_local, "wb") as cache_fd:
                 cache_fd.write(cache_s3)
             return cache_s3.decode("utf-8")
-        today = now.strftime("%Y-%m-%d")
         # If no cache exists and the report is not for today then break.
+        today = now.strftime("%Y-%m-%d")
         if(date != today and not expired):
             raise ZephyrException(
                 "Cache not found for date {}. "

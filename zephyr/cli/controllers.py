@@ -3,7 +3,7 @@ import os
 from cement.core.controller import CementBaseController, expose
 
 from ..core import meta
-from ..data.common import get_config_values
+from ..core.utils import get_config_values
 
 class ZephyrCLI(CementBaseController):
     class Meta:

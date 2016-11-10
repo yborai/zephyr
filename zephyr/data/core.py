@@ -1,19 +1,27 @@
 import csv
 import json
 
+from datetime import datetime
 from decimal import Decimal
 from re import search, sub
 
+from ..core import cloudcheckr as cc
 from ..core.ddh import DDH
 
-class Warp(object):
-    def __init__(self, json_string):
-        self.raw_json = json.loads(json_string)
+class Warp(cc.CloudCheckr):
+    def __init__(self, json_string=None, config=None):
+        if(config):
+            super().__init__(config)
         self.data = {}
         key = self._key()
-        self.data = self.raw_json[0]
-        if(len(self.raw_json) > 1):
-            self.merge_results(self.raw_json)
+        if(json_string):
+            self.parse(json_string)
+
+    @classmethod
+    def cache_key(cls, account, date):
+        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+        filename = "{slug}.json".format(date=date, slug=self.slug)
+        return os.path.join(account, month, filename)
 
     @classmethod
     def get_params(cls, api_key, name, date):
@@ -22,6 +30,12 @@ class Warp(object):
             date=date,
             use_account=name,
         )
+
+    def parse(self, json_string):
+        self.raw_json = json.loads(json_string)
+        self.data = self.raw_json[0]
+        if(len(self.raw_json) > 1):
+            self.merge_results(self.raw_json)
 
     def merge_results(self, pages):
         out = []
@@ -63,10 +77,14 @@ class Warp(object):
 class BestPracticesWarp(Warp):
     uri = "best_practice.json/get_best_practices"
 
-    def __init__(self, json_string, bpc_id=None):
-        super().__init__(self._remove_links(json_string))
+    def __init__(self, json_string, bpc_id=None, config=None):
+        super().__init__(json_string=json_string, config=config)
         self.bpc_id = bpc_id
+        if(json_string):
+            self.parse(json_string)
 
+    def parse(self, json_string):
+        super().parse(self._remove_links(json_string))
         self.data = self.raw_json[0]
         if(len(self.raw_json) > 1):
             self.merge_results(self.raw_json)

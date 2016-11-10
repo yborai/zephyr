@@ -14,6 +14,10 @@ class DecimalEncoder(json.JSONEncoder):
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 
+def get_config_values(section, keys, config):
+    """Get a list of configuration values from the same section."""
+    return [config.get(section, key) for key in keys]
+
 def timed(func, log=None):
     """
     Wrap a function in a timer.

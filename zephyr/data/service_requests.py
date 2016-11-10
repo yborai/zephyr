@@ -33,17 +33,26 @@ class ServiceRequests(object):
 
     @classmethod
     def cache(cls, account, date, cache_file, expired, config=None, log=None):
-        cache_root = os.path.expanduser(config.get("zephyr", "cache"))
-        # If no date is given then default to the first of last month.
-        now = datetime.now()
-        if(not date):
-            date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
-        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+        #
+        #
         # If cache_file is specified then use that
         if(cache_file):
             log.info("Using specified cached response: {cache}".format(cache=cache_file))
             with open(cache_file, "r") as f:
                 return f.read()
+        zephyr_config_keys = ("cache", "database")
+        cache_root, db = [
+            os.path.expanduser(path)
+            for path in get_config_values("zephyr", zephyr_config_keys, config)
+        ]
+        database = sqlite3.connect(os.path.join(cache_root, db))
+        #
+        #
+        # If no date is given then default to the first of last month.
+        now = datetime.now()
+        if(not date):
+            date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
+        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
         # If local exists and expired is false then use the local cache
         cache_key_ = cache_key(account, date)
         cache_local = os.path.join(cache_root, cache_key_)
@@ -58,7 +67,6 @@ class ServiceRequests(object):
         bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, config)
         session = aws.get_session(key_id, secret)
         s3 = session.resource("s3")
-        #
         cache_s3 = aws.get_object_from_s3(bucket, cache_key_, s3)
         if(cache_s3 and not expired):
             log.info("Using cached response from S3.")
@@ -76,8 +84,6 @@ class ServiceRequests(object):
         # If we are this far then contact the API and cache the result
         lo_config_keys = ("login", "passphrase")
         user, passwd = get_config_values("lw-lo", lo_config_keys, config)
-        db = os.path.join(cache_root, config.get("zephyr", "database"))
-        database = sqlite3.connect(db)
         cookies = lo.get_cookies(user, passwd)
         lo_acct = lo.get_account_by_slug(account, database)
         log.info("Loading service-requests from Logicops.")

@@ -15,13 +15,14 @@ class Client(object):
         ]
         self.bucket = bucket
         self.cache_root = cache_root
-        database = sqlite3.connect(os.path.join(cache_root, db))
+        self.config = config
+        self.database = sqlite3.connect(os.path.join(cache_root, db))
         self.db = db
         self.key_id = key_id
         self.secret = secret
         self.session = aws.get_session(key_id, secret)
 
-    def get_object_from_s3(cache_key):
+    def get_object_from_s3(self, cache_key):
         cache_local = os.path.join(self.cache_root, cache_key)
         session = aws.get_session(self.key_id, self.secret)
         s3 = session.resource("s3")

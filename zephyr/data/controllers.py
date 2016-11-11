@@ -71,7 +71,7 @@ class DataRun(ZephyrData):
         self.run(**vars(self.app.pargs))
 
 class WarpRun(DataRun):
-    def cache(self, client, account, date, cache_file, expired):
+    def cache_policy(self, client, account, date, cache_file, expired, log=None, config=None):
         config = self.app.config
         log = self.app.log
         # If cache_file is specified then use that
@@ -79,8 +79,6 @@ class WarpRun(DataRun):
             log.info("Using specified cached response: {cache}".format(cache=cache_file))
             with open(cache_file, "r") as f:
                 return f.read()
-        #
-        #
         # If no date is given then default to the first of last month.
         now = datetime.now()
         if(not date):
@@ -114,7 +112,15 @@ class WarpRun(DataRun):
         if(cache_file):
             cache_file_ = os.path.expanduser(cache_file)
         client = WarpClass(config=self.app.config)
-        response = self.cache(client, account, date, cache_file_, expire_cache)
+        response = self.cache_policy(
+            client,
+            account,
+            date,
+            cache_file_,
+            expire_cache,
+            log=self.app.log,
+            config=self.app.config,
+        )
         client.parse(response)
         self.app.render(client.to_ddh())
 
@@ -185,12 +191,16 @@ class ServiceRequestsRun(DataRun):
         cache_file = self.app.pargs.cache_file
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
-        response = ServiceRequests.cache(
-            account, date, cache_file, expire_cache, config=self.app.config, log=self.app.log
+        client = ServiceRequests(config=self.app.config)
+        response = client.cache_policy(
+            account,
+            date,
+            cache_file,
+            expire_cache,
+            log=self.app.log,
         )
-        out = ServiceRequests(response)
-        self.app.render(out.to_ddh())
-        return out
+        client.parse(response)
+        self.app.render(client.to_ddh())
 
 class ComputeDetails(WarpRun):
     class Meta:

@@ -7,7 +7,7 @@ import requests
 from urllib.parse import urlencode
 
 from .client import Client
-from .utils import account_ids, get_config_values, timed
+from .utils import get_config_values, timed
 
 class CloudCheckr(Client):
     def __init__(self, config):
@@ -17,12 +17,7 @@ class CloudCheckr(Client):
         self.api_key = api_key
         self.base = base
 
-    def cache(
-            self,
-            account,
-            date,
-            log=None
-        ):
+    def cache(self, account, date, log=None):
         cache_key = self.cache_key(account, date)
         cc_name = self.get_account_by_slug(account, self.database)
         params = self.get_params(self.api_key, cc_name, date)
@@ -80,26 +75,29 @@ class CloudCheckr(Client):
             out.append(obj)
         return out
 
-def get_accounts(database, config, log=None):
-    base = "https://api.cloudcheckr.com/api/"
-    uri_accts = "account.json/get_accounts_v2"
-    api_key = config[0]
-    params = dict(access_key=api_key)
-    url = "".join([
-        base,
-        uri_accts,
-        "?",
-        urlencode(params),
-    ])
-    r = timed(lambda:requests.get(url), log=log)()
-    accts = r.json()
-    header = ["aws_account", "id", "name"]
-    data = [[
-            acct["aws_account_id"],
-            acct["cc_account_id"],
-            acct["account_name"],
+class CloudCheckrAccounts(CloudCheckr):
+    uri = "account.json/get_accounts_v2"
+    def __init__(self, config, log=None):
+        super().__init__(config)
+        self.log = log
+
+    def request(self):
+        params = dict(access_key=self.api_key)
+        url = "".join([
+            self.base,
+            self.uri,
+            "?",
+            urlencode(params),
+        ])
+        r = timed(lambda:requests.get(url), log=self.log.info)()
+        accts = r.json()
+        header = ["aws_account", "id", "name"]
+        data = [[
+                acct["aws_account_id"],
+                acct["cc_account_id"],
+                acct["account_name"],
+            ]
+            for acct in accts["accounts_and_users"]
         ]
-        for acct in accts["accounts_and_users"]
-    ]
-    df = pd.DataFrame(data, columns=header)
-    df.to_sql("cloudcheckr_accounts", database, if_exists="replace")
+        df = pd.DataFrame(data, columns=header)
+        df.to_sql("cloudcheckr_accounts", self.database, if_exists="replace")

@@ -134,7 +134,6 @@ class ServiceRequestReport(ZephyrReport):
             )
         )]
 
-
     @expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))

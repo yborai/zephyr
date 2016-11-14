@@ -105,6 +105,28 @@ class DBDetailsReport(ZephyrReport):
         if not out:
             self.app.log.info("No RDS Instances to report!")
 
+class ComputeMigrationReport(ZephyrReport):
+    class Meta:
+        label = "migration"
+        stacked_on = "report"
+        stacked_type = "nested"
+        description = "Generate the compute-migration worksheet for a given account."
+
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        cache = self.app.pargs.cache_file
+        if not cache:
+            raise NotImplementedError
+        self.app.log.info("using cached response:{cache}".format(cache=cache))
+        with open(cache, "r") as f:
+            migr = f.read()
+        out = migration_xlsx(json_string=migr, formatting=formatting)
+        if not out:
+            self.app.log.info("No Migration to report!")
+
 class ComputeRIReport(ZephyrReport):
     class Meta:
         label = "ri-recs"
@@ -125,7 +147,7 @@ class ComputeRIReport(ZephyrReport):
             ri = f.read()
         out = ri_xlsx(json_string=ri, formatting=formatting)
         if not out:
-            self.app.log.info("No Service Requests to report!")
+            self.app.log.info("No RI Recommendations to report!")
 
 class ServiceRequestReport(ZephyrReport):
     class Meta:

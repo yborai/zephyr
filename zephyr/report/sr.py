@@ -1,7 +1,7 @@
 import xlsxwriter
 
 from ..data.service_requests import ServiceRequests
-from .common import ( 
+from .common import (
     chart_dimensions,
     count_by_pie_chart,
     put_label,

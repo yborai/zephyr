@@ -150,7 +150,6 @@ def sum_by_column_chart(
     dlf = dict()
     dlf.update(formatting["data_labels"])
     dlf["category"] = False
-    dlf["value"] = True
     ccf = dict(
         legend_options=formatting["legend_options"],
         data_labels=dlf

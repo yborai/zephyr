@@ -18,6 +18,7 @@ from ..data import (
 from .common import formatting, rows_to_excel
 from .ec2 import ec2_xlsx
 from .rds import rds_xlsx
+from .migration import migration_xlsx
 from .ri_recs import ri_xlsx
 from .sr import sr_xlsx
 
@@ -189,20 +190,16 @@ def create_xlsx_account_review(
 
     rds_xlsx(workbook, rds_details_json, formatting)
 
-    ri_xlsx(workbook, ec2_ri_recommendations_json, formatting)
+    migration_xlsx(workbook, ec2_migration_recommendations_json, formatting)
 
-    create_review_sheet(
-        workbook, ec2_migration_recommendations_json, compute_migration,
-        "EC2 Migration Recommendations", temp_filepath, "Migrations"
-    )
+    ri_xlsx(workbook, ec2_ri_recommendations_json, formatting)
 
     create_review_sheet(
         workbook, ri_pricing_csv, ri_pricings,
         "RI Pricing", temp_filepath, "Pricings"
     )
 
-    if service_requests_json is not None:
-        sr_xlsx(workbook, service_requests_json, formatting)
+    sr_xlsx(workbook, service_requests_json, formatting)
 
     if ec2_underutilized_instances_json is not None:
         ec2_underutilized_instances_sheet = compute_underutilized.create_sheet(

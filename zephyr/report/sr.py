@@ -11,6 +11,8 @@ from .common import (
 def sr_xlsx(book=None, json_string=None, formatting=None):
     """Save a list of SRs in an Excel workbook."""
     ddh = ServiceRequests(json_string).to_ddh()
+    if not ddh.data:
+        return False
     title = "Service Requests"
     name = "SRs"
     if not book:

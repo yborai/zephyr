@@ -79,7 +79,9 @@ class ComputeDetailsReport(ZephyrReport):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
             ec2 = f.read()
-        ec2_xlsx(json_string=ec2, formatting=formatting)
+        out = ec2_xlsx(json_string=ec2, formatting=formatting)
+        if not out:
+            self.app.log.info("No EC2 Instances to report!")
 
 class DBDetailsReport(ZephyrReport):
     class Meta:
@@ -99,7 +101,9 @@ class DBDetailsReport(ZephyrReport):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
             rds = f.read()
-        rds_xlsx(json_string=rds, formatting=formatting)
+        out = rds_xlsx(json_string=rds, formatting=formatting)
+        if not out:
+            self.app.log.info("No RDS Instances to report!")
 
 class ComputeRIReport(ZephyrReport):
     class Meta:
@@ -119,7 +123,9 @@ class ComputeRIReport(ZephyrReport):
         self.app.log.info("Using cached response: {cache}".format(cache=cache))
         with open(cache, "r") as f:
             ri = f.read()
-        ri_xlsx(json_string=ri, formatting=formatting)
+        out = ri_xlsx(json_string=ri, formatting=formatting)
+        if not out:
+            self.app.log.info("No Service Requests to report!")
 
 class ServiceRequestReport(ZephyrReport):
     class Meta:
@@ -140,14 +146,16 @@ class ServiceRequestReport(ZephyrReport):
 
     def run(self, **kwargs):
         account = self.app.pargs.account
-        cache = self.app.pargs.cache_file
+        cache_file = self.app.pargs.cache_file
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
-        response = ServiceRequests.cache(
-            account, date, cache, expire_cache, config=self.app.config, log=self.app.log
+        client = ServiceRequests(config=self.app.config)
+        response = client.cache_policy(
+            account, date, cache_file, expire_cache, log=self.app.log
         )
-        sr_xlsx(json_string=response, formatting=formatting)
-
+        out = sr_xlsx(json_string=response, formatting=formatting)
+        if not out:
+            self.app.log.info("No Service Requests to report!")
 
 __ALL__ = [
     ZephyrReport,

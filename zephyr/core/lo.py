@@ -1,5 +1,5 @@
+import json
 import os
-import sqlite3
 
 import pandas as pd
 import requests
@@ -7,7 +7,6 @@ import requests
 from datetime import datetime
 
 from .client import Client
-from .ddh import DDH
 from .utils import get_config_values
 
 class Logicops(Client):
@@ -33,24 +32,14 @@ class Logicops(Client):
         self.passwd = passwd
         self.cookies = self.get_cookies(self.user, self.passwd)
 
-    def get_account_by_slug(slug):
-        return pd.read_sql("""
-            SELECT a.name AS slug, l.name AS lo_name
-            FROM
-                aws AS a LEFT OUTER JOIN
-                projects AS p ON (p."Id" = a."Assoc_Project__c") LEFT OUTER JOIN
-                logicops_accounts AS l ON (p.LogicOps_ID__c = l.id)
-            WHERE a.name = '{slug}'
-            """.format(slug=slug),
-            self.database
-        )["lo_name"][0]
-
     def cache(self, response, cache_key, log=None):
         cache_local = os.path.join(self.cache_root, cache_key)
         log.info("Caching service-requests response locally.")
         with open(cache_local, "w") as f:
             f.write(response)
         log.info("Caching service-requests response in S3.")
+        # Save a copy the response on S3
+        s3 = self.session.resource("s3")
         s3.meta.client.upload_file(cache_local, self.bucket, cache_key)
 
     def cache_policy(self, account, date, cache_file, expired, log=None):
@@ -92,11 +81,23 @@ class Logicops(Client):
         # If we are this far then contact the API and cache the result
         log.info("Retrieving data from Logicops.")
         response = self.request(account)
-        self.cache(response, cache_key, log=log)
-        return json.dumps(response)
+        self.cache(response, cache_key_, log=log)
+        return response
 
-        def request(self, account):
-            raise NotImplementedError
+    def get_account_by_slug(self, slug):
+        return pd.read_sql("""
+            SELECT a.name AS slug, l.name AS lo_name
+            FROM
+                aws AS a LEFT OUTER JOIN
+                projects AS p ON (p."Id" = a."Assoc_Project__c") LEFT OUTER JOIN
+                logicops_accounts AS l ON (p.LogicOps_ID__c = l.id)
+            WHERE a.name = '{slug}'
+            """.format(slug=slug),
+            self.database
+        )["lo_name"][0]
+
+    def request(self, account):
+        raise NotImplementedError
 
 class LogicopsAccounts(Logicops):
     def __init__(self, config):

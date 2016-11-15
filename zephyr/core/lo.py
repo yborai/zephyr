@@ -28,23 +28,12 @@ class Logicops(Client):
         self.base = "https://logicops.logicworks.net/api/v1/"
         lo_config_keys = ("login", "passphrase")
         user, passwd = get_config_values("lw-lo", lo_config_keys, config)
-        self.user = user
+        self.name = "Logicops"
         self.passwd = passwd
+        self.user = user
         self.cookies = self.get_cookies(self.user, self.passwd)
 
-    def cache(self, response, cache_key, log=None):
-        cache_local = os.path.join(self.cache_root, cache_key)
-        log.info("Caching service-requests response locally.")
-        with open(cache_local, "w") as f:
-            f.write(response)
-        log.info("Caching service-requests response in S3.")
-        # Save a copy the response on S3
-        s3 = self.session.resource("s3")
-        s3.meta.client.upload_file(cache_local, self.bucket, cache_key)
-
     def cache_policy(self, account, date, cache_file, expired, log=None):
-        #
-        #
         # If cache_file is specified then use that
         if(cache_file):
             log.info("Using specified cached response: {cache}".format(cache=cache_file))
@@ -55,8 +44,8 @@ class Logicops(Client):
         if(not date):
             date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
         # If local exists and expired is false then use the local cache
-        cache_key_ = self.cache_key(account, date)
-        cache_local = os.path.join(self.cache_root, cache_key_)
+        cache_key = self.cache_key(account, date)
+        cache_local = os.path.join(self.cache_root, cache_key)
         os.makedirs(os.path.dirname(cache_local), exist_ok=True)
         cache_local_exists = os.path.isfile(cache_local)
         if(cache_local_exists and not expired):
@@ -64,7 +53,7 @@ class Logicops(Client):
             with open(cache_local, "r") as f:
                 return f.read()
         # If local does not exist and expired is false then check s3
-        cache_s3 = self.get_object_from_s3(cache_key_)
+        cache_s3 = self.get_object_from_s3(cache_key)
         if(cache_s3 and not expired):
             log.info("Using cached response from S3.")
             with open(cache_local, "wb") as cache_fd:
@@ -79,9 +68,9 @@ class Logicops(Client):
                 "for current Service Requests.".format(date)
         )
         # If we are this far then contact the API and cache the result
-        log.info("Retrieving data from Logicops.")
+        log.info("Retrieving data from {}".format(self.name))
         response = self.request(account)
-        self.cache(response, cache_key_, log=log)
+        self.cache(response, cache_key, log=log)
         return response
 
     def get_account_by_slug(self, slug):

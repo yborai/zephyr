@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 
 from datetime import datetime
 from decimal import Decimal
@@ -20,7 +21,7 @@ class Warp(cc.CloudCheckr):
     @classmethod
     def cache_key(cls, account, date):
         month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        filename = "{slug}.json".format(date=date, slug=self.slug)
+        filename = "{slug}.json".format(date=date, slug=cls.slug)
         return os.path.join(account, month, filename)
 
     @classmethod
@@ -77,7 +78,7 @@ class Warp(cc.CloudCheckr):
 class BestPracticesWarp(Warp):
     uri = "best_practice.json/get_best_practices"
 
-    def __init__(self, json_string, bpc_id=None, config=None):
+    def __init__(self, json_string=None, bpc_id=None, config=None):
         super().__init__(json_string=json_string, config=config)
         self.bpc_id = bpc_id
         if(json_string):

@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import requests
 
+from datetime import datetime
 from urllib.parse import urlencode
 
 from .client import Client
@@ -16,27 +17,39 @@ class CloudCheckr(Client):
         api_key, base = get_config_values("cloudcheckr", cc_config_keys, config)
         self.api_key = api_key
         self.base = base
+        self.name = "CloudCheckr"
 
-    def cache(self, account, date, log=None):
+    def cache_policy(self, account, date, cache_file, expired, log=None):
+        # If cache_file is specified then use that
+        if(cache_file):
+            log.info("Using specified cached response: {cache}".format(cache=cache_file))
+            with open(cache_file, "r") as f:
+                return f.read()
+        # If no date is given then default to the first of last month.
+        now = datetime.now()
+        if(not date):
+            date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
+        # If local exists and expired is false then use the local cache
         cache_key = self.cache_key(account, date)
-        cc_name = self.get_account_by_slug(account, self.database)
-        params = self.get_params(self.api_key, cc_name, date)
-        url = "".join([
-            self.base,
-            self.uri,
-            "?",
-            urlencode(params),
-        ])
-        log.info(url)
-        response = self.load_pages(url, timing=True, log=log.info)
         cache_local = os.path.join(self.cache_root, cache_key)
         os.makedirs(os.path.dirname(cache_local), exist_ok=True)
-        with open(cache_local, "w") as f:
-            json.dump(response, f)
-        # Save a copy the response on S3
-        s3 = self.session.resource("s3")
-        s3.meta.client.upload_file(cache_local, self.bucket, self.cache_key)
-        return json.dumps(response)
+        cache_local_exists = os.path.isfile(cache_local)
+        if(cache_local_exists and not expired):
+            log.info("Using cached response: {cache}".format(cache=cache_local))
+            with open(cache_local, "r") as f:
+                return f.read()
+        # If local does not exist and expired is false then check s3
+        cache_s3 = self.get_object_from_s3(cache_key)
+        if(cache_s3 and not expired):
+            log.info("Using cached response from S3.")
+            with open(cache_local, "wb") as cache_fd:
+                cache_fd.write(cache_s3)
+            return cache_s3.decode("utf-8")
+        # If we are this far then contact the API and cache the result
+        log.info("Retrieving data from {}.".format(self.name))
+        response = self.request(account, date, log=log)
+        self.cache(response, cache_key, log=log)
+        return response
 
     def get_account_by_slug(self, acc_short_name):
         return pd.read_sql("""
@@ -74,6 +87,19 @@ class CloudCheckr(Client):
                 token = obj["NextToken"]
             out.append(obj)
         return out
+
+    def request(self, account, date, log=None):
+        cc_name = self.get_account_by_slug(account)
+        params = self.get_params(self.api_key, cc_name, date)
+        url = "".join([
+            self.base,
+            self.uri,
+            "?",
+            urlencode(params),
+        ])
+        log.info(url)
+        response = self.load_pages(url, timing=True, log=log.info)
+        return json.dumps(response)
 
 class CloudCheckrAccounts(CloudCheckr):
     uri = "account.json/get_accounts_v2"

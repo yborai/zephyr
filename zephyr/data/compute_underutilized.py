@@ -9,9 +9,6 @@ class ComputeUnderutilizedWarp(SplitInstanceWarp):
     bpc_id = 68
     slug = "compute-underutilized"
 
-    def __init__(self, json_string=None, config=None):
-        super().__init__(json_string, bpc_id=self.bpc_id)
-
     def _fieldnames(self):
         return (
             "Instance ID", "Instance Name", "Average CPU Util",

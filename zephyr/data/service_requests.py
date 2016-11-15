@@ -1,16 +1,13 @@
 import json
-import os
-import sqlite3
 
 import requests
 
 from collections import OrderedDict
-from datetime import datetime
 from urllib.parse import urlencode
 
-from ..core import aws, lo
+from ..core import lo
 from ..core.ddh import DDH
-from ..core.utils import get_config_values, ZephyrException
+from ..core.utils import get_config_values
 
 class ServiceRequests(lo.Logicops):
     uri = "sr-filter"

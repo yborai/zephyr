@@ -9,9 +9,6 @@ class ComputeMigrationWarp(SplitInstanceWarp):
     bpc_id = 240
     slug = "compute-migration"
 
-    def __init__(self, json_string=None, config=None):
-        super().__init__(json_string, bpc_id=self.bpc_id)
-
     def _fieldnames(self):
         return (
             "Instance ID", "Instance Name", "Region", "Recommendation",

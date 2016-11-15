@@ -8,9 +8,6 @@ class StorageDetachedWarp(BestPracticesWarp):
     bpc_id = 1
     slug = "storage-detached"
 
-    def __init__(self, json_string=None, config=None):
-        super().__init__(json_string, bpc_id=self.bpc_id)
-
     def _fieldnames(self):
         return (
             "Volume ID",

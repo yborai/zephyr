@@ -1,6 +1,4 @@
 import csv
-import io
-import sqlite3
 import os
 
 from datetime import datetime
@@ -8,7 +6,6 @@ from datetime import datetime
 from cement.core.controller import CementBaseController, expose
 
 from ..cli.controllers import ZephyrCLI
-from ..core import aws, cloudcheckr as cc, lo
 from ..core.ddh import DDH
 from .compute_av import compute_av
 from .compute_details import ComputeDetailsWarp
@@ -71,38 +68,6 @@ class DataRun(ZephyrData):
         self.run(**vars(self.app.pargs))
 
 class WarpRun(DataRun):
-    def cache_policy(self, client, account, date, cache_file, expired, log=None, config=None):
-        config = self.app.config
-        log = self.app.log
-        # If cache_file is specified then use that
-        if(cache_file):
-            log.info("Using specified cached response: {cache}".format(cache=cache_file))
-            with open(cache_file, "r") as f:
-                return f.read()
-        # If no date is given then default to the first of last month.
-        now = datetime.now()
-        if(not date):
-            date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
-        # If local exists and expired is false then use the local cache
-        cache_key = client.cache_key(account, date)
-        cache_local = os.path.join(client.cache_root, cache_key)
-        #
-        cache_local_exists = os.path.isfile(cache_local)
-        if(cache_local_exists and not expired):
-            log.info("Using cached response: {cache}".format(cache=cache_local))
-            with open(cache_local, "r") as f:
-                return f.read()
-        # If local does not exist and expired is false then check s3
-        cache_s3 = client.get_object_from_s3(cache_key)
-        if(cache_s3 and not expired):
-            log.info("Using cached response from S3.")
-            with open(cache_local, "wb") as cache_fd:
-                cache_fd.write(cache_s3)
-            return cache_s3.decode("utf-8")
-        # If we are this far then contact the API and cache the result
-        log.info("Retrieving data from CloudCheckr.")
-        return client.cache(account, date, log=log)
-
     def warp_run(self, WarpClass, **kwargs):
         account = self.app.pargs.account
         cache_file = self.app.pargs.cache_file
@@ -112,14 +77,12 @@ class WarpRun(DataRun):
         if(cache_file):
             cache_file_ = os.path.expanduser(cache_file)
         client = WarpClass(config=self.app.config)
-        response = self.cache_policy(
-            client,
+        response = client.cache_policy(
             account,
             date,
             cache_file_,
             expire_cache,
             log=self.app.log,
-            config=self.app.config,
         )
         client.parse(response)
         self.app.render(client.to_ddh())

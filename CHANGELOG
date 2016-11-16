@@ -1,0 +1,12 @@
+Changelog
+
+0.1.0
+-----
+
+* The `zephyr data` command supports data retreival, caching and display for
+    CloudCheckr and Logicops.
+* The `zephyr etl` command supports ETL processes for static files.
+* Cross-vendor entity resolution through the `zephhyr meta` command. Connects
+    to AWS, CloudCheckr, Logicops, Salesforce
+* The `zephyr report` command supports Excel report generation for selected
+    calls to CloudCheckr and Logicops.

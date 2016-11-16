@@ -7,7 +7,7 @@ class ZephyrETL(CementBaseController):
         label = "etl"
         stacked_on = "base"
         stacked_type = "nested"
-        description = "Generate single table reports for an account."
+        description = "Perform Extract-Transform-Load operations on data."
         arguments = CementBaseController.Meta.arguments
 
     @expose(hide=True)
@@ -18,7 +18,6 @@ class ZephyrDBRRI(ZephyrETL):
     class Meta:
         label = "dbr-ri"
         stacked_on = "etl"
-        stacked_type = "nested"
         description = "Filter the DBR for only reserved instances."
 
         arguments = ZephyrETL.Meta.arguments + [

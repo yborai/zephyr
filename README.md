@@ -1,4 +1,13 @@
-# zephyr
+`zephyr`
+======
+
+This project automates several reports which quantify Logicworks' value
+proposition to its clients. It standardizes the design of these reports which
+makes it easier to see what information clients use for decision making. This
+reduces the ad-hoc nature of report construction and archival. Additionally,
+the `zephyr` command archives each report in S3 for posterity making our
+reporting more easily auditable.
+
 
 ```
 $ zephyr
@@ -12,7 +21,7 @@ commands:
     Generate single table reports for an account.
 
   etl
-    Generate single table reports for an account.
+    Perform Extract-Transform-Load operations on data.
 
   meta
     Gather client meta information.
@@ -28,36 +37,38 @@ optional arguments:
   --line_width LINE_WIDTH
 ```
 
-## installation 
+## Installation ##
 
-1. clone the repository. 
-
+1. Clone the repository.
 ```
 $ git clone ssh://git@code.logicworks.net:44322/zephyr/zephyr.git
 ```
 
-2. Create a virtualenv.
+2. Create and activate a Python 3 virtualenv.
 
 3. Change directory into the repository.
 
-4. Activate the virtualenv.
-
-5. Install Zephyr with the following command:
+4. Install `zephyr` via `pip`:
 ```
-$pip install --editable . 
+$ pip install --editable .
 ```
 
-## data subcommand
+## Available Commands ##
 
-Command Name                 | Description
+The primary subcommands are `data`, `etl`, `meta` and `report`.
+The `zephyr meta` command initalizes the local database with client data from
+AWS, Logicops and Salesforce including projects and unique identifiers.
+
+Command                      | Description
 -----------------------------|-----------------------------------------------
-billing-monthly              | Provides a monthly itemized billing summary. 
+**`zephyr data`**            |
+billing-monthly              | Provides a monthly itemized billing summary.
 billing-line-items           | Provides a line items billing summary.
 billing-line-item-aggregates | Provides an aggregate line items billing summary.
 compute-av                   | Shows which instances have the anti-virus agent installed.
 compute-details              | Get the detailed instance meta information.
 compute-migration            | Recommends which insatnces should be updated.
-compute-ri                   | Recommends which instances be transfered to reserved instances based on usage data.
+compute-ri                   | List RI purchase recommendations.
 compute-underutilized        | List instances which have low CPU utilization.
 db-details                   | Get the detailed rds meta information.
 db-idle                      | List idle database instances.
@@ -67,21 +78,11 @@ lb-idle                      | List idle load balancers.
 ri-pricings                  | Outlines pricing information for reserved instances.
 service-requests             | List the open service requests assoicated to an account.
 storage-detached             | List detached storage volumes.
-
-## etl subcommand
-
-Command Name   | Description
----------------|-----------------------------------------------
-dbr-ri         | Filter the DBR for only reserved instances.
-
-## meta subcommand
-
-Command Name   | Description
----------------|-------------------------------------------------------
-meta           | Gather client information.
-## report subcommand
-
-Command Name     | Description
------------------|-------------------------------------------------------
-account-review   | Returns a comprehensive report of a specified account. Includes information about each data subcommand.
-sr               | Generate the Service Requests worksheet for a specified account. 
+                             |
+**`zephyr etl`**             |
+dbr-ri                       | Filter the DBR leaving only reserved instance line items.
+                             |
+**`zephyr report`**          |
+account-review               | Generate a report quantifing Logicworks' value proposition.
+ec2                          | Generate the EC2 Details worksheet of the Account Review.
+sr                           | Generate the Service Requests worksheet of the Account Review.

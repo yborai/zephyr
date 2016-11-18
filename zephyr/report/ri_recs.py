@@ -5,7 +5,7 @@ import pandas as pd
 import xlsxwriter
 
 from ..core.ddh import DDH
-from ..data.compute_ri import ComputeRIWarp
+from ..core.cc.calls import ComputeRIWarp
 from .common import (
     chart_dimensions,
     put_label,

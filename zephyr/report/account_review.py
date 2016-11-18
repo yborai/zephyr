@@ -6,14 +6,15 @@ import xlsxwriter
 
 from cement.core import controller
 
-from ..data import (
-    billing,
-    compute_migration,
-    compute_underutilized,
-    compute_underutilized_breakdown,
-    db_details,
-    ri_pricings,
+from ..core.cc.calls import (
+    ComputeDetailsWarp,
+    ComputeRIWarp,
+    ComputeUnderutilizedWarp,
+    ComputeUnderutilizedBreakdownWarp,
+    RIPricingWarp,
 )
+
+from ..data import billing
 
 from .common import formatting, rows_to_excel
 from .ec2 import ec2_xlsx
@@ -186,7 +187,8 @@ def create_xlsx_account_review(
     billing_table(workbook, sheet_dy, line_item_aggs, "LineItemAggs", top=1, left=8)
     billing_table(workbook, sheet_dy, monthly_totals, "Monthly", top=len(line_item_aggs)+2, left=8)
 
-    ec2_xlsx(workbook, ec2_details_json, formatting)
+    cd_client = ComputeDetailsWarp(json_string=ec2_details_json)
+    ec2_xlsx(workbook, cd_client, formatting)
 
     rds_xlsx(workbook, rds_details_json, formatting)
 
@@ -195,23 +197,31 @@ def create_xlsx_account_review(
     ri_xlsx(workbook, ec2_ri_recommendations_json, formatting)
 
     create_review_sheet(
-        workbook, ri_pricing_csv, ri_pricings,
-        "RI Pricing", temp_filepath, "Pricings"
+        workbook,
+        ri_pricing_csv,
+        RIPricingWarp,
+        "RI Pricing",
+        temp_filepath,
+        "Pricings"
     )
 
     sr_xlsx(workbook, service_requests_json, formatting)
 
     if ec2_underutilized_instances_json is not None:
-        ec2_underutilized_instances_sheet = compute_underutilized.create_sheet(
+        ec2_underutilized_instances_sheet = ComputeUnderutilizedWarp.create_sheet(
             ec2_underutilized_instances_json,
             temp_filepath + "/" + "ec2_underutilized_instances.csv"
         )
         ec2_underutilized_instances_xls_sheet = write_csv_to_worksheet(
-            workbook, "EC2 underutilized instances", ec2_underutilized_instances_sheet, "Underutil", "EC2 Underutilized Instances"
+            workbook,
+            "EC2 underutilized instances",
+            ec2_underutilized_instances_sheet,
+            "Underutil",
+            "EC2 Underutilized Instances"
         )
 
         if define_category_func is not None:
-            ec2_underutilized_breakdown_sheet = compute_underutilized_breakdown.create_sheet(
+            ec2_underutilized_breakdown_sheet = ComputeUnderutilizedBreakdownWarp.create_sheet(
                 ec2_underutilized_instances_json,
                 define_category_func,
                 temp_filepath + "/" + "ec2_underutilized_instances_breakdown.csv"

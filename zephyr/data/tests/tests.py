@@ -5,25 +5,23 @@ from cement.utils import test
 
 from ...__main__ import Zephyr
 
-from ...tests.tests import TestZephyr
-
-from ...core.ddh import DDH
-
-from ...data.compute_details import ComputeDetailsWarp
-from ...data.compute_migration import ComputeMigrationWarp
-from ...data.compute_ri import ComputeRIWarp
-from ...data.compute_underutilized import ComputeUnderutilizedWarp
-from ...data.compute_underutilized_breakdown import (
-    ComputeUnderutilizedBreakdownWarp
+from ...core.cc.calls import (
+    ComputeDetailsWarp,
+    ComputeMigrationWarp,
+    ComputeRIWarp,
+    ComputeUnderutilizedWarp,
+    ComputeUnderutilizedBreakdownWarp,
+    DBDetailsWarp,
+    DBIdleWarp,
+    LBIdleWarp,
+    RIPricingWarp,
+    StorageDetachedWarp,
 )
-from ...data.db_details import DBDetailsWarp
-from ...data.db_idle import DBIdleWarp
+from ...core.ddh import DDH
+from ...core.lo.calls import ServiceRequests
 from ...data.domains import domains
 from ...data.iam_users import iam_users
-from ...data.lb_idle import LBIdleWarp
-from ...data.ri_pricings import RIPricingWarp
-from ...data.service_requests import ServiceRequests
-from ...data.storage_detached import StorageDetachedWarp
+from ...tests.tests import TestZephyr
 
 class TestZephyrData(test.CementTestCase):
     app_class = TestZephyr

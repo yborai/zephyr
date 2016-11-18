@@ -1,6 +1,6 @@
 import xlsxwriter
 
-from ..data.compute_migration import ComputeMigrationWarp
+from ..core.cc.calls import ComputeMigrationWarp
 from .common import (
     put_label,
     put_table,

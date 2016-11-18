@@ -6,8 +6,8 @@ import requests
 
 from datetime import datetime
 
-from .client import Client
-from .utils import get_config_values
+from ..client import Client
+from ..utils import get_config_values
 
 class Logicops(Client):
     @classmethod

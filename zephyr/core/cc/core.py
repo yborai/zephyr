@@ -6,8 +6,8 @@ from datetime import datetime
 from decimal import Decimal
 from re import search, sub
 
-from ..core import cloudcheckr as cc
-from ..core.ddh import DDH
+from . import common as cc
+from ..ddh import DDH
 
 class Warp(cc.CloudCheckr):
     def __init__(self, json_string=None, config=None):
@@ -23,6 +23,11 @@ class Warp(cc.CloudCheckr):
         month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
         filename = "{slug}.json".format(date=date, slug=cls.slug)
         return os.path.join(account, month, filename)
+
+    @classmethod
+    def create_sheet(cls, json_string, csv_filename="out.csv"):
+        processor = cls(json_string)
+        return processor.write_csv(csv_filename)
 
     @classmethod
     def get_params(cls, api_key, name, date):

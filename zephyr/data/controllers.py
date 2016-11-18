@@ -7,20 +7,22 @@ from cement.core.controller import CementBaseController, expose
 
 from ..cli.controllers import ZephyrCLI
 from ..core.ddh import DDH
+from ..core.cc.calls import (
+    ComputeDetailsWarp,
+    ComputeMigrationWarp,
+    ComputeRIWarp,
+    ComputeUnderutilizedWarp,
+    ComputeUnderutilizedBreakdownWarp,
+    DBDetailsWarp,
+    DBIdleWarp,
+    LBIdleWarp,
+    RIPricingWarp,
+    StorageDetachedWarp,
+)
+from ..core.lo.calls import ServiceRequests
 from .compute_av import compute_av
-from .compute_details import ComputeDetailsWarp
-from .compute_migration import ComputeMigrationWarp
-from .compute_ri import ComputeRIWarp
-from .compute_underutilized import ComputeUnderutilizedWarp
-from .compute_underutilized_breakdown import ComputeUnderutilizedBreakdownWarp
-from .db_details import DBDetailsWarp
-from .db_idle import DBIdleWarp
 from .domains import domains
 from .iam_users import iam_users
-from .lb_idle import LBIdleWarp
-from .ri_pricings import RIPricingWarp
-from .service_requests import ServiceRequests
-from .storage_detached import StorageDetachedWarp
 
 class ZephyrData(ZephyrCLI):
     class Meta:

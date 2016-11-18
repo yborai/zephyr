@@ -7,8 +7,8 @@ import requests
 from datetime import datetime
 from urllib.parse import urlencode
 
-from .client import Client
-from .utils import get_config_values, timed
+from ..client import Client
+from ..utils import get_config_values, timed
 
 class CloudCheckr(Client):
     def __init__(self, config):

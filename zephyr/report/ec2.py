@@ -2,7 +2,7 @@ from operator import itemgetter
 import xlsxwriter
 
 from ..core.ddh import DDH
-from ..data.compute_details import ComputeDetailsWarp
+from ..core.cc.calls import ComputeDetailsWarp
 from .common import ( 
     chart_dimensions,
     count_by,

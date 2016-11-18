@@ -1,6 +1,6 @@
 import xlsxwriter
 
-from ..data.service_requests import ServiceRequests
+from ..core.lo.calls import ServiceRequests
 from .common import (
     chart_dimensions,
     count_by_pie_chart,
@@ -10,7 +10,7 @@ from .common import (
 
 def sr_xlsx(book=None, json_string=None, formatting=None):
     """Save a list of SRs in an Excel workbook."""
-    ddh = ServiceRequests(json_string).to_ddh()
+    ddh = ServiceRequests(json_string=json_string).to_ddh()
     if not ddh.data:
         return False
     title = "Service Requests"

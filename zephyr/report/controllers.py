@@ -1,7 +1,7 @@
 from cement.core.controller import CementBaseController, expose
 
-from ..data.compute_details import ComputeDetailsWarp
-from ..data.service_requests import ServiceRequests
+from ..core.lo.calls import ServiceRequests
+from ..core.cc.calls import ComputeDetailsWarp
 from .common import formatting
 from .ec2 import ec2_xlsx
 from .rds import rds_xlsx

@@ -1,7 +1,9 @@
 import os
 import sqlite3
 
-from . import aws, cloudcheckr as cc, lo, sf
+from . import aws, sf
+from .cc import common as cc
+from .lo import common as lo
 from .client import Client
 from .ddh import DDH
 from .utils import get_config_values

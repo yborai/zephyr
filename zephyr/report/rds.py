@@ -4,7 +4,7 @@ import pandas as pd
 import xlsxwriter
 
 from ..core.ddh import DDH
-from ..data.db_details import DBDetailsWarp
+from ..core.cc.calls import DBDetailsWarp
 from .common import (
     chart_dimensions,
     put_chart,

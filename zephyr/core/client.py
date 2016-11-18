@@ -21,6 +21,7 @@ class Client(object):
         self.key_id = key_id
         self.secret = secret
         self.session = aws.get_session(key_id, secret)
+        self.s3 = self.session.resource("s3")
 
     def cache(self, response, cache_key, log=None):
         cache_local = os.path.join(self.cache_root, cache_key)
@@ -28,12 +29,9 @@ class Client(object):
         with open(cache_local, "w") as f:
             f.write(response)
         log.info("Caching {} response in S3.".format(self.name))
-        # Save a copy the response on S3
-        s3 = self.session.resource("s3")
-        s3.meta.client.upload_file(cache_local, self.bucket, cache_key)
+        self.s3.meta.client.upload_file(cache_local, self.bucket, cache_key)
 
     def get_object_from_s3(self, cache_key):
         cache_local = os.path.join(self.cache_root, cache_key)
         session = aws.get_session(self.key_id, self.secret)
-        s3 = session.resource("s3")
-        return aws.get_object_from_s3(self.bucket, cache_key, s3)
+        return aws.get_object_from_s3(self.bucket, cache_key, self.s3)

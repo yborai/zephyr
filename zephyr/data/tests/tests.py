@@ -180,7 +180,7 @@ class TestZephyrDataParams(test.CementTestCase):
         else:
             with open(infile, "r") as f:
                 response = f.read()
-            warp = modules[module](response)
+            warp = modules[module](json_string=response)
             csv_out = warp.to_ddh().to_csv()
         trans_csv = csv_out.replace("\r\n", "")
 

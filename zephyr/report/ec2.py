@@ -105,9 +105,9 @@ def ec2_sheet(book, ddh, title, name=None, formatting=None):
     )
     return sheet
 
-def ec2_xlsx(book=None, json_string=None, formatting=None):
+def ec2_xlsx(book=None, client=None, formatting=None):
     """Save a list of EC2 instances in an Excel workbook."""
-    ddh = ComputeDetailsWarp(json_string).to_ddh()
+    ddh = client.to_ddh()
     if not ddh.data:
         return False
     title = "EC2 Details"

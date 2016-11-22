@@ -36,6 +36,8 @@ def rds_sheet(book, ddh, title, name=None, formatting=None):
 def rds_xlsx(book=None, json_string=None, formatting=None):
     """Save a list of EC2 instances in an Excel workbook."""
     ddh = DBDetailsWarp(json_string).to_ddh()
+    if not ddh.data:
+        return False
     title = "RDS Details"
     name = "RDS"
     if not book:

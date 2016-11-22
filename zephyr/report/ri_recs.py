@@ -45,6 +45,8 @@ def put_ri_chart(book, sheet, title, top, left, data_loc, chart_type, formatting
 def ri_xlsx(book=None, json_string=None, formatting=None):
     """Save a list of EC2 instances in an Excel workbook."""
     ddh = ComputeRIWarp(json_string).to_ddh()
+    if not ddh.data:
+        return False
     title = "EC2 RI Recommendations"
     name = "RIs"
     if not book:

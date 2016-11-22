@@ -32,6 +32,7 @@ def rds_sheet(book, ddh, title, name=None, formatting=None):
         book, sheet, "DbInstanceClass", "MonthlyCost", ddh, chart_start_row, 0,
         "month_cost", formatting
     )
+    return sheet
 
 def rds_xlsx(book=None, json_string=None, formatting=None):
     """Save a list of EC2 instances in an Excel workbook."""

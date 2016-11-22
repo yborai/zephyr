@@ -15,7 +15,7 @@ def migration_xlsx(book=None, json_string=None, formatting=None):
     name = "Migration"
     if not book:
         options = formatting["book_options"]
-        with xlsxwriter.Workbook("underutilized.xlsx", options) as book:
+        with xlsxwriter.Workbook("migrations.xlsx", options) as book:
             return migration_sheet(book, ddh, title, name=name, formatting=formatting)
     return migration_sheet(book, ddh, title, name=name, formatting=formatting)
 
@@ -28,3 +28,4 @@ def migration_sheet(book, ddh, title, name=None, formatting=None):
     put_table(
         book, sheet, ddh, top=1, name=name, formatting=formatting
     )
+    return sheet

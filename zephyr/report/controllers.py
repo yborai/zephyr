@@ -4,6 +4,7 @@ from ..core.lo.calls import ServiceRequests
 from ..core.cc.calls import ComputeDetailsWarp
 from .common import formatting
 from .ec2 import ec2_xlsx
+from .migration import migration_xlsx
 from .rds import rds_xlsx
 from .ri_recs import ri_xlsx
 from .sr import sr_xlsx
@@ -116,7 +117,7 @@ class ComputeMigrationReport(ZephyrReport):
         cache = self.app.pargs.cache_file
         if not cache:
             raise NotImplementedError
-        self.app.log.info("using cached response:{cache}".format(cache=cache))
+        self.app.log.info("Using cached response:{cache}".format(cache=cache))
         with open(cache, "r") as f:
             migr = f.read()
         out = migration_xlsx(json_string=migr, formatting=formatting)
@@ -171,6 +172,7 @@ __ALL__ = [
     ZephyrReport,
     ZephyrAccountReview,
     ComputeDetailsReport,
+    ComputeMigrationReport,
     ComputeRIReport,
     DBDetailsReport,
     ServiceRequestReport,

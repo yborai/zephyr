@@ -74,6 +74,7 @@ def ri_sheet(book, ddh, title, name=None, formatting=None):
     sum_by_column_chart(
         book, sheet, "Savings", ddh, chart_start_row, 0, "ri_savings", formatting
     )
+    return sheet
 
 def sum_by(header, data):
     """Sum rows in data grouping by values in the column specified"""

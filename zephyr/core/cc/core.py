@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from re import search, sub
 
-from . import common as cc
+from . import client as cc
 from ..ddh import DDH
 
 class Warp(cc.CloudCheckr):
@@ -85,15 +85,13 @@ class BestPracticesWarp(Warp):
 
     def __init__(self, json_string=None, bpc_id=None, config=None):
         super().__init__(json_string=json_string, config=config)
-        self.bpc_id = bpc_id
+        if(bpc_id):
+            self.bpc_id = bpc_id
         if(json_string):
             self.parse(json_string)
 
     def parse(self, json_string):
         super().parse(self._remove_links(json_string))
-        self.data = self.raw_json[0]
-        if(len(self.raw_json) > 1):
-            self.merge_results(self.raw_json)
 
         parsed_data = []
         bpcs = self.data["BestPracticeChecks"]

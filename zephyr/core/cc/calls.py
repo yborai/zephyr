@@ -3,8 +3,36 @@ import csv
 from datetime import datetime
 from itertools import groupby
 
-from ..utils import ZephyrException
+from ..utils import ZephyrException, timed
+from . import client as cc
 from .core import BestPracticesWarp, SplitInstanceWarp, Warp
+
+class CloudCheckrAccounts(cc.CloudCheckr):
+    uri = "account.json/get_accounts_v2"
+    def __init__(self, config, log=None):
+        super().__init__(config)
+        self.log = log
+
+    def request(self):
+        params = dict(access_key=self.api_key)
+        url = "".join([
+            self.base,
+            self.uri,
+            "?",
+            urlencode(params),
+        ])
+        r = timed(lambda:requests.get(url), log=self.log.info)()
+        accts = r.json()
+        header = ["aws_account", "id", "name"]
+        data = [[
+                acct["aws_account_id"],
+                acct["cc_account_id"],
+                acct["account_name"],
+            ]
+            for acct in accts["accounts_and_users"]
+        ]
+        df = pd.DataFrame(data, columns=header)
+        df.to_sql("cloudcheckr_accounts", self.database, if_exists="replace")
 
 class ComputeDetailsWarp(Warp):
     slug = "compute-details"
@@ -324,6 +352,7 @@ class StorageDetachedWarp(BestPracticesWarp):
         )
 
 __ALL__ = [
+    CloudCheckrAccounts,
     ComputeDetailsWarp,
     ComputeMigrationWarp,
     ComputeRIWarp,

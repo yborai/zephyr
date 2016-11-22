@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 
 from ..client import Client
-from ..utils import get_config_values
+from ..utils import get_config_values, ZephyrException
 
 class Logicops(Client):
     @classmethod

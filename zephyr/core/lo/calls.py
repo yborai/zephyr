@@ -6,7 +6,7 @@ import requests
 from collections import OrderedDict
 from urllib.parse import urlencode
 
-from . import common as lo
+from . import client as lo
 from ..ddh import DDH
 from ..utils import get_config_values
 

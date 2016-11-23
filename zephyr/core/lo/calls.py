@@ -8,7 +8,6 @@ from urllib.parse import urlencode
 
 from . import client as lo
 from ..ddh import DDH
-from ..utils import get_config_values
 
 class ServiceRequests(lo.Logicops):
     uri = "sr-filter"

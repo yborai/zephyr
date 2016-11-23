@@ -21,7 +21,7 @@ class Warp(cc.CloudCheckr):
     @classmethod
     def cache_key(cls, account, date):
         month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        filename = "{slug}.json".format(date=date, slug=cls.slug)
+        filename = "{slug}.json".format(slug=cls.slug)
         return os.path.join(account, month, filename)
 
     @classmethod

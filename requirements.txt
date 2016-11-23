@@ -2,6 +2,7 @@ boto3==1.4.0
 cement==2.10.2
 colorlog==2.7.0
 pandas==0.18.1
+pymssql==2.1.2
 pystache==0.5.4
 requests==2.11.1
 simple-salesforce==0.70

@@ -19,6 +19,7 @@ from ..core.cc.calls import (
     RIPricingWarp,
     StorageDetachedWarp,
 )
+from ..core.dy.calls import MonthlyInvoice
 from ..core.lo.calls import ServiceRequests
 from .compute_av import compute_av
 from .domains import domains
@@ -106,10 +107,26 @@ class Billing(DataRun):
         self.app.render(out)
         return out
 
-class BillingMonthly(Billing):
+class BillingMonthly(DataRun):
     class Meta:
         label = "billing-monthly"
         description = "Get the monthly billing meta information."
+
+    def run(self, **kwargs):
+        account = self.app.pargs.account
+        cache_file = self.app.pargs.cache_file
+        date = self.app.pargs.date
+        expire_cache = self.app.pargs.expire_cache
+        client = MonthlyInvoice(config=self.app.config)
+        response = client.cache_policy(
+            account,
+            date,
+            cache_file,
+            expire_cache,
+            log=self.app.log,
+        )
+        client.parse(response)
+        self.app.render(client.to_ddh())
 
 class BillingLineItems(Billing):
     class Meta:

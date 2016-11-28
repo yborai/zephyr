@@ -10,37 +10,8 @@ from .common import (
     chart_dimensions,
     put_label,
     put_table,
+    put_two_series_chart,
 )
-
-def put_ri_chart(book, sheet, title, top, left, data_loc, chart_type, formatting):
-    """Add a chart to an xlsx workbook located at data_loc."""
-    chart = book.add_chart(dict(type=chart_type))
-    legend_options = formatting["legend_options"]
-    top_, bottom, col_keys, col_values = data_loc
-
-    # Add first column
-    series_categories = [sheet.name, top_, col_keys, bottom, col_keys]
-    series1_values = [sheet.name, top_, col_values-1, bottom, col_values-1] # Looks at first column
-    series1 = dict(
-        categories=series_categories,
-        values=series1_values,
-        data_labels=formatting["data_labels"],
-    )
-    chart.add_series(series1)
-
-    # Add the second column
-    series2_values = [sheet.name, top_, col_values, bottom, col_values]
-    series2 = dict(
-        categories=series_categories,
-        values=series2_values,
-        data_labels=formatting["data_labels"],
-    )
-    chart.add_series(series2)
-
-    chart.set_title({"name": title})
-    chart.set_legend(legend_options)
-    sheet.insert_chart(top, left, chart)
-    return sheet
 
 def ri_xlsx(book=None, json_string=None, formatting=None):
     """Save a list of EC2 instances in an Excel workbook."""
@@ -72,7 +43,7 @@ def ri_sheet(book, ddh, title, name=None, formatting=None):
     chart_start_row = 1 + table_height + cell_spacing
 
     sum_by_column_chart(
-        book, sheet, "Savings", ddh, chart_start_row, 0, "ri_savings", formatting
+        book, sheet, "Annual Savings", ddh, chart_start_row, 0, "ri_savings", formatting
     )
     return sheet
 
@@ -157,5 +128,5 @@ def sum_by_column_chart(
         legend_options=formatting["legend_options"],
         data_labels=dlf
     )
-    put_ri_chart(book, sheet, column_name, top, left, table_loc, "column", ccf)
+    put_two_series_chart(book, sheet, column_name, top, left, table_loc, "column", ccf)
     return book

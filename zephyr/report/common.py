@@ -78,14 +78,25 @@ def count_by(header, data, column):
     con = sqlite3.connect(":memory:")
     df = pd.DataFrame(data, columns=header)
     df.to_sql("df", con, if_exists="replace")
-    query = """
-        SELECT
-             {col},
-             COUNT({col}) as Total
-         FROM df
-         GROUP BY {col}
-         ORDER BY COUNT({col}) DESC
-    """.format(col=column)
+    if column != "Status":
+        query = """
+            SELECT
+                 {col},
+                 COUNT({col}) as Total
+             FROM df
+             WHERE Status = "running"
+             GROUP BY {col}
+             ORDER BY COUNT({col}) DESC
+        """.format(col=column)
+    else:
+        query = """
+            SELECT
+                 {col},
+                 COUNT({col}) as Total
+             FROM df
+             GROUP BY {col}
+             ORDER BY COUNT({col}) DESC
+        """.format(col=column)
 
     sql_group = pd.read_sql(query, con)
     header = list(sql_group)
@@ -189,6 +200,36 @@ def put_table(
 
     # Tell Excel this array is a table. Note: Xlsxwriter is 0 indexed.
     sheet.add_table(top, left, top + n_rows, left + n_cols - 1, table_format)
+    return sheet
+
+def put_two_series_chart(book, sheet, title, top, left, data_loc, chart_type, formatting):
+    """Add RI chart to an xlsx workbook located at data_loc."""
+    chart = book.add_chart(dict(type=chart_type))
+    legend_options = formatting["legend_options"]
+    top_, bottom, col_keys, col_values = data_loc
+
+    # Add first column
+    series_categories = [sheet.name, top_, col_keys, bottom, col_keys]
+    series1_values = [sheet.name, top_, col_values-1, bottom, col_values-1] # Looks at first column
+    series1 = dict(
+        categories=series_categories,
+        values=series1_values,
+        data_labels=formatting["data_labels"],
+    )
+    chart.add_series(series1)
+
+    # Add the second column
+    series2_values = [sheet.name, top_, col_values, bottom, col_values]
+    series2 = dict(
+        categories=series_categories,
+        values=series2_values,
+        data_labels=formatting["data_labels"],
+    )
+    chart.add_series(series2)
+
+    chart.set_title({"name": title})
+    chart.set_legend(legend_options)
+    sheet.insert_chart(top, left, chart)
     return sheet
 
 def rows_to_excel(sheet, rows, top=1, left=0):

@@ -1,3 +1,4 @@
+import datetime
 from operator import itemgetter
 import xlsxwriter
 
@@ -52,6 +53,7 @@ def count_by_column_chart(
         table_left,
         table_left + 1,
     )
+
     # Create chart formatting
     dlf = dict()
     dlf.update(formatting["data_labels"])
@@ -64,8 +66,50 @@ def count_by_column_chart(
     put_chart(book, sheet, column_name, top, left, table_loc, "column", ccf)
     return book
 
+def days_since_launch_pie_chart(
+    book, sheet, ddh, top, left, name, formatting
+):
+    """Insert a column chart with data specified."""
+    chart_width, chart_height, cell_spacing = chart_dimensions(formatting)
+    table_left = int(chart_width) + cell_spacing
+    table_top = top + 1 # Account for label.
+
+    launch_times, days_90, days_180, days_270 = get_launch_times(ddh)
+
+    header = ["Days Since Launch", "Total"]
+    data = [
+        ["< 90 Days", len(launch_times) - sum([days_90, days_180, days_270])],
+        ["> 90 Days", days_90],
+        ["> 180 Days", days_180],
+        ["> 270 Days", days_270],
+    ]
+    counts = DDH(header=header, data = data)
+    title = "RI Qualified"
+
+    put_label(book, sheet, title, top, table_left, formatting=formatting)
+
+    sheet = put_table(
+        book,
+        sheet,
+        counts,
+        top=table_top,
+        left=table_left,
+        name=name,
+        formatting=formatting,
+    )
+
+    table_loc = (
+        table_top + 1,
+        table_top + len(data),
+        table_left,
+        table_left + 1,
+    )
+
+    put_chart(book, sheet, title, top, left, table_loc, "pie", formatting)
+    return book
+
 def ec2_sheet(book, ddh, title, name=None, formatting=None):
-    """Format the sheet and insert the data for the SR report."""
+    """Format the sheet and insert the data for the EC2 report."""
     # Insert raw report data.
     sheet = book.add_worksheet(title)
     put_label(book, sheet, title, formatting=formatting)
@@ -79,6 +123,7 @@ def ec2_sheet(book, ddh, title, name=None, formatting=None):
     n_rows = len(ddh.data)
     table_height = n_rows + 1
     chart_start_row = 1 + table_height + cell_spacing
+    table_left = int(chart_width) + cell_spacing
     chart_ceil = int(chart_height) + 1
 
     # Insert instances by region.
@@ -98,8 +143,14 @@ def ec2_sheet(book, ddh, title, name=None, formatting=None):
         book, sheet, "Status", ddh, status_top, 0, "status", formatting
     )
 
+    # Insert RI Qualifications
+    ri_qual_top = status_top + chart_ceil + cell_spacing
+    days_since_launch_pie_chart(
+        book, sheet, ddh, ri_qual_top, 0, "ri_qual", formatting
+    )
+
     # Insert instances by type
-    instance_top = status_top + chart_ceil + cell_spacing # Account for second chart
+    instance_top = ri_qual_top + chart_ceil + cell_spacing
     count_by_column_chart(
         book, sheet, "InstanceType", ddh, instance_top, 0, "instance_type", formatting
     )
@@ -117,3 +168,26 @@ def ec2_xlsx(book=None, client=None, formatting=None):
         with xlsxwriter.Workbook("ec2.xlsx", options) as book:
             return ec2_sheet(book, ddh, title, name=name, formatting=formatting)
     return ec2_sheet(book, ddh, title, name=name, formatting=formatting)
+
+def get_launch_times(ddh):
+    launch_times = []
+    for row in ddh.data:
+        if row[3] != "running": # Status is the 4th column: only include running instances
+            continue
+        launch_times.append(row[-1])
+
+    now = datetime.datetime.now().date()
+    days_90 = 0
+    days_180 = 0
+    days_270 = 0
+    for date in launch_times:
+        day = datetime.datetime.strptime(date, "%m/%d/%y %H:%M").date()
+        delta = now - day
+        if delta.days > 90 and delta.days < 181:
+            days_90 += 1
+        if delta.days > 180 and delta.days < 271:
+            days_180 += 1
+        if delta.days > 270:
+            days_270 += 1
+
+    return launch_times, days_90, days_180, days_270

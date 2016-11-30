@@ -19,23 +19,9 @@ class Warp(cc.CloudCheckr):
             self.parse(json_string)
 
     @classmethod
-    def cache_key(cls, account, date):
-        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        filename = "{slug}.json".format(slug=cls.slug)
-        return os.path.join(account, month, filename)
-
-    @classmethod
     def create_sheet(cls, json_string, csv_filename="out.csv"):
         processor = cls(json_string)
         return processor.write_csv(csv_filename)
-
-    @classmethod
-    def get_params(cls, api_key, name, date):
-        return dict(
-            access_key=api_key,
-            date=date,
-            use_account=name,
-        )
 
     def parse(self, json_string):
         self.raw_json = json.loads(json_string)

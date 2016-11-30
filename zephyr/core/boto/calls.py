@@ -1,7 +1,7 @@
 import json
 import boto3
 
-from ..core.ddh import DDH
+from ..ddh import DDH
 
 def domains(access_key_id, secret_key, session_token):
     route53 = boto3.client(

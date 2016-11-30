@@ -1,8 +1,10 @@
 import csv
+import json
 
 from datetime import datetime
 from itertools import groupby
 
+from ..ddh import DDH
 from ..utils import ZephyrException, timed
 from . import client as cc
 from .core import BestPracticesWarp, SplitInstanceWarp, Warp
@@ -37,11 +39,6 @@ class CloudCheckrAccounts(cc.CloudCheckr):
 class ComputeDetailsWarp(Warp):
     slug = "compute-details"
     uri = "inventory.json/get_resources_ec2_details"
-
-    @classmethod
-    def create_sheet(cls, json_string, csv_filename="compute-details.csv"):
-        processor = ComputeDetailsWarp(json_string)
-        return processor.write_csv(csv_filename)
 
     def _key(self):
         return "Ec2Instances"
@@ -248,6 +245,47 @@ class DBIdleWarp(BestPracticesWarp):
             "Predicted Monthly Cost",
         )
 
+class IAMUsersData(cc.CloudCheckr):
+    slug = "iam-users"
+    uri = "inventory.json/get_resources_iam_users"
+
+    def __init__(self, json_string=None, config=None):
+        if(config):
+            super().__init__(config)
+        if(json_string):
+            self.parse(json_string)
+
+    def parse(self, json_string):
+        self.raw_json = json.loads(json_string)
+
+        self.user_details = self.raw_json[0].get("IamUsersDetails")
+
+        self.header = [
+            "Username",
+            "Has MFA",
+            "Console Last Used",
+            "Access Key 1 Last Used",
+            "Access Key 2 Last Used",
+        ]
+
+
+        self.data = [
+            [
+                user["UserName"],
+                user["HasMfa"],
+                user["LastUsed"],
+                user["UserCredential"]["AccessKey1LastUsedDate"],
+                user["UserCredential"]["AccessKey2LastUsedDate"],
+            ]
+                for user in self.user_details
+        ]
+
+    def to_ddh(self):
+        header = self.header
+        data = self.data
+
+        return DDH(header=header, data=data)
+
 class LBIdleWarp(BestPracticesWarp):
     bpc_id = 126
     slug = "lb-idle"
@@ -360,6 +398,7 @@ __ALL__ = [
     ComputeUnderutilizedBreakdownWarp,
     DBDetailsWarp,
     DBIdleWarp,
+    IAMUsersData,
     LBIdleWarp,
     RIPricingWarp,
     StorageDetachedWarp,

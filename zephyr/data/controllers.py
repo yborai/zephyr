@@ -7,6 +7,8 @@ from cement.core.controller import CementBaseController, expose
 
 from ..cli.controllers import ZephyrCLI
 from ..core.ddh import DDH
+from ..core.bd.calls import compute_av
+from ..core.boto.calls import domains
 from ..core.cc.calls import (
     ComputeDetailsWarp,
     ComputeMigrationWarp,
@@ -15,15 +17,14 @@ from ..core.cc.calls import (
     ComputeUnderutilizedBreakdownWarp,
     DBDetailsWarp,
     DBIdleWarp,
+    IAMUsersData,
     LBIdleWarp,
     RIPricingWarp,
     StorageDetachedWarp,
 )
 from ..core.dy.calls import MonthlyInvoice
 from ..core.lo.calls import ServiceRequests
-from .compute_av import compute_av
-from .domains import domains
-from .iam_users import iam_users
+
 
 class ZephyrData(ZephyrCLI):
     class Meta:
@@ -190,13 +191,7 @@ class IAMUsers(DataRun):
         description = "Get the IAM Users meta information"
 
     def run(self, **kwargs):
-        cache_file = self.app.pargs.cache_file
-        if (not cache_file):
-            raise NotImplementedError # We will add fetching later
-        self.app.log.info("Using cached response: {cache}".format(cache=cache_file))
-        out = iam_users(cache_file)
-        self.app.render(out)
-        return out
+        self.run_call(IAMUsersData, **kwargs)
 
 class LBIdle(DataRun):
     class Meta:

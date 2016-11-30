@@ -14,7 +14,7 @@ from ..core.cc.calls import (
     RIPricingWarp,
 )
 
-from ..data import billing
+from ..core.dy.calls import data
 
 from .common import formatting, rows_to_excel
 from .ec2 import ec2_xlsx
@@ -176,9 +176,9 @@ def create_xlsx_account_review(
     workbook = xlsxwriter.Workbook(destination_filepath + "/" + xslx_filename, {"strings_to_numbers": True})
     temp_filepath = create_temp_folder(destination_filepath, temporary_folder_name)
 
-    monthly_totals = billing.data(billing_monthly_cache)
-    line_items = billing.data(billing_line_items_cache)
-    line_item_aggs = billing.data(billing_line_item_aggs_cache)
+    monthly_totals = data(billing_monthly_cache)
+    line_items = data(billing_line_items_cache)
+    line_item_aggs = data(billing_line_item_aggs_cache)
 
     sheet_dy = workbook.add_worksheet("Billing")
 

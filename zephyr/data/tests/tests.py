@@ -5,6 +5,7 @@ from cement.utils import test
 
 from ...__main__ import Zephyr
 
+from ...core.boto.calls import domains
 from ...core.cc.calls import (
     ComputeDetailsWarp,
     ComputeMigrationWarp,
@@ -13,14 +14,13 @@ from ...core.cc.calls import (
     ComputeUnderutilizedBreakdownWarp,
     DBDetailsWarp,
     DBIdleWarp,
+    IAMUsersData,
     LBIdleWarp,
     RIPricingWarp,
     StorageDetachedWarp,
 )
 from ...core.ddh import DDH
 from ...core.lo.calls import ServiceRequests
-from ...data.domains import domains
-from ...data.iam_users import iam_users
 from ...tests.tests import TestZephyr
 
 class TestZephyrData(test.CementTestCase):
@@ -160,7 +160,7 @@ class TestZephyrDataParams(test.CementTestCase):
             compute_underutilized=ComputeUnderutilizedWarp,
             db_details=DBDetailsWarp,
             db_idle=DBIdleWarp,
-            iam_users=iam_users,
+            iam_users=IAMUsersData,
             lb_idle=LBIdleWarp,
             ri_pricings=RIPricingWarp,
             service_requests=ServiceRequests,
@@ -172,14 +172,11 @@ class TestZephyrDataParams(test.CementTestCase):
         infile = os.path.join(files, "{}_single.json".format(module))
         outfile = os.path.join(files, "{}_gold.csv".format(module))
 
-        if(module == "iam_users"):
-            result = modules[module](infile)
-            csv_out = result.to_csv()
-        else:
-            with open(infile, "r") as f:
-                response = f.read()
-            warp = modules[module](json_string=response)
-            csv_out = warp.to_ddh().to_csv()
+
+        with open(infile, "r") as f:
+            response = f.read()
+        warp = modules[module](json_string=response)
+        csv_out = warp.to_ddh().to_csv()
         trans_csv = csv_out.replace("\r\n", "")
 
         with open(outfile, "r") as f:

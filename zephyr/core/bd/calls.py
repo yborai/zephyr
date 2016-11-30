@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 import sqlite3
 
-from ..core.ddh import DDH
+from ..ddh import DDH
 
 def compute_av(cache, compute_details):
     with open(cache, "r") as f:

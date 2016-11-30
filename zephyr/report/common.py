@@ -78,7 +78,7 @@ def count_by(header, data, column):
     con = sqlite3.connect(":memory:")
     df = pd.DataFrame(data, columns=header)
     df.to_sql("df", con, if_exists="replace")
-    if column != "Status":
+    if column != "Status" and ("running" or "stopped") in data[0]:
         query = """
             SELECT
                  {col},

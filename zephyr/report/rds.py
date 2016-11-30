@@ -10,6 +10,7 @@ from .common import (
     put_chart,
     put_label,
     put_table,
+    Report,
 )
 
 def rds_sheet(book, ddh, title, name=None, formatting=None):
@@ -110,3 +111,13 @@ def sum_and_count_by_column_chart(
     )
     put_chart(book, sheet, column_name, top, left, table_loc, "column", ccf)
     return book
+
+class ReportRDS(Report):
+    name = "RDS"
+    title = "RDS Details"
+    cls = DBDetailsWarp
+
+    @staticmethod
+    def _xlsx(*args, **kwargs):
+        return rds_sheet(*args, **kwargs)
+

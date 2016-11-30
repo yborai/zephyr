@@ -1,11 +1,13 @@
+import xlsxwriter
+
 from cement.core.controller import CementBaseController, expose
 
 from ..core.lo.calls import ServiceRequests
 from ..core.cc.calls import ComputeDetailsWarp
 from .common import formatting
-from .ec2 import ec2_xlsx
+from .ec2 import ec2_xlsx, ReportEC2
 from .migration import migration_xlsx
-from .rds import rds_xlsx
+from .rds import rds_xlsx, ReportRDS
 from .ri_recs import ri_xlsx
 from .sr import sr_xlsx
 from .underutil import underutil_xlsx
@@ -55,9 +57,24 @@ class ZephyrAccountReview(ZephyrReport):
     def default(self):
         self.run(**vars(self.app.pargs))
 
+    def reports(self, book, account, date, expire_cache, formatting):
+        config = self.app.config
+        log = self.app.log
+        ec2 = ReportEC2(
+            config, account=account, date=date, expire_cache=expire_cache, log=log,
+        ).to_xlsx(book, formatting)
+        rds = ReportRDS(
+            config, account=account, date=date, expire_cache=expire_cache, log=log,
+        ).to_xlsx(book, formatting)
+
     def run(self, **kwargs):
+        account = self.app.pargs.account
+        date = self.app.pargs.date
+        expire_cache = self.app.pargs.expire_cache
         # TODO: Combine working reports here.
-        raise NotImplementedError
+        book_options = formatting["book_options"]
+        with xlsxwriter.Workbook("ar.xlsx", book_options) as book:
+            self.reports(book, account, date, expire_cache, formatting)
 
 class ComputeDetailsReport(ZephyrReport):
     class Meta:

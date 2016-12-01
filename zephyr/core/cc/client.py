@@ -79,6 +79,6 @@ class CloudCheckr(Client):
             "?",
             urlencode(params),
         ])
-        log.info(url)
+        log.debug(url)
         response = self.load_pages(url, timing=True, log=log.info)
         return json.dumps(response)

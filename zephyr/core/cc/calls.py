@@ -1,8 +1,12 @@
 import csv
 import json
 
+import pandas as pd
+import requests
+
 from datetime import datetime
 from itertools import groupby
+from urllib.parse import urlencode
 
 from ..ddh import DDH
 from ..utils import ZephyrException, timed
@@ -23,6 +27,7 @@ class CloudCheckrAccounts(cc.CloudCheckr):
             "?",
             urlencode(params),
         ])
+        self.log.debug(url)
         r = timed(lambda:requests.get(url), log=self.log.info)()
         accts = r.json()
         header = ["aws_account", "id", "name"]

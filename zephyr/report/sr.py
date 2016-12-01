@@ -1,6 +1,7 @@
 import xlsxwriter
 
 from ..core.lo.calls import ServiceRequests
+from ..core.report import Report
 from .common import (
     chart_dimensions,
     count_by_pie_chart,
@@ -49,3 +50,13 @@ def sr_sheet(book, ddh, title, name=None, formatting=None):
         book, sheet, "Severity", ddh, severity_top, 0, "sr_sev", formatting,
     )
     return sheet
+
+class ReportSRs(Report):
+    name = "SRs"
+    title = "Service Requests"
+    cls = ServiceRequests
+
+    @staticmethod
+    def _xlsx(*args, **kwargs):
+        return sr_sheet(*args, **kwargs)
+

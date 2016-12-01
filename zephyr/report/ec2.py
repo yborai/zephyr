@@ -12,7 +12,6 @@ from .common import (
     put_chart,
     put_label,
     put_table,
-    Report,
 )
 
 def count_by_column_chart(
@@ -193,12 +192,3 @@ def get_launch_times(ddh):
             days_270 += 1
 
     return launch_times, days_90, days_180, days_270
-
-class ReportEC2(Report):
-    name = "EC2s"
-    title = "EC2 Details"
-    cls = ComputeDetailsWarp
-
-    @staticmethod
-    def _xlsx(*args, **kwargs):
-        return ec2_sheet(*args, **kwargs)

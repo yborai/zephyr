@@ -2,15 +2,15 @@ import xlsxwriter
 
 from cement.core.controller import CementBaseController, expose
 
-from ..core.lo.calls import ServiceRequests
-from ..core.cc.calls import ComputeDetailsWarp
+from ..core.cc.reports import (
+    ReportRDS,
+    ReportEC2,
+    ReportMigration,
+    ReportRIs,
+)
 from .common import formatting
-from .ec2 import ec2_xlsx, ReportEC2
-from .migration import migration_xlsx
-from .rds import rds_xlsx, ReportRDS
-from .ri_recs import ri_xlsx
-from .sr import sr_xlsx
 from .underutil import underutil_xlsx
+from .sr import ReportSRs
 
 class ZephyrReport(CementBaseController):
     class Meta:
@@ -47,121 +47,92 @@ class ZephyrReport(CementBaseController):
     def default(self):
         self.app.args.print_help()
 
-class ZephyrAccountReview(ZephyrReport):
+    def collate(self, sheets):
+        account = self.app.pargs.account
+        cache_file = self.app.pargs.cache_file
+        date = self.app.pargs.date
+        expire_cache = self.app.pargs.expire_cache
+        book_options = formatting["book_options"]
+        filename = "{}.xlsx".format(self.Meta.label)
+        with xlsxwriter.Workbook(filename, book_options) as book:
+            out = self.reports(book, sheets, account, date, expire_cache, formatting)
+        return out
+
+    def reports(self, book, sheets, account, date, expire_cache, formatting):
+        config = self.app.config
+        log = self.app.log
+        out = dict()
+        for Sheet in sheets:
+            out[Sheet] = Sheet(
+                config,
+                account=account,
+                date=date,
+                expire_cache=expire_cache,
+                log=log,
+            ).to_xlsx(book, formatting)
+        return out
+
+    def _run(self, *args):
+        out = self.collate(args)
+        sheet_set = {bool(value) for value in out.values()}
+        if True not in sheet_set:
+            self.app.log.info("No data to report!")
+
+class ZephyrReportRun(ZephyrReport):
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+class ZephyrAccountReview(ZephyrReportRun):
     class Meta:
         label = "account-review"
         stacked_on = "report"
         description = "Generate an account review for a given account."
 
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
-    def reports(self, book, account, date, expire_cache, formatting):
-        config = self.app.config
-        log = self.app.log
-        ec2 = ReportEC2(
-            config, account=account, date=date, expire_cache=expire_cache, log=log,
-        ).to_xlsx(book, formatting)
-        rds = ReportRDS(
-            config, account=account, date=date, expire_cache=expire_cache, log=log,
-        ).to_xlsx(book, formatting)
-
     def run(self, **kwargs):
-        account = self.app.pargs.account
-        date = self.app.pargs.date
-        expire_cache = self.app.pargs.expire_cache
-        # TODO: Combine working reports here.
-        book_options = formatting["book_options"]
-        with xlsxwriter.Workbook("ar.xlsx", book_options) as book:
-            self.reports(book, account, date, expire_cache, formatting)
+        self._run(
+            ReportEC2,
+            ReportRDS,
+            ReportMigration,
+            ReportRIs,
+            ReportSRs,
+        )
 
-class ComputeDetailsReport(ZephyrReport):
+class ComputeDetailsReport(ZephyrReportRun):
     class Meta:
         label = "ec2"
         stacked_on = "report"
         description = "Generate the compute-details worksheet for a given account."
 
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
     def run(self, **kwargs):
-        account = self.app.pargs.account
-        cache_file = self.app.pargs.cache_file
-        date = self.app.pargs.date
-        expire_cache = self.app.pargs.expire_cache
-        client = ComputeDetailsWarp(config=self.app.config)
-        response = client.cache_policy(
-            account, date, cache_file, expire_cache, log=self.app.log
-        )
-        client.parse(response)
-        out = ec2_xlsx(client=client, formatting=formatting)
-        if not out:
-            self.app.log.info("No Compute Instances to report!")
+        self._run(ReportEC2)
 
-class DBDetailsReport(ZephyrReport):
-    class Meta:
-        label = "rds"
-        stacked_on = "report"
-        description = "Generate the db-details worksheet for a given account."
-
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
-    def run(self, **kwargs):
-        cache = self.app.pargs.cache_file
-        if not cache:
-            raise NotImplementedError
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            rds = f.read()
-        out = rds_xlsx(json_string=rds, formatting=formatting)
-        if not out:
-            self.app.log.info("No RDS Instances to report!")
-
-class ComputeMigrationReport(ZephyrReport):
+class ComputeMigrationReport(ZephyrReportRun):
     class Meta:
         label = "migration"
         stacked_on = "report"
         description = "Generate the compute-migration worksheet for a given account."
 
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
     def run(self, **kwargs):
-        cache = self.app.pargs.cache_file
-        if not cache:
-            raise NotImplementedError
-        self.app.log.info("Using cached response:{cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            migr = f.read()
-        out = migration_xlsx(json_string=migr, formatting=formatting)
-        if not out:
-            self.app.log.info("No Migration to report!")
+        self._run(ReportMigration)
 
-class ComputeRIReport(ZephyrReport):
+class ComputeRIReport(ZephyrReportRun):
     class Meta:
         label = "ri-recs"
         stacked_on = "report"
         description = "Generate the compute-ri worksheet for a given account."
 
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
+    def run(self, **kwargs):
+        self._run(ReportRIs)
+
+class DBDetailsReport(ZephyrReportRun):
+    class Meta:
+        label = "rds"
+        stacked_on = "report"
+        description = "Generate the db-details worksheet for a given account."
 
     def run(self, **kwargs):
-        cache = self.app.pargs.cache_file
-        if not cache:
-            raise NotImplementedError
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            ri = f.read()
-        out = ri_xlsx(json_string=ri, formatting=formatting)
-        if not out:
-            self.app.log.info("No RI Recommendations to report!")
+        self._run(ReportRDS)
 
 class ComputeUnderutilizedReport(ZephyrReport):
     class Meta:
@@ -184,28 +155,14 @@ class ComputeUnderutilizedReport(ZephyrReport):
         if not out:
             self.app.log.info("No RI Recommendations to report!")
 
-class ServiceRequestReport(ZephyrReport):
+class ServiceRequestReport(ZephyrReportRun):
     class Meta:
         label = "sr"
         stacked_on = "report"
         description = "Generate the service-requests worksheet for a given account."
 
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
     def run(self, **kwargs):
-        account = self.app.pargs.account
-        cache_file = self.app.pargs.cache_file
-        date = self.app.pargs.date
-        expire_cache = self.app.pargs.expire_cache
-        client = ServiceRequests(config=self.app.config)
-        response = client.cache_policy(
-            account, date, cache_file, expire_cache, log=self.app.log
-        )
-        out = sr_xlsx(json_string=response, formatting=formatting)
-        if not out:
-            self.app.log.info("No Service Requests to report!")
+        self._run(ReportSRs)
 
 __ALL__ = [
     ZephyrReport,

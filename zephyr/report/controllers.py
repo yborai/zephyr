@@ -8,6 +8,7 @@ from .migration import migration_xlsx
 from .rds import rds_xlsx
 from .ri_recs import ri_xlsx
 from .sr import sr_xlsx
+from .underutil import underutil_xlsx
 
 class ZephyrReport(CementBaseController):
     class Meta:
@@ -145,6 +146,27 @@ class ComputeRIReport(ZephyrReport):
         if not out:
             self.app.log.info("No RI Recommendations to report!")
 
+class ComputeUnderutilizedReport(ZephyrReport):
+    class Meta:
+        label = "underutilized"
+        stacked_on = "report"
+        description = "Generate the compute-underutilized worksheet for a given account."
+
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        cache = self.app.pargs.cache_file
+        if not cache:
+            raise NotImplementedError
+        self.app.log.info("Using cached response: {cache}".format(cache=cache))
+        with open(cache, "r") as f:
+            underutil = f.read()
+        out = underutil_xlsx(json_string=underutil, formatting=formatting)
+        if not out:
+            self.app.log.info("No RI Recommendations to report!")
+
 class ServiceRequestReport(ZephyrReport):
     class Meta:
         label = "sr"
@@ -174,6 +196,7 @@ __ALL__ = [
     ComputeDetailsReport,
     ComputeMigrationReport,
     ComputeRIReport,
+    ComputeUnderutilizedReport,
     DBDetailsReport,
     ServiceRequestReport,
 ]

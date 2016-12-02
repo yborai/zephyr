@@ -1,27 +1,24 @@
-import os
-import unittest
-
 from cement.utils import test
 
-from ...__main__ import Zephyr
+from ..__main__ import Zephyr
 
-from ...core.boto.calls import domains
-from ...core.cc.calls import (
-    ComputeDetailsWarp,
-    ComputeMigrationWarp,
-    ComputeRIWarp,
-    ComputeUnderutilizedWarp,
-    ComputeUnderutilizedBreakdownWarp,
-    DBDetailsWarp,
-    DBIdleWarp,
-    IAMUsersData,
-    LBIdleWarp,
-    RIPricingWarp,
-    StorageDetachedWarp,
-)
-from ...core.ddh import DDH
-from ...core.lo.calls import ServiceRequests
-from ...tests.tests import TestZephyr
+class TestZephyr(Zephyr):
+    class Meta:
+        argv = []
+
+    @classmethod
+    def assert_zephyr_success(cls, obj, args):
+        with cls(argv=args) as app:
+            with obj.assertRaises(SystemExit) as cm:
+                app.run()
+            obj.eq(cm.exception.code, 0, msg="Expected to return SystemExit: 0")
+
+class TestZephyrBase(test.CementTestCase):
+    app_class = TestZephyr
+
+    def test_zephyr(self):
+        with self.app as app:
+            app.run()
 
 class TestZephyrData(test.CementTestCase):
     app_class = TestZephyr
@@ -148,69 +145,59 @@ class TestZephyrData(test.CementTestCase):
             "storage-detached",
             "--help",
         ])
-    
-class TestZephyrDataParams(test.CementTestCase):
+
+class TestZephyrETL(test.CementTestCase):
     app_class = TestZephyr
 
-    def assert_equal_out(self, module):
-        modules = dict(
-            compute_details=ComputeDetailsWarp,
-            compute_migration=ComputeMigrationWarp,
-            compute_ri=ComputeRIWarp,
-            compute_underutilized=ComputeUnderutilizedWarp,
-            db_details=DBDetailsWarp,
-            db_idle=DBIdleWarp,
-            iam_users=IAMUsersData,
-            lb_idle=LBIdleWarp,
-            ri_pricings=RIPricingWarp,
-            service_requests=ServiceRequests,
-            storage_detached=StorageDetachedWarp,
-        )
+    def test_zephyr_etl(self):
+        with TestZephyr(argv=["etl"]) as app:
+            app.run()
 
-        files = os.path.join(os.path.dirname(__file__), "assets")
+    def test_dbr_ri(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "etl",
+            "dbr-ri",
+            "--help",
+        ])
 
-        infile = os.path.join(files, "{}_single.json".format(module))
-        outfile = os.path.join(files, "{}_gold.csv".format(module))
+class TestZephyrReport(test.CementTestCase):
+    app_class = TestZephyr
 
+    def test_zephyr_report(self):
+        with TestZephyr(argv=["report"]) as app:
+            app.run()
 
-        with open(infile, "r") as f:
-            response = f.read()
-        warp = modules[module](json_string=response)
-        csv_out = warp.to_ddh().to_csv()
-        trans_csv = csv_out.replace("\r\n", "")
+    def test_account_review(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report",
+            "account-review",
+            "--help",
+        ])
 
-        with open(outfile, "r") as f:
-            gold_result = f.read()
-        trans_gold = gold_result.replace("\n", "")
-        self.eq(trans_csv, trans_gold)
+    def test_ec2(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report",
+            "ec2",
+            "--help",
+        ])
 
-    def test_compute_details(self):
-        self.assert_equal_out("compute_details")
+    def test_rds(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report",
+            "rds",
+            "--help",
+        ])
 
-    def test_compute_migration(self):
-        self.assert_equal_out("compute_migration")
+    def test_ri_recs(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report",
+            "ri-recs",
+            "--help",
+        ])
 
-    def test_compute_ri(self):
-        self.assert_equal_out("compute_ri")
-
-    def test_compute_underutilized(self):
-        self.assert_equal_out("compute_underutilized")
-
-    def test_db_details(self):
-        self.assert_equal_out("db_details")
-
-    def test_db_idle(self):
-        self.assert_equal_out("db_idle")
-
-    def test_iam_users(self):
-        self.assert_equal_out("iam_users")
-
-    def test_lb_idle(self):
-        self.assert_equal_out("lb_idle")
-
-    def test_service_requests(self):
-        self.assert_equal_out("service_requests")
-
-    def test_storage_detached(self):
-        self.assert_equal_out("storage_detached")
-
+    def test_sr(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report",
+            "sr",
+            "--help",
+        ])

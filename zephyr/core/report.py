@@ -17,9 +17,12 @@ class Report(Client):
         self.client = client
 
     def to_xlsx(self, book, formatting):
+        ddh = self.client.to_ddh()
+        if not ddh.data:
+            return False
         return self._xlsx(
             book,
-            self.client.to_ddh(),
+            ddh,
             self.title,
             name=self.name,
             formatting=formatting

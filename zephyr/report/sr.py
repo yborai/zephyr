@@ -56,7 +56,6 @@ class ReportSRs(Report):
     title = "Service Requests"
     cls = ServiceRequests
 
-    @staticmethod
-    def _xlsx(*args, **kwargs):
+    def _xlsx(self, *args, **kwargs):
         return sr_sheet(*args, **kwargs)
 

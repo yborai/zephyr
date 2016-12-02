@@ -4,7 +4,7 @@ import json
 
 import texttable
 
-from .utils import DecimalEncoder
+from .utils import ZephyrEncoder
 
 class DDH(object):
     def __init__(self, header=None, data=None):
@@ -39,7 +39,7 @@ class DDH(object):
     def to_json(self, *args, **kwargs):
         kwargs = self._discard_keys(kwargs, ("line_width", "template"))
         out = dict(header=self.header, data=self.data)
-        return json.dumps(out, cls=DecimalEncoder, *args, **kwargs)
+        return json.dumps(out, cls=ZephyrEncoder, *args, **kwargs)
 
     def to_table(self, *args, **kwargs):
         kwargs = self._discard_keys(kwargs, ("template"))

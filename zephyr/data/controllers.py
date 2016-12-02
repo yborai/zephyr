@@ -22,7 +22,7 @@ from ..core.cc.calls import (
     RIPricingWarp,
     StorageDetachedWarp,
 )
-from ..core.dy.calls import MonthlyInvoice
+from ..core.dy.calls import Billing
 from ..core.lo.calls import ServiceRequests
 
 
@@ -90,13 +90,13 @@ class DataRun(ZephyrData):
         client.parse(response)
         self.app.render(client.to_ddh())
 
-class BillingMonthly(DataRun):
+class BillingLineItems(DataRun):
     class Meta:
-        label = "billing-monthly"
-        description = "Get the monthly billing meta information."
+        label = "billing-line-items"
+        description = "Get the line items billing meta information."
 
     def run(self, **kwargs):
-        self.run_call(MonthlyInvoice, **kwargs)
+        self.run_call(Billing, **kwargs)
 
 class ComputeDetails(DataRun):
     class Meta:
@@ -225,7 +225,7 @@ class StorageDetached(DataRun):
     def run(self, **kwargs):
         self.run_call(StorageDetachedWarp, **kwargs)
 
-class Billing(DataRun):
+class BillingRun(DataRun):
     def cache(self, cache_file):
         if(not cache_file):
             raise NotImplementedError # We will add fetching later.
@@ -242,12 +242,7 @@ class Billing(DataRun):
         self.app.render(out)
         return out
 
-class BillingLineItems(Billing):
-    class Meta:
-        label = "billing-line-items"
-        description = "Get the line items billing meta information."
-
-class BillingLineItemAggregates(Billing):
+class BillingLineItemAggregates(BillingRun):
     class Meta:
         label = "billing-line-item-aggregates"
         description = "Get the billing line item aggregate totals."
@@ -279,7 +274,6 @@ class ComputeAV(DataRun):
 
 __ALL__ = [
     ZephyrData,
-    BillingMonthly,
     BillingLineItems,
     BillingLineItemAggregates,
     ComputeAV,

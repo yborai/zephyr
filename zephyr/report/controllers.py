@@ -3,11 +3,12 @@ import xlsxwriter
 from cement.core.controller import CementBaseController, expose
 
 from ..core.cc.reports import (
-    ReportRDS,
     ReportEC2,
     ReportMigration,
+    ReportRDS,
     ReportRIs,
 )
+from ..core.dy.reports import ReportBilling
 from .common import formatting
 from .underutil import underutil_xlsx
 from .sr import ReportSRs
@@ -79,6 +80,9 @@ class ZephyrReport(CementBaseController):
             self.app.log.info("No data to report!")
 
 class ZephyrReportRun(ZephyrReport):
+    class Meta:
+        stacked_on = "report"
+
     @expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))
@@ -86,11 +90,11 @@ class ZephyrReportRun(ZephyrReport):
 class ZephyrAccountReview(ZephyrReportRun):
     class Meta:
         label = "account-review"
-        stacked_on = "report"
         description = "Generate an account review for a given account."
 
     def run(self, **kwargs):
         self._run(
+            ReportBilling,
             ReportEC2,
             ReportRDS,
             ReportMigration,
@@ -98,10 +102,17 @@ class ZephyrAccountReview(ZephyrReportRun):
             ReportSRs,
         )
 
+class BillingReport(ZephyrReportRun):
+    class Meta:
+        label = "billing"
+        description = "Generate the compute-details worksheet for a given account."
+
+    def run(self, **kwargs):
+        self._run(ReportBilling)
+
 class ComputeDetailsReport(ZephyrReportRun):
     class Meta:
         label = "ec2"
-        stacked_on = "report"
         description = "Generate the compute-details worksheet for a given account."
 
     def run(self, **kwargs):
@@ -110,7 +121,6 @@ class ComputeDetailsReport(ZephyrReportRun):
 class ComputeMigrationReport(ZephyrReportRun):
     class Meta:
         label = "migration"
-        stacked_on = "report"
         description = "Generate the compute-migration worksheet for a given account."
 
     def run(self, **kwargs):
@@ -119,7 +129,6 @@ class ComputeMigrationReport(ZephyrReportRun):
 class ComputeRIReport(ZephyrReportRun):
     class Meta:
         label = "ri-recs"
-        stacked_on = "report"
         description = "Generate the compute-ri worksheet for a given account."
 
     def run(self, **kwargs):
@@ -128,7 +137,6 @@ class ComputeRIReport(ZephyrReportRun):
 class DBDetailsReport(ZephyrReportRun):
     class Meta:
         label = "rds"
-        stacked_on = "report"
         description = "Generate the db-details worksheet for a given account."
 
     def run(self, **kwargs):
@@ -137,7 +145,6 @@ class DBDetailsReport(ZephyrReportRun):
 class ComputeUnderutilizedReport(ZephyrReport):
     class Meta:
         label = "underutilized"
-        stacked_on = "report"
         description = "Generate the compute-underutilized worksheet for a given account."
 
     @expose(hide=True)
@@ -158,7 +165,6 @@ class ComputeUnderutilizedReport(ZephyrReport):
 class ServiceRequestReport(ZephyrReportRun):
     class Meta:
         label = "sr"
-        stacked_on = "report"
         description = "Generate the service-requests worksheet for a given account."
 
     def run(self, **kwargs):
@@ -167,6 +173,7 @@ class ServiceRequestReport(ZephyrReportRun):
 __ALL__ = [
     ZephyrReport,
     ZephyrAccountReview,
+    BillingReport,
     ComputeDetailsReport,
     ComputeMigrationReport,
     ComputeRIReport,

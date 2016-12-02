@@ -7,10 +7,10 @@ from ..core.cc.reports import (
     ReportMigration,
     ReportRDS,
     ReportRIs,
+    ReportUnderutilized,
 )
 from ..core.dy.reports import ReportBilling
 from .common import formatting
-from .underutil import underutil_xlsx
 from .sr import ReportSRs
 
 class ZephyrReport(CementBaseController):
@@ -100,6 +100,7 @@ class ZephyrAccountReview(ZephyrReportRun):
             ReportMigration,
             ReportRIs,
             ReportSRs,
+            ReportUnderutilized,
         )
 
 class BillingReport(ZephyrReportRun):
@@ -142,25 +143,13 @@ class DBDetailsReport(ZephyrReportRun):
     def run(self, **kwargs):
         self._run(ReportRDS)
 
-class ComputeUnderutilizedReport(ZephyrReport):
+class ComputeUnderutilizedReport(ZephyrReportRun):
     class Meta:
         label = "underutilized"
         description = "Generate the compute-underutilized worksheet for a given account."
 
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
     def run(self, **kwargs):
-        cache = self.app.pargs.cache_file
-        if not cache:
-            raise NotImplementedError
-        self.app.log.info("Using cached response: {cache}".format(cache=cache))
-        with open(cache, "r") as f:
-            underutil = f.read()
-        out = underutil_xlsx(json_string=underutil, formatting=formatting)
-        if not out:
-            self.app.log.info("No RI Recommendations to report!")
+        self._run(ReportUnderutilized)
 
 class ServiceRequestReport(ZephyrReportRun):
     class Meta:

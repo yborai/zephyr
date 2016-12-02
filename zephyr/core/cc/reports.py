@@ -2,11 +2,13 @@ from ...report.ec2 import ec2_sheet
 from ...report.migration import migration_sheet
 from ...report.rds import rds_sheet
 from ...report.ri_recs import ri_sheet
+from ...report.underutil import underutil_sheet
 from ..report import Report
 from .calls import (
     ComputeDetailsWarp,
     ComputeMigrationWarp,
     ComputeRIWarp,
+    ComputeUnderutilizedWarp,
     DBDetailsWarp,
 )
 
@@ -41,3 +43,11 @@ class ReportRIs(Report):
 
     def _xlsx(self, *args, **kwargs):
         return ri_sheet(*args, **kwargs)
+
+class ReportUnderutilized(Report):
+    name = "Underutil"
+    title = "EC2 Underutilized Instances"
+    cls = ComputeUnderutilizedWarp
+
+    def _xlsx(self, *args, **kwargs):
+        return underutil_sheet(*args, **kwargs)

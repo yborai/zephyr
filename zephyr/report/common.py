@@ -7,6 +7,7 @@ import sqlite3
 import pandas as pd
 import xlsxwriter
 
+from decimal import Decimal
 from ..core.ddh import DDH
 
 # 480 x 288 is the default size of the xlsxwriter chart.
@@ -72,6 +73,18 @@ def chart_dimensions(formatting):
     chart_height = chart["height"]/cell["height"]
     cell_spacing = 1
     return chart_width, chart_height, cell_spacing
+
+def clean_data(data):
+    new_data = []
+    for row in data:
+        new_row = []
+        for cell in row:
+            if isinstance(cell, Decimal):
+                new_row.append(float(cell))
+                continue
+            new_row.append(cell)
+        new_data.append(new_row)
+    return new_data
 
 def count_by(header, data, column):
     """Count rows in data grouping by values in the column specified"""

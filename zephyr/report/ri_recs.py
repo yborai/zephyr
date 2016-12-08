@@ -1,5 +1,4 @@
 from operator import itemgetter
-from decimal import Decimal
 import sqlite3
 import pandas as pd
 import xlsxwriter
@@ -8,6 +7,7 @@ from ..core.ddh import DDH
 from ..core.cc.calls import ComputeRIWarp
 from .common import (
     chart_dimensions,
+    clean_data,
     put_label,
     put_table,
     put_two_series_chart,
@@ -50,15 +50,8 @@ def ri_sheet(book, ddh, title, name=None, formatting=None):
 def sum_by(header, data):
     """Sum rows in data grouping by values in the column specified"""
     # Create data with correct float values
-    new_data = []
-    for row in data:
-        new_row = []
-        for cell in row:
-            if isinstance(cell, Decimal):
-                new_row.append(float(cell))
-                continue
-            new_row.append(cell)
-        new_data.append(new_row)
+
+    new_data = clean_data(data)
 
     con = sqlite3.connect(":memory:")
     df = pd.DataFrame(new_data, columns=header)

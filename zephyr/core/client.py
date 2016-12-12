@@ -4,6 +4,7 @@ import sqlite3
 from datetime import datetime
 
 from . import aws
+from .ddh import DDH
 from .utils import get_config_values
 
 class Client(object):
@@ -69,3 +70,14 @@ class Client(object):
         cache_local = os.path.join(self.cache_root, cache_key)
         session = aws.get_session(self.key_id, self.secret)
         return aws.get_object_from_s3(self.bucket, cache_key, self.s3)
+
+    def get_slugs(self):
+        query = 'SELECT "Name" AS slug FROM aws ORDER BY "Name"'
+        slugs = DDH.read_sql(query, self.database)
+        return list(zip(*slugs.data))[0]
+
+    def slug_valid(self, slug):
+        return True
+
+    def to_ddh(self):
+        return DDH(header=self.header, data=self.data)

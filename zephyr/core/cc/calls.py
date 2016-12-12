@@ -13,6 +13,20 @@ from ..utils import ZephyrException, timed
 from . import client as cc
 from .core import BestPracticesWarp, SplitInstanceWarp, Warp
 
+class BestPracticeChecksSummary(cc.CloudCheckr):
+    slug = "best-practice"
+    uri = "best_practice.json/get_best_practices"
+
+    def __init__(self, config, log=None):
+        super().__init__(config)
+        self.log = log
+
+    def parse(self, json_string):
+        self.raw_json = json.loads(json_string)
+        bpcs = self.raw_json[0]["BestPracticeChecks"]
+        self.header = ["Name", "Results"]
+        self.data = [[ bpc["Name"], bpc["CountOfResults"]] for bpc in bpcs]
+
 class CloudCheckrAccounts(cc.CloudCheckr):
     uri = "account.json/get_accounts_v2"
     def __init__(self, config, log=None):
@@ -262,9 +276,7 @@ class IAMUsersData(cc.CloudCheckr):
 
     def parse(self, json_string):
         self.raw_json = json.loads(json_string)
-
         self.user_details = self.raw_json[0].get("IamUsersDetails")
-
         self.header = [
             "Username",
             "Has MFA",
@@ -272,8 +284,6 @@ class IAMUsersData(cc.CloudCheckr):
             "Access Key 1 Last Used",
             "Access Key 2 Last Used",
         ]
-
-
         self.data = [
             [
                 user["UserName"],

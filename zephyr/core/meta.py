@@ -84,4 +84,3 @@ class LWProjects(Client):
         LIMIT 200
         """
         return DDH.read_sql(query, self.database)
-

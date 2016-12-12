@@ -7,9 +7,11 @@ from cement.core.controller import CementBaseController, expose
 
 from ..cli.controllers import ZephyrCLI
 from ..core.ddh import DDH
+from ..core.utils import ZephyrException
 from ..core.bd.calls import compute_av
 from ..core.boto.calls import domains
 from ..core.cc.calls import (
+    BestPracticeChecksSummary,
     ComputeDetailsWarp,
     ComputeMigrationWarp,
     ComputeRIWarp,
@@ -24,7 +26,6 @@ from ..core.cc.calls import (
 )
 from ..core.dy.calls import Billing
 from ..core.lo.calls import ServiceRequests
-
 
 class ZephyrData(ZephyrCLI):
     class Meta:
@@ -76,19 +77,35 @@ class DataRun(ZephyrData):
         cache_file = self.app.pargs.cache_file
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
+        log = self.app.log
         cache_file_ = None
         if(cache_file):
             cache_file_ = os.path.expanduser(cache_file)
         client = cls(config=self.app.config)
-        response = client.cache_policy(
-            account,
-            date,
-            cache_file_,
-            expire_cache,
-            log=self.app.log,
-        )
-        client.parse(response)
-        self.app.render(client.to_ddh())
+        accts = [account]
+        if(account == "all"):
+            accts = client.get_slugs()
+        for acct in accts:
+            if(not client.slug_valid(acct)):
+                log.info("Skipping {}".format(acct))
+                continue
+            log.info("Running {report} for {account}".format(
+                report=self.Meta.label,
+                account=acct,
+            ))
+            try:
+                response = client.cache_policy(
+                    acct,
+                    date,
+                    cache_file_,
+                    expire_cache,
+                    log=log,
+                )
+            except ZephyrException as e:
+                message = e.args[0]
+                log.error(message)
+            client.parse(response)
+            self.app.render(client.to_ddh())
 
 class BillingLineItems(DataRun):
     class Meta:
@@ -97,6 +114,14 @@ class BillingLineItems(DataRun):
 
     def run(self, **kwargs):
         self.run_call(Billing, **kwargs)
+
+class BestPracticeChecksSummaryData(DataRun):
+    class Meta:
+        label = "bpc-summary"
+        description = "Get a summary of the CloudCheckr best practice checks."
+
+    def run(self, **kwargs):
+        self.run_call(BestPracticeChecksSummary, **kwargs)
 
 class ComputeDetails(DataRun):
     class Meta:
@@ -274,6 +299,7 @@ class ComputeAV(DataRun):
 
 __ALL__ = [
     ZephyrData,
+    BestPracticeChecksSummaryData,
     BillingLineItems,
     BillingLineItemAggregates,
     ComputeAV,

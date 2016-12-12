@@ -8,7 +8,7 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 from ..client import Client
-from ..utils import get_config_values, timed
+from ..utils import get_config_values, timed, ZephyrException
 
 class CloudCheckr(Client):
     def __init__(self, config):
@@ -62,6 +62,10 @@ class CloudCheckr(Client):
             if(token):
                 url_cur = url + tmpl.format(token=token)
             resp = time(lambda:requests.get(url_cur))()
+            if(resp.status_code != 200):
+                raise ZephyrException(
+                    "Response not OK, got code: {}".format(resp.status_code)
+                )
             obj = resp.json()
             page_next = obj.get("HasNext", False)
             token = ""
@@ -82,3 +86,6 @@ class CloudCheckr(Client):
         log.debug(url)
         response = self.load_pages(url, timing=True, log=log.info)
         return json.dumps(response)
+
+    def slug_valid(self, slug):
+        return self.get_account_by_slug(slug)

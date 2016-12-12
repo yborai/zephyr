@@ -45,7 +45,7 @@ class ServiceRequests(lo.Logicops):
         self.data = [[row[index] for index in self.column_indexes] for row in data_raw]
         return self.response
 
-    def request(self, slug):
+    def request(self, slug, log=None):
         lo_acct = self.get_account_by_slug(slug)
         params = {
             "team_options[0]" : "_all_",
@@ -62,14 +62,9 @@ class ServiceRequests(lo.Logicops):
             "?",
             urlencode(params),
         ])
+        log.debug(url)
         r = requests.get(url, cookies=self.cookies, verify=False)
         return r.content.decode("utf-8")
-
-    def to_ddh(self):
-        header = self.header
-        data = self.data
-
-        return DDH(header=header, data=data)
 
     def write_csv(self, csv_filename):
         with open(csv_filename, "w") as csvfile:

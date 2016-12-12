@@ -2,6 +2,9 @@ import xlsxwriter
 
 from cement.core.controller import CementBaseController, expose
 
+from ..core.client import Client
+from ..core.utils import ZephyrException
+from ..core.cc.client import CloudCheckr
 from ..core.cc.reports import (
     ReportEC2,
     ReportMigration,
@@ -22,7 +25,10 @@ class ZephyrReport(CementBaseController):
         arguments = CementBaseController.Meta.arguments + [(
             ["--account"], dict(
                  type=str,
-                 help="The desired account slug."
+                 help=(
+                    "The desired account slug. The value 'all' will iterate"
+                    " through all available slugs."
+                )
             )
         ),
         (
@@ -49,14 +55,31 @@ class ZephyrReport(CementBaseController):
         self.app.args.print_help()
 
     def collate(self, sheets):
+        log = self.app.log
         account = self.app.pargs.account
         cache_file = self.app.pargs.cache_file
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
         book_options = formatting["book_options"]
-        filename = "{}.xlsx".format(self.Meta.label)
-        with xlsxwriter.Workbook(filename, book_options) as book:
-            out = self.reports(book, sheets, account, date, expire_cache, formatting)
+        accts = [account]
+        out = dict()
+        if(account == "all"):
+            accts = Client(self.app.config).get_slugs()
+        for acct in accts:
+            if(not self.slug_valid(acct)):
+                log.info("Skipping {}".format(acct))
+                continue
+            log.info("Running {report} for {account}".format(
+                report=self.Meta.label,
+                account=acct,
+            ))
+            filename = "{slug}.{label}.xlsx".format(
+                label=self.Meta.label, slug=acct
+            )
+            with xlsxwriter.Workbook(filename, book_options) as book:
+                out = self.reports(
+                    book, sheets, acct, date, expire_cache, formatting
+                )
         return out
 
     def reports(self, book, sheets, account, date, expire_cache, formatting):
@@ -64,13 +87,19 @@ class ZephyrReport(CementBaseController):
         log = self.app.log
         out = dict()
         for Sheet in sheets:
-            out[Sheet] = Sheet(
-                config,
-                account=account,
-                date=date,
-                expire_cache=expire_cache,
-                log=log,
-            ).to_xlsx(book, formatting)
+            try:
+                out[Sheet] = Sheet(
+                    config,
+                    account=account,
+                    date=date,
+                    expire_cache=expire_cache,
+                    log=log,
+                ).to_xlsx(book, formatting)
+            except ZephyrException as e:
+                message = e.args[0]
+                log.error("Error in {sheet}: {message}".format(
+                    sheet=Sheet.title, message=message
+                ))
         return out
 
     def _run(self, *args):
@@ -87,6 +116,9 @@ class ZephyrReportRun(ZephyrReport):
     def default(self):
         self.run(**vars(self.app.pargs))
 
+    def slug_valid(self, slug):
+        return True
+
 class ZephyrAccountReview(ZephyrReportRun):
     class Meta:
         label = "account-review"
@@ -102,6 +134,10 @@ class ZephyrAccountReview(ZephyrReportRun):
             ReportSRs,
             ReportUnderutilized,
         )
+
+    def slug_valid(self, slug):
+        client = CloudCheckr(config=self.app.config)
+        return client.get_account_by_slug(slug)
 
 class BillingReport(ZephyrReportRun):
     class Meta:

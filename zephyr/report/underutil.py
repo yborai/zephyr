@@ -89,7 +89,8 @@ def remove_repeated_names(data):
             continue
         row[0] = ""
         with_tags.append(row)
-    no_tags[0][0] = "No tag"
+    if(len(no_tags)):
+        no_tags[0][0] = "No tag"
 
     out = with_tags + no_tags
 

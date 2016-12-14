@@ -3,6 +3,7 @@ import os
 from cement.core.controller import CementBaseController, expose
 
 from ..core import meta
+from ..core.configure import Configure
 
 class ZephyrCLI(CementBaseController):
     class Meta:
@@ -43,7 +44,25 @@ class ZephyrMeta(ZephyrCLI):
             line_width=self.line_width
         )
 
+class ZephyrConfigure(ZephyrCLI):
+    class Meta:
+        label = "configure"
+        stacked_on = "base"
+        stacked_type = "nested"
+        description = "Gather configuration values."
+
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        log = self.app.log
+
+        configure = Configure()
+        configure.create_config(self.app.config)
+
 __ALL__ = [
     ZephyrCLI,
+    ZephyrConfigure,
     ZephyrMeta,
 ]

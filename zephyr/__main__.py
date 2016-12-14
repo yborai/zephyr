@@ -19,6 +19,8 @@ defaults = init_defaults(
     "cloudcheckr",
     "log.logging",
     "lw-aws",
+    "lw-dy",
+    "lw-lo",
     "lw-sf",
     "tests",
     "zephyr",

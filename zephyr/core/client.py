@@ -8,6 +8,12 @@ from .ddh import DDH
 from .utils import get_config_values
 
 class Client(object):
+    @classmethod
+    def cache_key(cls, account, date):
+        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+        filename = "{slug}.json".format(slug=cls.slug)
+        return os.path.join(account, month, filename)
+
     def __init__(self, config):
         aws_config_keys = ("s3_bucket", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
         bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, config)

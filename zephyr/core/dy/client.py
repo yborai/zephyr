@@ -9,12 +9,6 @@ from ..client import Client
 from ..utils import get_config_values, ZephyrException
 
 class Dynamics(Client):
-    @classmethod
-    def cache_key(cls, account, date):
-        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        filename = "{slug}.json".format(slug=cls.slug)
-        return os.path.join(account, month, filename)
-
     def __init__(self, config):
         super().__init__(config)
         dy_config_keys = ("host", "user", "password")

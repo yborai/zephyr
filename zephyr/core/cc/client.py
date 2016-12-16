@@ -19,12 +19,6 @@ class CloudCheckr(Client):
         self.base = base
         self.name = "CloudCheckr"
 
-    @classmethod
-    def cache_key(cls, account, date):
-        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        filename = "{slug}.json".format(slug=cls.slug)
-        return os.path.join(account, month, filename)
-
     def get_account_by_slug(self, acc_short_name):
         return pd.read_sql("""
             SELECT a.name AS slug, c.name AS cc_name

@@ -1,4 +1,9 @@
+import os
+
 import xlsxwriter
+
+from datetime import datetime
+from shutil import copyfile
 
 from cement.core.controller import CementBaseController, expose
 
@@ -54,17 +59,19 @@ class ZephyrReport(CementBaseController):
     def default(self):
         self.app.args.print_help()
 
-    def collate(self, sheets):
-        log = self.app.log
-        account = self.app.pargs.account
-        cache_file = self.app.pargs.cache_file
-        date = self.app.pargs.date
-        expire_cache = self.app.pargs.expire_cache
+    def cache_key(self, slug, account, date):
+        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+        filename = "{slug}.xlsx".format(slug=slug)
+        return os.path.join(account, month, filename)
+
+    def collate(self, sheets, account, date, expire_cache, formatting, log):
+        config = self.app.config
         book_options = formatting["book_options"]
         accts = [account]
         out = dict()
+        client = Client(config)
         if(account == "all"):
-            accts = Client(self.app.config).get_slugs()
+            accts = client.get_slugs()
         for acct in accts:
             if(not self.slug_valid(acct)):
                 log.info("Skipping {}".format(acct))
@@ -80,6 +87,12 @@ class ZephyrReport(CementBaseController):
                 out = self.reports(
                     book, sheets, acct, date, expire_cache, formatting
                 )
+            cache_key = self.cache_key(self.Meta.label, acct, date)
+            cache_local = os.path.join(client.cache_root, cache_key)
+            copyfile(filename, cache_local)
+            # Cache result to local cache and S3
+            log.info(cache_local, cache_key)
+            client.s3.meta.client.upload_file(cache_local, client.bucket, cache_key)
         return out
 
     def reports(self, book, sheets, account, date, expire_cache, formatting):
@@ -103,7 +116,16 @@ class ZephyrReport(CementBaseController):
         return out
 
     def _run(self, *args):
-        out = self.collate(args)
+        log = self.app.log
+        account = self.app.pargs.account
+        cache_file = self.app.pargs.cache_file
+        date = self.app.pargs.date
+        expire_cache = self.app.pargs.expire_cache
+        # If no date is given then default to the first of last month.
+        now = datetime.now()
+        if(not date):
+            date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
+        out = self.collate(args, account, date, expire_cache, formatting, log)
         sheet_set = {bool(value) for value in out.values()}
         if True not in sheet_set:
             self.app.log.info("No data to report!")

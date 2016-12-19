@@ -39,7 +39,7 @@ class ReportCoverPage(Client):
         super().__init__(config)
         self.account = account
         date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
-        self.date = date_obj.strftime("%B %Y")
+        self.date = date_obj.strftime("%B %d, %Y")
 
     def get_account_by_slug(self, slug):
         return pd.read_sql("""
@@ -56,8 +56,8 @@ class ReportCoverPage(Client):
     def to_xlsx(self, book, formatting):
         sheet = book.add_worksheet("Cover Page")
         acct = self.get_account_by_slug(self.account)
-        label = "{} Account Review".format(acct)
-        put_label(book, sheet, label, formatting=formatting)
-        put_label(book, sheet, self.date, top=1, formatting=formatting)
+        put_label(book, sheet, "Account Review", formatting=formatting)
+        put_label(book, sheet, acct, top=1, formatting=formatting)
+        put_label(book, sheet, self.date, top=2, formatting=formatting)
 
         return sheet

@@ -8,6 +8,7 @@ from shutil import copyfile
 from cement.core.controller import CementBaseController, expose
 
 from ..core.client import Client
+from ..core.report import ReportCoverPage
 from ..core.utils import ZephyrException
 from ..core.cc.client import CloudCheckr
 from ..core.cc.reports import (
@@ -148,6 +149,7 @@ class ZephyrAccountReview(ZephyrReportRun):
 
     def run(self, **kwargs):
         self._run(
+            ReportCoverPage,
             ReportBilling,
             ReportEC2,
             ReportRDS,

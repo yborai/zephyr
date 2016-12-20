@@ -34,9 +34,9 @@ class CloudCheckrAccounts(cc.CloudCheckr):
         self.log = log
 
     def request(self):
-        params = dict(access_key=self.api_key)
+        params = dict(access_key=self.CC_API_KEY)
         url = "".join([
-            self.base,
+            self.CC_API_BASE,
             self.uri,
             "?",
             urlencode(params),

@@ -96,9 +96,9 @@ class BestPracticesWarp(Warp):
         self.data = {self._key(): parsed_data}
 
     @classmethod
-    def get_params(cls, api_key, name, date):
+    def get_params(cls, cc_api_key, name, date):
         return dict(
-            access_key=api_key,
+            access_key=cc_api_key,
             bpc_id=cls.bpc_id,
             date=date,
             use_account=name,

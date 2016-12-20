@@ -11,7 +11,7 @@ from .utils import get_config_values
 class LWProjects(Client):
     def __init__(self, config):
         super().__init__(config)
-        sf_config_keys = ("SF_USERNAME", "SF_PASSWD", "SF_TOKEN")
+        sf_config_keys = ("SF_USER", "SF_PASSWORD", "SF_TOKEN")
         sf_config = get_config_values("lw-sf", sf_config_keys, config)
         self.sf_config = sf_config
 
@@ -20,16 +20,16 @@ class LWProjects(Client):
         Obtains a local database connection,
         retrieving data from S3 or Salesforce as necessary.
         """
-        metadir = os.path.join(self.cache_root, "meta/")
+        metadir = os.path.join(self.ZEPHYR_CACHE_ROOT, "meta/")
         os.makedirs(metadir, exist_ok=True)
         s3_key = "meta/local.db"
-        db = os.path.join(self.cache_root, self.db)
+        db = os.path.join(self.ZEPHYR_CACHE_ROOT, self.ZEPHYR_DATABASE)
         db_exists = os.path.isfile(db)
         # If a local cache exists and it is not expired then use that.
         if(db_exists and not expired):
             log.info("Database exists locally.")
             return sqlite3.connect(db)
-        session = aws.get_session(self.key_id, self.secret)
+        session = aws.get_session(self.AWS_ACCESS_KEY_ID , self.AWS_SECRET_ACCESS_KEY)
         s3 = session.resource("s3")
         """
         If a local cache does not exist and the cache is not expired
@@ -37,7 +37,7 @@ class LWProjects(Client):
         """
         if(not db_exists and not expired):
             log.info("Checking S3 for cached copy of database.")
-            cache_s3 = aws.get_object_from_s3(self.bucket, s3_key, s3)
+            cache_s3 = aws.get_object_from_s3(self.ZEPHYR_S3_BUCKET, s3_key, s3)
             if(cache_s3):
                 log.info("Downloaded cached database from S3.")
                 with open(db, "wb") as cache_fd:
@@ -55,7 +55,7 @@ class LWProjects(Client):
         log.info("Loading account metadata from Logicops.")
         lo.LogicopsAccounts(self.config).request()
         log.info("Caching account metadata in S3.")
-        s3.meta.client.upload_file(db, self.bucket, s3_key)
+        s3.meta.client.upload_file(db, self.ZEPHYR_S3_BUCKET, s3_key)
         return self.database
 
     def get_all_projects(self):

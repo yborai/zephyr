@@ -1,86 +1,81 @@
+import io
 import os
 import sys
 
-from collections import OrderedDict
+from .utils import ZephyrException
 
-CREDS = OrderedDict(
-    [
-        (
-            "cloudcheckr", [
-                "api_key",
-                "base"
-            ]
-        ),
-        (
-            "lw-aws", [
-                "aws_access_key_id",
-                "aws_secret_access_key",
-                "s3_bucket"
+CONFIG_PATH = os.path.expanduser("~/.zephyr/config")
+CRED_ITEMS = [
+    (
+        "lw-aws", [
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "ZEPHYR_S3_BUCKET",
+        ],
+    ),
+    (
+        "lw-cc", [
+            "CC_API_KEY",
+            "CC_API_BASE",
+        ],
+    ),
+    (
+        "lw-dy", [
+            "DY_HOST",
+            "DY_USER",
+            "DY_PASSWORD",
+        ],
+    ),
+    (
+        "lw-lo", [
+            "LO_USER",
+            "LO_PASSWORD",
+        ],
+    ),
+    (
+        "lw-sf", [
+            "SF_USER",
+            "SF_PASSWORD",
+            "SF_TOKEN",
+        ],
+    ),
+    (
+        "zephyr", [
+            "ZEPHYR_CACHE_ROOT",
+            "ZEPHYR_DATABASE",
+            "ZEPHYR_LINE_WIDTH",
+        ],
+    ),
+]
 
-            ]
-        ),
-        (
-            "lw-dy", [
-                "host",
-                "user",
-                "password"
-            ]
-        ),
-        (
-            "lw-lo", [
-                "login",
-                "passphrase"
-            ]
-        ),
-        (
-            "lw-sf", [
-                "sf_username",
-                "sf_passwd",
-                "sf_token"
-            ]
-        ),
-        (
-            "tests", [
-                "assets"
-            ]
-        ),
-        (
-            "zephyr", [
-                "accounts",
-                "cache",
-                "database",
-                "line_width"
-            ]
-        )
-    ]
-)
-
-class Configure(object):
-    def __init__(self):
-        self.creds = CREDS
-
-    def create_config(self, config):
-        value = None
-        for section, keys in self.creds.items():
+def create_config(config, prompt=None, write=None, ini=None):
+    if prompt:
+        for section, keys in CRED_ITEMS:
             for key in keys:
-                if key in config.keys(section):
-                    value = config.get(section, key)
+                value = config.get(section, key, fallback="")
                 user_input = input(
-                    "What is your {} {}? [{}]: ".format(section, key, value)
+                    "{} [{}]: ".format(key, value)
                 ) or value
+                if(user_input == ""):
+                    raise ZephyrException(
+                        "This configuration item requires a value."
+                    )
                 config[section][key] = user_input
 
-        path = os.path.expanduser("~/.zephyr/config")
-        with open(path, "w") as f:
-            for section, keys in self.creds.items():
-                f.write("[{}]\n".format(section))
-                for key in keys:
-                    value = config.get(section, key)
-                    f.write(("{}={}\n".format(key, value)))
-                f.write("\n")
-
-        with open(path, "r") as f:
-            for line in f:
-                print(line, end="")
-
-        return config
+    out = io.StringIO()
+    if write:
+        ini = True
+    for section in CRED_ITEMS:
+        sec, keys = section
+        if ini:
+            out.write("[{}]\n".format(sec))
+        for key in keys:
+            out.write("{}={}\n".format(
+                key, config.get(sec, key, fallback="")
+            ))
+    if write:
+        print(CONFIG_PATH)
+        with open(CONFIG_PATH, "w") as f:
+            f.write(out.getvalue())
+    print(out.getvalue(), end="")
+    return config

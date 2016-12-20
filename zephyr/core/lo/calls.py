@@ -57,7 +57,7 @@ class ServiceRequests(lo.Logicops):
             "account_options[0]" : lo_acct,
         }
         url = "".join([
-            self.base,
+            self.LO_API_BASE,
             self.uri,
             "?",
             urlencode(params),

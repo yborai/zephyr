@@ -3,7 +3,7 @@ import os
 from cement.core.controller import CementBaseController, expose
 
 from ..core import meta
-from ..core.configure import Configure
+from ..core.configure import create_config
 
 class ZephyrCLI(CementBaseController):
     class Meta:
@@ -34,14 +34,14 @@ class ZephyrMeta(ZephyrCLI):
     def run(self, **kwargs):
         config = self.app.config
         log = self.app.log
-        self.line_width = int(self.app.config.get("zephyr", "line_width"))
+        self.ZEPHYR_LINE_WIDTH = int(self.app.config.get("zephyr", "ZEPHYR_LINE_WIDTH"))
         expire_cache = self.app.pargs.expire_cache
         self.app.log.info("Collecting client metadata.")
         projects = meta.LWProjects(config)
         projects.cache_policy(expire_cache, log=log)
         self.app.render(
             projects.get_all_projects(),
-            line_width=self.line_width
+            line_width=self.ZEPHYR_LINE_WIDTH
         )
 
 class ZephyrConfigure(ZephyrCLI):
@@ -50,16 +50,35 @@ class ZephyrConfigure(ZephyrCLI):
         stacked_on = "base"
         stacked_type = "nested"
         description = "Gather configuration values."
+        arguments = CementBaseController.Meta.arguments + [(
+            ["--ini"], dict(
+                action="store_true",
+                help="Include sections, as in INI format.",
+            )
+        ),
+        (
+            ["--no-prompt"], dict(
+                action="store_true",
+                help="Do not ask for values, only print those which exist."
+            )
+        ),
+        (
+            ["--write"], dict(
+                action="store_true",
+                help="Write configuration file. This option implies --ini."
+            )
+        )]
+
 
     @expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))
 
     def run(self, **kwargs):
-        log = self.app.log
-
-        configure = Configure()
-        configure.create_config(self.app.config)
+        prompt = not self.app.pargs.no_prompt
+        ini = self.app.pargs.ini
+        write = self.app.pargs.write
+        create_config(self.app.config, prompt, write, ini)
 
 __ALL__ = [
     ZephyrCLI,

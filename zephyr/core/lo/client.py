@@ -25,13 +25,13 @@ class Logicops(Client):
 
     def __init__(self, config):
         super().__init__(config)
-        self.base = "https://logicops.logicworks.net/api/v1/"
-        lo_config_keys = ("login", "passphrase")
+        self.LO_API_BASE = "https://logicops.logicworks.net/api/v1/"
+        lo_config_keys = ("LO_USER", "LO_PASSWORD")
         user, passwd = get_config_values("lw-lo", lo_config_keys, config)
         self.name = "Logicops"
-        self.passwd = passwd
-        self.user = user
-        self.cookies = self.get_cookies(self.user, self.passwd)
+        self.LO_PASSWORD = passwd
+        self.LO_USER = user
+        self.cookies = self.get_cookies(user, passwd)
 
     def cache_policy(self, account, date, cache_file, expired, log=None):
         # If cache_file is specified then use that
@@ -45,7 +45,7 @@ class Logicops(Client):
             date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
         # If local exists and expired is false then use the local cache
         cache_key = self.cache_key(account, date)
-        cache_local = os.path.join(self.cache_root, cache_key)
+        cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
         os.makedirs(os.path.dirname(cache_local), exist_ok=True)
         cache_local_exists = os.path.isfile(cache_local)
         if(cache_local_exists and not expired):

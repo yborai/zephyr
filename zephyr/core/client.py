@@ -15,30 +15,30 @@ class Client(object):
         return os.path.join(account, month, filename)
 
     def __init__(self, config):
-        aws_config_keys = ("s3_bucket", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
+        aws_config_keys = ("ZEPHYR_S3_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
         bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, config)
-        zephyr_config_keys = ("cache", "database")
+        zephyr_config_keys = ("ZEPHYR_CACHE_ROOT", "ZEPHYR_DATABASE")
         cache_root, db = [
             os.path.expanduser(path)
             for path in get_config_values("zephyr", zephyr_config_keys, config)
         ]
-        self.bucket = bucket
-        self.cache_root = cache_root
+        self.ZEPHYR_S3_BUCKET = bucket
+        self.ZEPHYR_CACHE_ROOT = cache_root
         self.config = config
         self.database = sqlite3.connect(os.path.join(cache_root, db))
-        self.db = db
-        self.key_id = key_id
-        self.secret = secret
+        self.ZEPHYR_DATABASE = db
+        self.AWS_ACCESS_KEY_ID = key_id
+        self.AWS_SECRET_ACCESS_KEY = secret
         self.session = aws.get_session(key_id, secret)
         self.s3 = self.session.resource("s3")
 
     def cache(self, response, cache_key, log=None):
-        cache_local = os.path.join(self.cache_root, cache_key)
+        cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
         log.info("Caching {} response locally.".format(self.name))
         with open(cache_local, "w") as f:
             f.write(response)
         log.info("Caching {} response in S3.".format(self.name))
-        self.s3.meta.client.upload_file(cache_local, self.bucket, cache_key)
+        self.s3.meta.client.upload_file(cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
 
     def cache_policy(self, account, date, cache_file, expired, log=None):
         # If cache_file is specified then use that
@@ -52,7 +52,7 @@ class Client(object):
             date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
         # If local exists and expired is false then use the local cache
         cache_key = self.cache_key(account, date)
-        cache_local = os.path.join(self.cache_root, cache_key)
+        cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
         os.makedirs(os.path.dirname(cache_local), exist_ok=True)
         cache_local_exists = os.path.isfile(cache_local)
         if(cache_local_exists and not expired):
@@ -73,9 +73,9 @@ class Client(object):
         return response
 
     def get_object_from_s3(self, cache_key):
-        cache_local = os.path.join(self.cache_root, cache_key)
-        session = aws.get_session(self.key_id, self.secret)
-        return aws.get_object_from_s3(self.bucket, cache_key, self.s3)
+        cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
+        session = aws.get_session(self.AWS_ACCESS_KEY_ID, self.AWS_SECRET_ACCESS_KEY)
+        return aws.get_object_from_s3(self.ZEPHYR_S3_BUCKET, cache_key, self.s3)
 
     def get_slugs(self):
         query = 'SELECT "Name" AS slug FROM aws ORDER BY "Name"'

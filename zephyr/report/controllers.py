@@ -89,11 +89,11 @@ class ZephyrReport(CementBaseController):
                     book, sheets, acct, date, expire_cache, formatting
                 )
             cache_key = self.cache_key(self.Meta.label, acct, date)
-            cache_local = os.path.join(client.cache_root, cache_key)
+            cache_local = os.path.join(client.ZEPHYR_CACHE_ROOT, cache_key)
             copyfile(filename, cache_local)
             # Cache result to local cache and S3
             log.info(cache_local, cache_key)
-            client.s3.meta.client.upload_file(cache_local, client.bucket, cache_key)
+            client.s3.meta.client.upload_file(cache_local, client.ZEPHYR_S3_BUCKET, cache_key)
         return out
 
     def reports(self, book, sheets, account, date, expire_cache, formatting):

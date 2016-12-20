@@ -13,10 +13,10 @@ from ..utils import get_config_values, timed, ZephyrException
 class CloudCheckr(Client):
     def __init__(self, config):
         super().__init__(config)
-        cc_config_keys = ("api_key", "base")
-        api_key, base = get_config_values("cloudcheckr", cc_config_keys, config)
-        self.api_key = api_key
-        self.base = base
+        cc_config_keys = ("CC_API_KEY", "CC_API_BASE")
+        CC_API_KEY, CC_API_BASE = get_config_values("lw-cc", cc_config_keys, config)
+        self.CC_API_KEY = CC_API_KEY
+        self.CC_API_BASE = CC_API_BASE
         self.name = "CloudCheckr"
 
     def get_account_by_slug(self, acc_short_name):
@@ -31,9 +31,9 @@ class CloudCheckr(Client):
         )["cc_name"][0]
 
     @classmethod
-    def get_params(cls, api_key, name, date):
+    def get_params(cls, cc_api_key, name, date):
         return dict(
-            access_key=api_key,
+            access_key=cc_api_key,
             date=date,
             use_account=name,
         )
@@ -70,9 +70,9 @@ class CloudCheckr(Client):
 
     def request(self, account, date, log=None):
         cc_name = self.get_account_by_slug(account)
-        params = self.get_params(self.api_key, cc_name, date)
+        params = self.get_params(self.CC_API_KEY, cc_name, date)
         url = "".join([
-            self.base,
+            self.CC_API_BASE,
             self.uri,
             "?",
             urlencode(params),

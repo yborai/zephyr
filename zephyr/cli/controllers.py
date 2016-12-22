@@ -51,6 +51,15 @@ class ZephyrConfigure(ZephyrCLI):
         stacked_type = "nested"
         description = "Gather configuration values."
         arguments = CementBaseController.Meta.arguments + [(
+            ["--first-run"], dict(
+                action="store_true",
+                help=(
+                    "Alias for --write --no-prompt."
+                    " Initializes a configuration file with empty values."
+                ),
+            )
+        ),
+        (
             ["--ini"], dict(
                 action="store_true",
                 help="Include sections, as in INI format.",
@@ -59,7 +68,7 @@ class ZephyrConfigure(ZephyrCLI):
         (
             ["--no-prompt"], dict(
                 action="store_true",
-                help="Do not ask for values, only print those which exist."
+                help="Do not ask for values, but print given values."
             )
         ),
         (
@@ -75,9 +84,12 @@ class ZephyrConfigure(ZephyrCLI):
         self.run(**vars(self.app.pargs))
 
     def run(self, **kwargs):
-        prompt = not self.app.pargs.no_prompt
-        ini = self.app.pargs.ini
-        write = self.app.pargs.write
+        first_run = self.app.pargs.first_run
+        write = self.app.pargs.write or first_run # first_run implies write
+        # first_run implies no prompt
+        no_prompt = self.app.pargs.no_prompt or first_run
+        prompt = not no_prompt
+        ini = self.app.pargs.ini or write # write implies ini
         create_config(self.app.config, prompt, write, ini)
 
 __ALL__ = [

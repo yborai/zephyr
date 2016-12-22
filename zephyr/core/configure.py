@@ -5,6 +5,8 @@ import sys
 from .utils import ZephyrException
 
 CONFIG_PATH = os.path.expanduser("~/.zephyr/config")
+ZEPHYR_CACHE_ROOT_DEFAULT = os.path.expanduser("~/.zephyr/cache/")
+ZEPHYR_DATABASE_DEFAULT = "meta/lcoal.db"
 CRED_ITEMS = [
     (
         "lw-aws", [
@@ -63,8 +65,6 @@ def create_config(config, prompt=None, write=None, ini=None):
                 config[section][key] = user_input
 
     out = io.StringIO()
-    if write:
-        ini = True
     for section in CRED_ITEMS:
         sec, keys = section
         if ini:
@@ -74,7 +74,15 @@ def create_config(config, prompt=None, write=None, ini=None):
                 key, config.get(sec, key, fallback="")
             ))
     if write:
-        print(CONFIG_PATH)
+        cache_root = os.path.expanduser(config.get(
+            "zephyr", "ZEPHYR_CACHE_ROOT", fallback=ZEPHYR_CACHE_ROOT_DEFAULT
+        ))
+        db = config.get(
+            "zephyr", "ZEPHYR_DATABASE" , fallback=ZEPHYR_DATABASE_DEFAULT
+        )
+        db_dir = os.path.dirname(os.path.join(cache_root, db))
+        os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+        os.makedirs(db_dir, exist_ok=True)
         with open(CONFIG_PATH, "w") as f:
             f.write(out.getvalue())
     print(out.getvalue(), end="")

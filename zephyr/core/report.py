@@ -2,9 +2,13 @@ import datetime
 import pandas as pd
 
 from ..core.client import Client
+from ..core.utils import ZephyrException
 from ..report.common import put_label
 
 class Report(Client):
+    name = None
+    title = None
+
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
     ):
@@ -33,6 +37,9 @@ class Report(Client):
         )
 
 class ReportCoverPage(Client):
+    name = "coverpage"
+    title = "Cover Page"
+
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
     ):
@@ -42,7 +49,7 @@ class ReportCoverPage(Client):
         self.date = date_obj.strftime("%B %d, %Y")
 
     def get_account_by_slug(self, slug):
-        return pd.read_sql("""
+        matches = pd.read_sql("""
             SELECT a.name AS client
             FROM
                 accounts AS a LEFT OUTER JOIN
@@ -51,10 +58,13 @@ class ReportCoverPage(Client):
             WHERE aws.name = '{slug}'
             """.format(slug=slug),
             self.database
-        )["client"][0]
+        )
+        if not len(matches):
+            raise ZephyrException("There are no projects associated with this slug.")
+        return matches["client"][0]
 
     def to_xlsx(self, book, formatting):
-        sheet = book.add_worksheet("Cover Page")
+        sheet = book.add_worksheet(self.title)
         acct = self.get_account_by_slug(self.account)
         put_label(book, sheet, "Account Review", formatting=formatting)
         put_label(book, sheet, acct, top=1, formatting=formatting)

@@ -9,7 +9,7 @@ from cement.core.controller import CementBaseController, expose
 
 from ..core.client import Client
 from ..core.report import ReportCoverPage
-from ..core.utils import ZephyrException
+from ..core.utils import first_of_previous_month, ZephyrException
 from ..core.cc.client import CloudCheckr
 from ..core.cc.reports import (
     ReportEC2,
@@ -123,9 +123,8 @@ class ZephyrReport(CementBaseController):
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
         # If no date is given then default to the first of last month.
-        now = datetime.now()
         if(not date):
-            date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
+            date = first_of_previous_month().strftime("%Y-%m-%d")
         out = self.collate(args, account, date, expire_cache, formatting, log)
         sheet_set = {bool(value) for value in out.values()}
         if True not in sheet_set:

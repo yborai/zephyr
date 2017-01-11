@@ -5,7 +5,7 @@ from datetime import datetime
 
 from . import aws
 from .ddh import DDH
-from .utils import get_config_values
+from .utils import first_of_previous_month, get_config_values
 
 class Client(object):
     @classmethod
@@ -47,9 +47,8 @@ class Client(object):
             with open(cache_file, "r") as f:
                 return f.read()
         # If no date is given then default to the first of last month.
-        now = datetime.now()
         if(not date):
-            date = datetime(year=now.year, month=now.month-1, day=1).strftime("%Y-%m-%d")
+            date = first_of_previous_month().strftime("%Y-%m-%d")
         # If local exists and expired is false then use the local cache
         cache_key = self.cache_key(account, date)
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)

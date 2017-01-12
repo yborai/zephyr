@@ -17,6 +17,9 @@ The zephyr reporting toolkit
 
 commands:
 
+  configure
+    Gather configuration values.
+
   data
     Generate single table reports for an account.
 
@@ -34,7 +37,6 @@ optional arguments:
   --debug               toggle debug output
   --quiet               suppress all output
   -o {json,default,csv} output handler
-  --line_width LINE_WIDTH
 ```
 
 ## Installation ##
@@ -53,16 +55,24 @@ $ git clone ssh://git@code.logicworks.net:44322/zephyr/zephyr.git
 $ pip install --editable .
 ```
 
+## Configuration ##
+
+Configuration can be managed by environment variables or a configuration file.
+The `zephyr configure` command prompts the user for values for all valid
+configuration parameters. Use the `--first-run` to initialize a configuration
+file with empty values. Running with `--no-prompt` will show the available
+parameters and their current values.
+
 ## Available Commands ##
 
-The primary subcommands are `data`, `etl`, `meta` and `report`.
+The primary subcommands are `configure`, `data`, `etl`, `meta` and `report`.
+
 The `zephyr meta` command initalizes the local database with client data from
 AWS, Logicops and Salesforce including projects and unique identifiers.
 
 Command                      | Description
 -----------------------------|-----------------------------------------------
 **`zephyr data`**            |
-billing-monthly              | Provides a monthly itemized billing summary.
 billing-line-items           | Provides a line items billing summary.
 billing-line-item-aggregates | Provides an aggregate line items billing summary.
 compute-av                   | Shows which instances have the anti-virus agent installed.
@@ -84,5 +94,10 @@ dbr-ri                       | Filter the DBR leaving only reserved instance lin
                              |
 **`zephyr report`**          |
 account-review               | Generate a report quantifing Logicworks' value proposition.
-ec2                          | Generate the EC2 Details worksheet of the Account Review.
-sr                           | Generate the Service Requests worksheet of the Account Review.
+billing                      | Generate a Billing worksheet of the Account Review.
+ec2                          | Generate a EC2 Details worksheet of the Account Review.
+migration                    | Generate a EC2 migration recommendations worksheet.
+rds                          | Generate a RDS Details worksheet.
+ri-recs                      | Generate a RI recommendations worksheet.
+sr                           | Generate a Service Requests worksheet.
+underutilized                | Generate a EC2 underutilized instances worksheet.

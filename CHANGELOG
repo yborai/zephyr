@@ -1,12 +1,27 @@
 Changelog
+=========
+
+0.2.0
+-----
+
+* Updated `zephyr report ec2` command to include more information.
+* Added a Dynamics report as `zephyr report billing`.
+* Added a CloudCheckr report as `zephyr report underutilized`.
+* Added Report class to unify report structure.
+* Improved exception handling.
+* Added `zephyr data bpc-summary`.
+* Added `--account=all` to run a report across all projects.
+* Added `zephyr configure` command.
+* Added local and AWS S3 caching for `zephyr report` commands.
+* Enabled environment variable override of configuration parameters.
 
 0.1.0
 -----
 
-* The `zephyr data` command supports data retreival, caching and display for
+* The `zephyr data` command supports data retrieval, caching and display for
     CloudCheckr and Logicops.
 * The `zephyr etl` command supports ETL processes for static files.
-* Cross-vendor entity resolution through the `zephhyr meta` command. Connects
-    to AWS, CloudCheckr, Logicops, Salesforce
+* Cross-vendor entity resolution is supported through the `zephyr meta`
+    command. This connects to AWS, CloudCheckr, Logicops and Salesforce.
 * The `zephyr report` command supports Excel report generation for selected
     calls to CloudCheckr and Logicops.

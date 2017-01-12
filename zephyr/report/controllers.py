@@ -8,7 +8,7 @@ from shutil import copyfile
 from cement.core.controller import CementBaseController, expose
 
 from ..core.client import Client
-from ..core.report import ReportCoverPage
+from ..core.report import Report, ReportCoverPage
 from ..core.utils import first_of_previous_month, ZephyrException
 from ..core.cc.client import CloudCheckr
 from ..core.cc.reports import (
@@ -19,8 +19,7 @@ from ..core.cc.reports import (
     ReportUnderutilized,
 )
 from ..core.dy.reports import ReportBilling
-from .common import formatting
-from .sr import ReportSRs
+from ..core.lo.reports import ReportSRs
 
 class ZephyrReport(CementBaseController):
     class Meta:
@@ -65,9 +64,9 @@ class ZephyrReport(CementBaseController):
         filename = "{slug}.xlsx".format(slug=slug)
         return os.path.join(account, month, filename)
 
-    def collate(self, sheets, account, date, expire_cache, formatting, log):
+    def collate(self, sheets, account, date, expire_cache, log):
         config = self.app.config
-        book_options = formatting["book_options"]
+        book_options = Report.formatting["book_options"]
         accts = [account]
         out = dict()
         client = Client(config)
@@ -85,18 +84,18 @@ class ZephyrReport(CementBaseController):
                 label=self.Meta.label, slug=acct
             )
             with xlsxwriter.Workbook(filename, book_options) as book:
-                out = self.reports(
-                    book, sheets, acct, date, expire_cache, formatting
-                )
+                out = self.reports(book, sheets, acct, date, expire_cache)
             cache_key = self.cache_key(self.Meta.label, acct, date)
             cache_local = os.path.join(client.ZEPHYR_CACHE_ROOT, cache_key)
             copyfile(filename, cache_local)
             # Cache result to local cache and S3
             log.info(cache_local, cache_key)
-            client.s3.meta.client.upload_file(cache_local, client.ZEPHYR_S3_BUCKET, cache_key)
+            client.s3.meta.client.upload_file(
+                cache_local, client.ZEPHYR_S3_BUCKET, cache_key
+            )
         return out
 
-    def reports(self, book, sheets, account, date, expire_cache, formatting):
+    def reports(self, book, sheets, account, date, expire_cache):
         config = self.app.config
         log = self.app.log
         out = dict()
@@ -107,8 +106,8 @@ class ZephyrReport(CementBaseController):
                     account=account,
                     date=date,
                     expire_cache=expire_cache,
-                    log=log,
-                ).to_xlsx(book, formatting)
+                    log=log
+                ).to_xlsx(book)
             except ZephyrException as e:
                 message = e.args[0]
                 log.error("Error in {sheet}: {message}".format(
@@ -125,7 +124,7 @@ class ZephyrReport(CementBaseController):
         # If no date is given then default to the first of last month.
         if(not date):
             date = first_of_previous_month().strftime("%Y-%m-%d")
-        out = self.collate(args, account, date, expire_cache, formatting, log)
+        out = self.collate(args, account, date, expire_cache, log)
         sheet_set = {bool(value) for value in out.values()}
         if True not in sheet_set:
             self.app.log.info("No data to report!")

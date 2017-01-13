@@ -11,9 +11,6 @@ from cement.utils.misc import init_defaults
 from .core.configure import CONFIG_PATH, CRED_ITEMS
 from .core.utils import ZephyrException
 from .cli.controllers import __ALL__ as ZephyrControllers
-from .data.controllers import __ALL__ as ZephyrDataControllers
-from .etl.controllers import __ALL__ as ZephyrETLControllers
-from .report.controllers import __ALL__ as ZephyrReportControllers
 
 sections = tuple(zip(*CRED_ITEMS))[0] + ("log.logging",)
 defaults = init_defaults(*sections)
@@ -28,9 +25,6 @@ class Zephyr(CementApp):
         config_files = [CONFIG_PATH]
         handlers = sum((
             ZephyrControllers,
-            ZephyrDataControllers,
-            ZephyrETLControllers,
-            ZephyrReportControllers,
         ), [])
         extensions = [
             "zephyr.cli.output",

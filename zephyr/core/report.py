@@ -83,7 +83,6 @@ class Report(Client):
         response = client.cache_policy(
             account,
             date,
-            None,
             expire_cache,
             log=log,
         )

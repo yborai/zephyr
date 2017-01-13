@@ -40,12 +40,7 @@ class Client(object):
         log.info("Caching {} response in S3.".format(self.name))
         self.s3.meta.client.upload_file(cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
 
-    def cache_policy(self, account, date, cache_file, expired, log=None):
-        # If cache_file is specified then use that
-        if(cache_file):
-            log.info("Using specified cached response: {cache}".format(cache=cache_file))
-            with open(cache_file, "r") as f:
-                return f.read()
+    def cache_policy(self, account, date, expired, log=None):
         # If no date is given then default to the first of last month.
         if(not date):
             date = first_of_previous_month().strftime("%Y-%m-%d")

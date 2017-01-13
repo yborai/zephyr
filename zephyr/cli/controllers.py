@@ -143,12 +143,6 @@ class ZephyrData(ZephyrCLI):
             )
         ),
         (
-            ["--cache-file"], dict(
-                 type=str,
-                 help="The path to the cached response to use."
-            )
-        ),
-        (
             ["--date"], dict(
                 type=str,
                 help="The report date to request."
@@ -177,13 +171,9 @@ class DataRun(ZephyrData):
 
     def run_call(self, cls, **kwargs):
         account = self.app.pargs.account
-        cache_file = self.app.pargs.cache_file
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
         log = self.app.log
-        cache_file_ = None
-        if(cache_file):
-            cache_file_ = os.path.expanduser(cache_file)
         client = cls(config=self.app.config)
         accts = [account]
         if(account == "all"):
@@ -200,7 +190,6 @@ class DataRun(ZephyrData):
                 response = client.cache_policy(
                     acct,
                     date,
-                    cache_file_,
                     expire_cache,
                     log=log,
                 )
@@ -353,34 +342,18 @@ class StorageDetached(DataRun):
     def run(self, **kwargs):
         self.run_call(StorageDetachedWarp, **kwargs)
 
-class BillingRun(DataRun):
-    def cache(self, cache_file):
-        if(not cache_file):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache_file))
-        with open(cache_file, "r") as f:
-            reader = csv.DictReader(f)
-            header = reader.fieldnames
-            data = [[row[col] for col in header] for row in reader]
-        return DDH(header=header, data=data)
-
-    def run(self, **kwargs):
-        cache_file = self.app.pargs.cache_file
-        out = self.cache(cache_file)
-        self.app.render(out)
-        return out
-
-class BillingLineItemAggregates(BillingRun):
-    class Meta:
-        label = "billing-line-item-aggregates"
-        description = "Get the billing line item aggregate totals."
-
 class ComputeAV(DataRun):
     class Meta:
         label = "compute-av"
         description = "Get the AV of instance meta information"
 
         arguments = DataRun.Meta.arguments + [(
+            ["--cache-file"], dict(
+                 type=str,
+                 help="The path to the cached response to use."
+            )
+        ),
+        (
             ["--compute-details"], dict(
                 type=str,
                 help="The path to the cached compute-details response to use."
@@ -485,12 +458,6 @@ class ZephyrReport(CementBaseController):
             )
         ),
         (
-            ["--cache-file"], dict(
-                type=str,
-                help="The path to the json cached file."
-            )
-        ),
-        (
             ["--date"], dict(
                  type=str,
                  help="The report date to request."
@@ -566,7 +533,6 @@ class ZephyrReport(CementBaseController):
     def _run(self, *args):
         log = self.app.log
         account = self.app.pargs.account
-        cache_file = self.app.pargs.cache_file
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
         # If no date is given then default to the first of last month.
@@ -668,7 +634,6 @@ class ServiceRequestReport(ZephyrReportRun):
 
 __ALL__ = [
     BestPracticeChecksSummaryData,
-    BillingLineItemAggregates,
     BillingLineItems,
     BillingReport,
     ComputeAV,

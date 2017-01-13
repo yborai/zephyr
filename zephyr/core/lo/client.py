@@ -35,12 +35,7 @@ class Logicops(Client):
         self.LO_USER = user
         self.cookies = self.get_cookies(user, passwd)
 
-    def cache_policy(self, account, date, cache_file, expired, log=None):
-        # If cache_file is specified then use that
-        if(cache_file):
-            log.info("Using specified cached response: {cache}".format(cache=cache_file))
-            with open(cache_file, "r") as f:
-                return f.read()
+    def cache_policy(self, account, date, expired, log=None):
         # If no date is given then default to the first of last month.
         now = datetime.now()
         if(not date):

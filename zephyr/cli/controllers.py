@@ -1,6 +1,7 @@
 import csv
 import datetime
 import os
+import sys
 
 import xlsxwriter
 
@@ -139,15 +140,13 @@ class ZephyrClearCache(ZephyrCLI):
         arguments = CementBaseController.Meta.arguments + [(
             ["--account"], dict(
                 type=str,
-                help="The desired account slug.",
-                required=True
+                help="The desired account slug."
             ),
         ),
         (
             ["--date"], dict(
                 type=str,
-                help="The report date to request.",
-                required=True
+                help="The report date to request."
             ),
         ),
         (
@@ -162,11 +161,16 @@ class ZephyrClearCache(ZephyrCLI):
         self.run(**vars(self.app.pargs))
 
     def run(self, **kwargs):
-        account = self.app.pargs.account
-        date = self.app.pargs.date
         config = self.app.config
         log = self.app.log
-        all_ = self.app.all
+        account = self.app.pargs.account
+        all_ = self.app.pargs.all
+        date = self.app.pargs.date
+        if not any((account, date, all_)):
+            self.app.args.print_help()
+            sys.exit()
+        if not all((account, date)):
+            raise ZephyrException("Account and date are required parameters.")
 
         month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
         client = Client(config)
@@ -224,11 +228,16 @@ class DataRun(ZephyrData):
         self.run(**vars(self.app.pargs))
 
     def run_call(self, cls, **kwargs):
+        log = self.app.log
         account = self.app.pargs.account
+        all_ = self.app.pargs.all
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
-        log = self.app.log
-        all_ = self.app.all
+        if not any((account, date, expire_cache, all_)):
+            self.app.args.print_help()
+            sys.exit()
+        if not account:
+            raise ZephyrException("Account is a required parameter.")
         client = cls(config=self.app.config)
         accts = client.get_slugs(all_) or [account]
         for acct in accts:
@@ -504,10 +513,7 @@ class ZephyrReport(CementBaseController):
         arguments = CementBaseController.Meta.arguments + [(
             ["--account"], dict(
                  type=str,
-                 help=(
-                    "The desired account slug. The value 'all' will iterate"
-                    " through all available slugs."
-                )
+                 help="The desired account slug."
             )
         ),
         (
@@ -590,9 +596,14 @@ class ZephyrReport(CementBaseController):
     def _run(self, *args):
         log = self.app.log
         account = self.app.pargs.account
+        all_ = self.app.pargs.all
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
-        all_ = self.app.pargs.all
+        if not any((account, date, expire_cache, all_)):
+            self.app.args.print_help()
+            sys.exit()
+        if not account:
+            raise ZephyrException("Account is a required parameter.")
         # If no date is given then default to the first of last month.
         if(not date):
             date = first_of_previous_month().strftime("%Y-%m-%d")

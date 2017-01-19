@@ -2,6 +2,7 @@ import os
 import sqlite3
 
 from datetime import datetime
+from shutil import rmtree
 
 from . import aws
 from .ddh import DDH
@@ -65,6 +66,32 @@ class Client(object):
         response = self.request(account, date, log=log)
         self.cache(response, cache_key, log=log)
         return response
+
+    def clear_cache_s3(self, account, month, log=None):
+        s3_client = self.session.client("s3")
+        #Lists objects in the desired directory
+        objects = s3_client.list_objects(
+            Bucket="lw-zephyr",
+            Prefix="{}/{}".format(account, month)
+        )
+
+        #Delete files from folder in S3 if they exist
+        if "Contents" not in objects:
+            return log.info("No cache in S3 for {}/{}".format(account, month))
+        for obj in objects["Contents"]:
+            log.info("Deleting {} from {}".format(obj["Key"], self.ZEPHYR_S3_BUCKET))
+            self.s3.meta.client.delete_object(
+                Bucket="lw-zephyr",
+                Key=obj["Key"]
+            )
+
+    def clear_cache_local(self, account, month, log=None):
+        #Delete directory locally
+        path = "{}/{}/{}".format(self.ZEPHYR_CACHE_ROOT, account, month)
+        if not os.path.exists(os.path.expanduser(path)):
+            return log.info("No local cache for {}/{}".format(account, month))
+        log.info("Deleting local cache.")
+        rmtree(path)
 
     def get_object_from_s3(self, cache_key):
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)

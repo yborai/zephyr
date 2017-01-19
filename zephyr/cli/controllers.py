@@ -130,6 +130,53 @@ class ZephyrConfigure(ZephyrCLI):
         ini = self.app.pargs.ini or write # write implies ini
         create_config(self.app.config, prompt, write, ini)
 
+class ZephyrClearCache(ZephyrCLI):
+    class Meta:
+        label = "clear-cache"
+        stacked_on = "base"
+        stacked_type = "nested"
+        description = "Clears cache in S3 and locally for a given account and date."
+        arguments = CementBaseController.Meta.arguments + [(
+            ["--account"], dict(
+                type=str,
+                help="The desired account slug."
+            ),
+        ),
+        (
+            ["--date"], dict(
+                type=str,
+                help="The report date to request."
+            ),
+        ),
+        (
+            ["--all"], dict(
+                action="store_true",
+                help="Run for all accounts."
+            )
+        )]
+
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        account = self.app.pargs.account
+        date = self.app.pargs.date
+        config = self.app.config
+        log = self.app.log
+
+        month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+        client = Client(config)
+        accts = [account]
+        if account == "all":
+            accts = client.get_slugs()
+        for acct in accts:
+            if(not client.slug_valid(acct)):
+                log.info("Skipping {}".format(acct))
+                continue
+            client.clear_cache_s3(acct, month, log)
+            client.clear_cache_local(acct, month, log)
+
 class ZephyrData(ZephyrCLI):
     class Meta:
         label = "data"
@@ -659,6 +706,7 @@ __ALL__ = [
     ZephyrAccountReview,
     ZephyrCLI,
     ZephyrConfigure,
+    ZephyrClearCache,
     ZephyrData,
     ZephyrDBRRI,
     ZephyrETL,

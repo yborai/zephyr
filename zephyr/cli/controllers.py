@@ -139,13 +139,15 @@ class ZephyrClearCache(ZephyrCLI):
         arguments = CementBaseController.Meta.arguments + [(
             ["--account"], dict(
                 type=str,
-                help="The desired account slug."
+                help="The desired account slug.",
+                required=True
             ),
         ),
         (
             ["--date"], dict(
                 type=str,
-                help="The report date to request."
+                help="The report date to request.",
+                required=True
             ),
         ),
         (

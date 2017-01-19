@@ -105,7 +105,9 @@ class Client(object):
         session = aws.get_session(self.AWS_ACCESS_KEY_ID, self.AWS_SECRET_ACCESS_KEY)
         return aws.get_object_from_s3(self.ZEPHYR_S3_BUCKET, cache_key, self.s3)
 
-    def get_slugs(self):
+    def get_slugs(self, all_):
+        if not all_:
+            return
         query = 'SELECT "Name" AS slug FROM aws ORDER BY "Name"'
         slugs = DDH.read_sql(query, self.database)
         return list(zip(*slugs.data))[0]

@@ -166,12 +166,11 @@ class ZephyrClearCache(ZephyrCLI):
         date = self.app.pargs.date
         config = self.app.config
         log = self.app.log
+        all_ = self.app.all
 
         month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
         client = Client(config)
-        accts = [account]
-        if account == "all":
-            accts = client.get_slugs()
+        accts = client.get_slugs(all_) or [account]
         for acct in accts:
             if(not client.slug_valid(acct)):
                 log.info("Skipping {}".format(acct))
@@ -202,6 +201,12 @@ class ZephyrData(ZephyrCLI):
                 action="store_true",
                 help="Forces the cached data to be refreshed."
             )
+        ),
+        (
+            ["--all"], dict(
+                action="store_true",
+                help="Run for all accounts."
+            )
         )]
 
     @expose(hide=True)
@@ -223,10 +228,9 @@ class DataRun(ZephyrData):
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
         log = self.app.log
+        all_ = self.app.all
         client = cls(config=self.app.config)
-        accts = [account]
-        if(account == "all"):
-            accts = client.get_slugs()
+        accts = client.get_slugs(all_) or [account]
         for acct in accts:
             if(not client.slug_valid(acct)):
                 log.info("Skipping {}".format(acct))
@@ -517,6 +521,12 @@ class ZephyrReport(CementBaseController):
                 action="store_true",
                 help="Forces the cached data to be refreshed."
             )
+        ),
+        (
+            ["--all"], dict(
+                action="store_true",
+                help="Run for all accounts."
+            )
         )]
 
     @expose(hide=True)
@@ -528,14 +538,12 @@ class ZephyrReport(CementBaseController):
         filename = "{slug}.xlsx".format(slug=slug)
         return os.path.join(account, month, filename)
 
-    def collate(self, sheets, account, date, expire_cache, log):
+    def collate(self, sheets, account, date, expire_cache, all_, log):
         config = self.app.config
         book_options = Report.formatting["book_options"]
-        accts = [account]
         out = dict()
         client = Client(config)
-        if(account == "all"):
-            accts = client.get_slugs()
+        accts = client.get_slugs(all_) or [account]
         for acct in accts:
             if(not self.slug_valid(acct)):
                 log.info("Skipping {}".format(acct))
@@ -584,10 +592,11 @@ class ZephyrReport(CementBaseController):
         account = self.app.pargs.account
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
+        all_ = self.app.pargs.all
         # If no date is given then default to the first of last month.
         if(not date):
             date = first_of_previous_month().strftime("%Y-%m-%d")
-        out = self.collate(args, account, date, expire_cache, log)
+        out = self.collate(args, account, date, expire_cache, all_, log)
         sheet_set = {bool(value) for value in out.values()}
         if True not in sheet_set:
             self.app.log.info("No data to report!")

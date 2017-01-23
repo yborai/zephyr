@@ -93,11 +93,12 @@ class Report(Client):
         self.chart_width = int(self.chart["width"]/self.cell["width"])
         self.chart_height = int(self.chart["height"]/self.cell["height"])
         self.cell_spacing = 1
+        self.date = date
         self.table_left = int(self.chart_width) + self.cell_spacing
 
-    def clean_data(self, data):
+    def clean_data(self):
         new_data = []
-        for row in data:
+        for row in self.ddh.data:
             new_row = []
             for cell in row:
                 if isinstance(cell, Decimal):
@@ -107,12 +108,12 @@ class Report(Client):
             new_data.append(new_row)
         return new_data
 
-    def count_by(self, header, data, column):
+    def count_by(self, column):
         """Count rows in data grouping by values in the column specified"""
         con = sqlite3.connect(":memory:")
-        df = pd.DataFrame(data, columns=header)
+        df = pd.DataFrame(self.ddh.data, columns=self.ddh.header)
         df.to_sql("df", con, if_exists="replace")
-        if column != "Status" and ("running" or "stopped") in data[0]:
+        if column != "Status" and ("running" or "stopped") in self.ddh.data[0]:
             query = """
                 SELECT
                      {col},
@@ -139,14 +140,14 @@ class Report(Client):
         return header, data
 
     def count_by_pie_chart(
-        self, book, sheet, column_name, ddh, top, left, name
+        self, book, sheet, column_name, top, left, name
     ):
         """Insert a pie chart with data specified."""
         table_left = int(self.chart_width) + self.cell_spacing
         table_top = top + 1 # Account for label.
 
         # Aggregate the data, grouping by the given column_name.
-        header, data = self.count_by(ddh.header, ddh.data, column_name)
+        header, data = self.count_by(column_name)
         counts = DDH(header=header, data=data)
 
         self.put_label(book, sheet, column_name, top, table_left)
@@ -155,7 +156,7 @@ class Report(Client):
         sheet = self.put_table(
             book,
             sheet,
-            counts,
+            ddh=counts,
             top=table_top,
             left=table_left,
             name=name
@@ -210,8 +211,10 @@ class Report(Client):
         return sheet
 
     def put_table(
-        self, book, sheet, ddh, top=0, left=0, name=None
+        self, book, sheet, ddh=None, top=0, left=0, name=None
     ):
+        if not ddh:
+            ddh = self.ddh
         """Creates an Excel table in a workbook."""
         # Configure formatting
         table_fmt, header_format, cell_format = self.book_formats(book)
@@ -251,12 +254,11 @@ class Report(Client):
         return sheet
 
     def to_xlsx(self, book):
-        ddh = self.client.to_ddh()
-        if not ddh.data:
+        self.ddh = self.client.to_ddh()
+        if not self.ddh.data:
             return False
         return self._xlsx(
             book,
-            ddh,
             name=self.name
         )
 

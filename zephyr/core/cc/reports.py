@@ -1,7 +1,8 @@
-import datetime
 import pandas as pd
 import sqlite3
+
 from operator import itemgetter
+from datetime import datetime
 
 from ..ddh import DDH
 from ..report import Report
@@ -18,58 +19,58 @@ class ReportEC2(Report):
     title = "EC2 Details"
     cls = ComputeDetailsWarp
 
-    def _xlsx(self, book, ddh, **kwargs):
+    def _xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the EC2 report."""
         # Insert raw report data.
         sheet = book.add_worksheet(self.title)
         self.put_label(book, sheet, self.title)
 
-        self.put_table(book, sheet, ddh, top=1, name=self.name)
+        self.put_table(book, sheet, top=1, name=self.name)
 
         # Where charts and other tables go
-        n_rows = len(ddh.data)
+        n_rows = len(self.ddh.data)
         table_height = n_rows + 1
         chart_start_row = 1 + table_height + self.cell_spacing
         chart_ceil = self.chart_height + 1
 
         # Insert instances by region.
         self.count_by_pie_chart(
-            book, sheet, "Region", ddh, chart_start_row, 0, "ec2_region"
+            book, sheet, "Region", chart_start_row, 0, "ec2_region"
         )
 
         # Insert instances by platform
         platform_top = chart_start_row + chart_ceil + self.cell_spacing
         self.count_by_pie_chart(
-            book, sheet, "PricingPlatform", ddh, platform_top, 0, "pric_plat"
+            book, sheet, "PricingPlatform", platform_top, 0, "pric_plat"
         )
 
         # Insert instances by status
         status_top = platform_top + chart_ceil + self.cell_spacing
         self.count_by_pie_chart(
-            book, sheet, "Status", ddh, status_top, 0, "status"
+            book, sheet, "Status", status_top, 0, "status"
         )
 
         # Insert RI Qualifications
         ri_qual_top = status_top + chart_ceil + self.cell_spacing
         self.days_since_launch_pie_chart(
-            book, sheet, ddh, ri_qual_top, 0, "ri_qual"
+            book, sheet, ri_qual_top, 0, "ri_qual"
         )
 
         # Insert instances by type
         instance_top = ri_qual_top + chart_ceil + self.cell_spacing
         self.count_by_column_chart(
-            book, sheet, "InstanceType", ddh, instance_top, 0, "instance_type"
+            book, sheet, "InstanceType", instance_top, 0, "instance_type"
         )
         return sheet
 
     def count_by_column_chart(
-        self, book, sheet, column_name, ddh, top, left, name
+        self, book, sheet, column_name, top, left, name
     ):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
 
         # Get first 4 data rows
-        header, data_ = self.count_by(ddh.header, ddh.data, column_name)
+        header, data_ = self.count_by(column_name)
         data = data_[:4]
 
         # Rollup remaining values into "other" column
@@ -87,7 +88,7 @@ class ReportEC2(Report):
         sheet = self.put_table(
             book,
             sheet,
-            counts,
+            ddh=counts,
             top=table_top,
             left=self.table_left,
             name=name
@@ -114,11 +115,11 @@ class ReportEC2(Report):
         )
         return book
 
-    def days_since_launch_pie_chart(self, book, sheet, ddh, top, left, name):
+    def days_since_launch_pie_chart(self, book, sheet, top, left, name):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
 
-        launch_times, days_90, days_180, days_270 = self.get_launch_times(ddh)
+        launch_times, days_90, days_180, days_270 = self.get_launch_times()
 
         header = ["Days Since Launch", "Total"]
         data = [
@@ -135,7 +136,7 @@ class ReportEC2(Report):
         sheet = self.put_table(
             book,
             sheet,
-            counts,
+            ddh=counts,
             top=table_top,
             left=self.table_left,
             name=name
@@ -151,19 +152,19 @@ class ReportEC2(Report):
         self.put_chart(book, sheet, title, top, left, table_loc, "pie")
         return book
 
-    def get_launch_times(self, ddh):
+    def get_launch_times(self):
         launch_times = []
-        for row in ddh.data:
+        for row in self.ddh.data:
             if row[3] != "running": # Status is the 4th column: only include running instances
                 continue
             launch_times.append(row[-1])
 
-        now = datetime.datetime.now().date()
+        now = datetime.strptime(self.date, "%Y-%m-%d").date()
         days_90 = 0
         days_180 = 0
         days_270 = 0
         for date in launch_times:
-            day = datetime.datetime.strptime(date, "%m/%d/%y %H:%M").date()
+            day = datetime.strptime(date, "%m/%d/%y %H:%M").date()
             delta = now - day
             if delta.days > 90 and delta.days < 181:
                 days_90 += 1
@@ -179,13 +180,13 @@ class ReportMigration(Report):
     title = "EC2 Migration Recommendations"
     cls = ComputeMigrationWarp
 
-    def _xlsx(self, book, ddh, **kwargs):
+    def _xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
         # Insert raw report data.
         sheet = book.add_worksheet(self.title)
         self.put_label(book, sheet, self.title)
 
-        self.put_table(book, sheet, ddh, top=1, name=self.name)
+        self.put_table(book, sheet, top=1, name=self.name)
 
         return sheet
 
@@ -194,16 +195,16 @@ class ReportRDS(Report):
     title = "RDS Details"
     cls = DBDetailsWarp
 
-    def _xlsx(self, book, ddh, **kwargs):
+    def _xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
         # Insert raw report data.
         sheet = book.add_worksheet(self.title)
         self.put_label(book, sheet, self.title)
 
-        self.put_table(book, sheet, ddh, top=1, name=self.name)
+        self.put_table(book, sheet, top=1, name=self.name)
 
         # Where charts and other tables go
-        n_rows = len(ddh.data)
+        n_rows = len(self.ddh.data)
         table_height = n_rows + 1
         chart_start_row = 1 + table_height + self.cell_spacing
 
@@ -211,17 +212,16 @@ class ReportRDS(Report):
             book, sheet,
             "DbInstanceClass",
             "MonthlyCost",
-            ddh,
             chart_start_row,
             0,
             "month_cost"
         )
         return sheet
 
-    def sum_and_count_by(self, header, data, column_name, cost_column):
+    def sum_and_count_by(self, column_name, cost_column):
         """Count and sum rows in data grouping by values in the column specified"""
         con = sqlite3.connect(":memory:")
-        df = pd.DataFrame(data, columns=header)
+        df = pd.DataFrame(self.ddh.data, columns=self.ddh.header)
         df.to_sql("df", con, if_exists="replace")
         query = """
             SELECT
@@ -240,14 +240,12 @@ class ReportRDS(Report):
         return header, data
 
     def sum_and_count_by_column_chart(
-        self, book, sheet, column_name, cost_column, ddh, top, left, name
+        self, book, sheet, column_name, cost_column, top, left, name
     ):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
 
-        header, data = self.sum_and_count_by(
-            ddh.header, ddh.data, column_name, cost_column
-        )
+        header, data = self.sum_and_count_by(column_name, cost_column)
 
         counts = DDH(header=header, data=data)
 
@@ -257,7 +255,7 @@ class ReportRDS(Report):
         sheet = self.put_table(
             book,
             sheet,
-            counts,
+            ddh=counts,
             top=table_top,
             left=self.table_left,
             name=name
@@ -288,21 +286,21 @@ class ReportRIs(Report):
     title = "EC2 RI Recommendations"
     cls = ComputeRIWarp
 
-    def _xlsx(self, book, ddh, **kwargs):
+    def _xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
         # Insert raw report data.
         sheet = book.add_worksheet(self.title)
         self.put_label(book, sheet, self.title)
 
-        self.put_table(book, sheet, ddh, top=1, name=self.name)
+        self.put_table(book, sheet, top=1, name=self.name)
 
         # Where charts and other tables go
-        n_rows = len(ddh.data)
+        n_rows = len(self.ddh.data)
         table_height = n_rows + 1
         chart_start_row = 1 + table_height + self.cell_spacing
 
         self.sum_by_column_chart(
-            book, sheet, "Annual Savings", ddh, chart_start_row, 0, "ri_savings"
+            book, sheet, "Annual Savings", chart_start_row, 0, "ri_savings"
         )
         return sheet
 
@@ -338,14 +336,14 @@ class ReportRIs(Report):
         sheet.insert_chart(top, left, chart)
         return sheet
 
-    def sum_by(self, header, data):
+    def sum_by(self):
         """Sum rows in data grouping by values in the column specified"""
         # Create data with correct float values
 
-        new_data = self.clean_data(data)
+        new_data = self.clean_data()
 
         con = sqlite3.connect(":memory:")
-        df = pd.DataFrame(new_data, columns=header)
+        df = pd.DataFrame(new_data, columns=self.ddh.header)
         df.to_sql("df", con, if_exists="replace")
         query = """
             SELECT
@@ -364,13 +362,13 @@ class ReportRIs(Report):
         return header, data_
 
     def sum_by_column_chart(
-        self, book, sheet, column_name, ddh, top, left, name
+        self, book, sheet, column_name, top, left, name
     ):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
 
         # Get first 4 data rows
-        header, data_ = self.sum_by(ddh.header, ddh.data)
+        header, data_ = self.sum_by()
         data = data_[:4]
 
         # Rollup remaining values into "other" column
@@ -389,7 +387,7 @@ class ReportRIs(Report):
         sheet = self.put_table(
             book,
             sheet,
-            sums,
+            ddh=sums,
             top=table_top,
             left=self.table_left,
             name=name
@@ -417,21 +415,21 @@ class ReportUnderutilized(Report):
     title = "EC2 Underutilized Instances"
     cls = ComputeUnderutilizedWarp
 
-    def _xlsx(self, book, ddh, **kwargs):
+    def _xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
         # Insert raw report data.
         sheet = book.add_worksheet(self.title)
         self.put_label(book, sheet, self.title)
 
-        self.put_table(book, sheet, ddh, top=1, name=self.name)
+        self.put_table(book, sheet, top=1, name=self.name)
 
         breakdown_title = "EC2 Underutilized Instance Breakdown"
         breakdown_name = "Breakdown"
-        breakdown_left = len(ddh.data[0]) + self.cell_spacing
+        breakdown_left = len(self.ddh.data[0]) + self.cell_spacing
 
         self.put_label(book, sheet, breakdown_name, left=breakdown_left)
 
-        header, data_ = self.get_category(ddh.header, ddh.data)
+        header, data_ = self.get_category()
         data = self.remove_repeated_names(data_)
 
         ddh = DDH(header=header, data=data)
@@ -441,11 +439,11 @@ class ReportUnderutilized(Report):
         return sheet
 
 
-    def get_category(self, header, data):
+    def get_category(self):
         """Returns the underutilized breakdown dataset including the category column."""
         con = sqlite3.connect(":memory:")
-        data_ = self.clean_data(data)
-        df = pd.DataFrame(data_, columns=header)
+        data_ = self.clean_data()
+        df = pd.DataFrame(data_, columns=self.ddh.header)
         df.to_sql("df", con, if_exists="replace", index=False)
         query = """
             SELECT

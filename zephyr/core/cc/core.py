@@ -10,11 +10,10 @@ from . import client as cc
 from ..ddh import DDH
 
 class Warp(cc.CloudCheckr):
-    def __init__(self, json_string=None, config=None):
+    def __init__(self, json_string=None, config=None, **kwargs):
         if(config):
             super().__init__(config)
         self.data = {}
-        key = self._key()
         if(json_string):
             self.parse(json_string)
 
@@ -54,6 +53,7 @@ class Warp(cc.CloudCheckr):
             [self._filter_row(row)[col] for col in header]
             for row in parsed
         ]
+
         return DDH(header=header, data=data)
 
     def _fieldnames(self):
@@ -69,7 +69,7 @@ class Warp(cc.CloudCheckr):
 class BestPracticesWarp(Warp):
     uri = "best_practice.json/get_best_practices"
 
-    def __init__(self, json_string=None, bpc_id=None, config=None):
+    def __init__(self, json_string=None, bpc_id=None, config=None, **kwargs):
         super().__init__(json_string=json_string, config=config)
         if(bpc_id):
             self.bpc_id = bpc_id

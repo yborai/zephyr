@@ -238,7 +238,7 @@ class DataRun(ZephyrData):
             sys.exit()
         if not account:
             raise ZephyrException("Account is a required parameter.")
-        client = cls(config=self.app.config)
+        client = cls(config=self.app.config, **kwargs)
         accts = client.get_slugs(all_) or [account]
         for acct in accts:
             if(not client.slug_valid(acct)):
@@ -281,8 +281,15 @@ class ComputeDetails(DataRun):
     class Meta:
         label = "compute-details"
         description = "Get the detailed instance meta information."
+        arguments = DataRun.Meta.arguments + [(
+            ["--all-tags"], dict(
+                 action="store_true",
+                 help="Stores resource tag meta information in cell"
+            )
+        )]
 
     def run(self, **kwargs):
+        kwargs["all_tags"] = self.app.pargs.all_tags
         self.run_call(ComputeDetailsWarp, **kwargs)
 
 class ComputeMigration(DataRun):

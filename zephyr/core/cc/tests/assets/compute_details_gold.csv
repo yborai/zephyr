@@ -1,2 +1,2 @@
-InstanceId,InstanceName,PrivateIpAddress,Status,Region,PricingPlatform,InstanceType,LaunchTime
-i-0272f78b,AVID-TESTING-SSO-HAP01,10.72.69.137,running,US East (Northern Virginia),LinuxVpc,m4.large,03/28/16 23:58
+InstanceId,InstanceName,Region,InstanceType,LaunchTime,PrivateIpAddress,PricingPlatform,Environment,Status
+i-0272f78b,AVID-TESTING-SSO-HAP01,US East (Northern Virginia),m4.large,03/28/16 23:58,10.72.69.137,LinuxVpc,,running

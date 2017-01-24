@@ -59,13 +59,28 @@ class ComputeDetailsWarp(Warp):
     slug = "compute-details"
     uri = "inventory.json/get_resources_ec2_details"
 
+    def __init__(self, json_string=None, config=None, **kwargs):
+        if(config):
+            super().__init__(config=config)
+        self.data = {}
+        self.all_tags = kwargs.get("all_tags")
+        if(json_string):
+            self.parse(json_string)
+
     def _key(self):
         return "Ec2Instances"
 
     def _filter_row(self, details_row):
         filtered_row = {
-            key: details_row[key] for key in self._fieldnames() if key in details_row.keys()
+            key: str(details_row[key]) for key in self._fieldnames() if key in details_row.keys()
         }
+
+        if "ResourceTags" not in details_row:
+            return self._format_datefields(filtered_row)
+        for tag in details_row["ResourceTags"]:
+            if tag["Key"] != "lw:environment":
+                continue
+            filtered_row["Environment"] = tag["Value"]
 
         return self._format_datefields(filtered_row)
 
@@ -80,19 +95,39 @@ class ComputeDetailsWarp(Warp):
         return row
 
     def _fieldnames(self):
-        return (
+        left_cols =  (
             "InstanceId",
             "InstanceName",
-            "PrivateIpAddress",
-            "Status",
             "Region",
-            "PricingPlatform",
             "InstanceType",
-            "LaunchTime"
+            "LaunchTime",
+            "PrivateIpAddress",
+            "PricingPlatform",
         )
+        right_cols = (
+            "Environment",
+            "Status",
+        )
+        if self.all_tags:
+            return left_cols + ("ResourceTags",) + right_cols
+
+        return left_cols + right_cols
 
     def _datetime_fields(self):
         return ("LaunchTime",)
+
+    def to_ddh(self):
+        header = self._fieldnames()
+        parsed = self.data[self._key()]
+
+        for row in parsed:
+            row["Environment"] = ""
+        data = [
+            [self._filter_row(row)[col] for col in header]
+            for row in parsed
+        ]
+
+        return DDH(header=header, data=data)
 
 class ComputeMigrationWarp(SplitInstanceWarp):
     bpc_id = 240

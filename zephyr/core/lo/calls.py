@@ -1,32 +1,29 @@
-import csv
 import json
 
 import requests
 
 from collections import OrderedDict
+from datetime import datetime
 from urllib.parse import urlencode
 
-from . import client as lo
 from ..ddh import DDH
+from ..utils import first_of_previous_month
+from . import client as lo
 
 class ServiceRequests(lo.Logicops):
     uri = "sr-filter"
 
     header_hash = OrderedDict([
+        ("name", "Name"),
         ("summary", "Summary"),
         ("status", "Status"),
         ("severity", "Severity"),
         ("area", "Area"),
         ("created_date", "Created Date"),
-        ("created_by", "Created By"),
+        ("closed_date", "Closed Date"),
     ])
 
-    @classmethod
-    def create_sheet(cls, json_string, csv_filename="out.csv"):
-        processor = cls(json_string)
-        return processor.write_csv(csv_filename)
-
-    def __init__(self, json_string=None, config=None):
+    def __init__(self, json_string=None, config=None, **kwargs):
         if(config):
             super().__init__(config)
         if(json_string):
@@ -45,16 +42,18 @@ class ServiceRequests(lo.Logicops):
         self.data = [[row[index] for index in self.column_indexes] for row in data_raw]
         return self.response
 
-    def request(self, slug, log=None):
+    def request(self, slug, date, log=None):
         lo_acct = self.get_account_by_slug(slug)
+        date_obj = datetime.strptime(date, "%Y-%m-%d")
+        start_date = first_of_previous_month(date_obj).strftime("%Y-%m-%d")
         params = {
-            "team_options[0]" : "_all_",
-            "assigned_to_options[0]" : "_all_",
-            "group_options[0]" : "_all_",
-            "area_options[0]" : "_all_",
-            "status_options[0]" : "_all_",
-            "severity_options[0]" : "_all_",
-            "account_options[0]" : lo_acct,
+            "account_options[]" : lo_acct,
+            "start_date" : start_date,
+            "end_date" : date,
+            "sort_option" : "-created_date",
+            "status_option" : "_all_",
+            "list_srs" : "1",
+            "limit" : "200",
         }
         url = "".join([
             self.LO_API_BASE,
@@ -66,16 +65,6 @@ class ServiceRequests(lo.Logicops):
         r = requests.get(url, cookies=self.cookies, verify=False)
         return r.content.decode("utf-8")
 
-    def write_csv(self, csv_filename):
-        with open(csv_filename, "w") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=self.header)
-
-            writer.writeheader()
-            for row in self.data:
-                row_dict = dict(zip(self.header, row))
-                writer.writerow(row_dict)
-
-        return csv_filename
 
 __ALL__ = [
     ServiceRequests

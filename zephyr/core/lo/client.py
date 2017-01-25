@@ -66,7 +66,7 @@ class Logicops(Client):
         )
         # If we are this far then contact the API and cache the result
         log.info("Retrieving data from {}".format(self.name))
-        response = self.request(account, log=log)
+        response = self.request(account, date, log=log)
         self.cache(response, cache_key, log=log)
         return response
 

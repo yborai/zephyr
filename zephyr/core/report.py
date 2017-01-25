@@ -113,26 +113,14 @@ class Report(Client):
         con = sqlite3.connect(":memory:")
         df = pd.DataFrame(self.ddh.data, columns=self.ddh.header)
         df.to_sql("df", con, if_exists="replace")
-        if column != "Status" and ("running" or "stopped") in self.ddh.data[0]:
-            query = """
-                SELECT
-                     {col},
-                     COUNT({col}) as Total
-                 FROM df
-                 WHERE Status = "running"
-                 GROUP BY {col}
-                 ORDER BY COUNT({col}) DESC
-            """.format(col=column)
-        else:
-            query = """
-                SELECT
-                     {col},
-                     COUNT({col}) as Total
-                 FROM df
-                 GROUP BY {col}
-                 ORDER BY COUNT({col}) DESC
-            """.format(col=column)
-
+        query = """
+            SELECT
+                 {col},
+                 COUNT({col}) as Total
+             FROM df
+             GROUP BY {col}
+             ORDER BY COUNT({col}) DESC
+        """.format(col=column)
         sql_group = pd.read_sql(query, con)
         header = list(sql_group)
         data = [list(row) for row in sql_group.values]

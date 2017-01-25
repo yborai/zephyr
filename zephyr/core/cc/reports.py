@@ -63,6 +63,29 @@ class ReportEC2(Report):
         )
         return sheet
 
+    def count_by(self, column):
+        """Count rows in data grouping by values in the column specified"""
+        con = sqlite3.connect(":memory:")
+        df = pd.DataFrame(self.ddh.data, columns=self.ddh.header)
+        df.to_sql("df", con, if_exists="replace")
+        where = ""
+        if column != "Status":
+            where = """WHERE "Status" = 'running' """
+        query = """
+            SELECT
+                 {col},
+                 COUNT({col}) as Total
+             FROM df
+             {where}
+             GROUP BY {col}
+             ORDER BY COUNT({col}) DESC
+        """.format(col=column, where=where)
+        sql_group = pd.read_sql(query, con)
+        header = list(sql_group)
+        data = [list(row) for row in sql_group.values]
+
+        return header, data
+
     def count_by_column_chart(
         self, book, sheet, column_name, top, left, name
     ):
@@ -154,10 +177,12 @@ class ReportEC2(Report):
 
     def get_launch_times(self):
         launch_times = []
+        status_index = self.ddh.header.index("Status")
+        lt_index = self.ddh.header.index("LaunchTime")
         for row in self.ddh.data:
-            if row[3] != "running": # Status is the 4th column: only include running instances
+            if row[status_index] != "running": # Only include running instances
                 continue
-            launch_times.append(row[-1])
+            launch_times.append(row[lt_index])
 
         now = datetime.strptime(self.date, "%Y-%m-%d").date()
         days_90 = 0

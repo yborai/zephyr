@@ -8,54 +8,56 @@ from ..core.client import Client
 from ..core.utils import ZephyrException
 from .ddh import DDH
 
+FORMATTING = {
+    "cell_options" : {
+        "height" : 20,
+        "width" : 64,
+    },
+    "chart_options" : {
+        "height" : 288,
+        "width" : 480,
+    },
+    "data_labels": {
+        "category": True,
+        "percentage": True,
+        "position": "outside_end",
+    },
+    "header_format" : {
+        "font_color" : "#000000",
+        "bg_color" : "#DCE6F1",
+        "bottom" : 2,
+    },
+    "label_format" : {
+        "bold": True,
+        "font_size": 16,
+        "font_color": "#000000",
+    },
+    "legend_options" : {
+        "none" : True,
+    },
+    "pie_chart" : {
+        "type" : "pie",
+    },
+    "table_style" : {
+        "style" : "Table Style Light 1",
+    },
+    "titles" : {
+        "Service Requests" : "srs",
+        "EC2 Details" : "ec2",
+    },
+    "total_row" : [
+        {"total_string" : "Total"},
+        {"total_function" : "sum"},
+    ],
+    "book_options" : {
+        "strings_to_numbers": True,
+    },
+}
+
 class Report(Client):
     name = None
     title = None
-    formatting = {
-            "cell_options" : {
-                "height" : 20,
-                "width" : 64,
-            },
-            "chart_options" : {
-                "height" : 288,
-                "width" : 480,
-            },
-            "data_labels": {
-                "category": True,
-                "percentage": True,
-                "position": "outside_end",
-            },
-            "header_format" : {
-                "font_color" : "#000000",
-                "bg_color" : "#DCE6F1",
-                "bottom" : 2,
-            },
-            "label_format" : {
-                "bold": True,
-                "font_size": 16,
-                "font_color": "#000000",
-            },
-            "legend_options" : {
-                "none" : True,
-            },
-            "pie_chart" : {
-                "type" : "pie",
-            },
-            "table_style" : {
-                "style" : "Table Style Light 1",
-            },
-            "titles" : {
-                "Service Requests" : "srs",
-                "EC2 Details" : "ec2",
-            },
-            "total_row" : [
-                {"total_string" : "Total"},
-                {"total_function" : "sum"},
-            ],
-            "book_options" : {
-                "strings_to_numbers": True,
-            },
-        }
+    formatting = FORMATTING
 
     @classmethod
     def book_formats(cls, book):
@@ -88,12 +90,9 @@ class Report(Client):
         )
         client.parse(response)
         self.client = client
-        self.cell = self.formatting["cell_options"]
-        self.chart = self.formatting["chart_options"]
-        self.chart_width = int(self.chart["width"]/self.cell["width"])
-        self.chart_height = int(self.chart["height"]/self.cell["height"])
-        self.cell_spacing = 1
         self.date = date
+        self.ddh = None
+        self.get_formatting()
         self.table_left = int(self.chart_width) + self.cell_spacing
 
     def clean_data(self):
@@ -160,6 +159,13 @@ class Report(Client):
         self.put_chart(book, sheet, column_name, top, left, table_loc, "pie")
         return book
 
+    def get_formatting(self):
+        self.cell = self.formatting["cell_options"]
+        self.chart = self.formatting["chart_options"]
+        self.chart_width = int(self.chart["width"]/self.cell["width"])
+        self.chart_height = int(self.chart["height"]/self.cell["height"])
+        self.cell_spacing = 1
+
     def header_format_xlsx(self, headers, header_format, total_row):
         """Create the header format dict for Xlsxwriter."""
         header = [{"header": col, "header_format": header_format} for col in headers]
@@ -203,6 +209,8 @@ class Report(Client):
     ):
         if not ddh:
             ddh = self.ddh
+        if not name:
+            name = self.name
         """Creates an Excel table in a workbook."""
         # Configure formatting
         table_fmt, header_format, cell_format = self.book_formats(book)
@@ -240,6 +248,17 @@ class Report(Client):
             for j in range(n_cells):
                 sheet.write(top+i, left+j, row[j])
         return sheet
+
+    def to_ddh(self):
+        if(not self.ddh):
+            self.ddh = self.client.to_ddh()
+        return self.ddh
+
+    def to_sql(self, name, con):
+        ddh = self.to_ddh()
+        data = [[str(cell) for cell in row] for row in ddh.data]
+        df = pd.DataFrame(data, columns=self.ddh.header)
+        df.to_sql(name, con)
 
     def to_xlsx(self, book):
         self.ddh = self.client.to_ddh()

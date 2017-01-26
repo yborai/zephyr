@@ -17,11 +17,6 @@ class Warp(cc.CloudCheckr):
         if(json_string):
             self.parse(json_string)
 
-    @classmethod
-    def create_sheet(cls, json_string, csv_filename="out.csv"):
-        processor = cls(json_string)
-        return processor.write_csv(csv_filename)
-
     def parse(self, json_string):
         self.raw_json = json.loads(json_string)
         self.data = self.raw_json[0]
@@ -35,16 +30,6 @@ class Warp(cc.CloudCheckr):
             out += page[key]
         self.data[key] = out
         return self.data
-
-    def write_csv(self, csv_filename):
-        with open(csv_filename, "w") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=self._fieldnames())
-
-            writer.writeheader()
-            for details_row in self.data[self._key()]:
-                writer.writerow(self._filter_row(details_row))
-
-        return csv_filename
 
     def to_ddh(self):
         header = self._fieldnames()

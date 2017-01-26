@@ -17,8 +17,6 @@ from ..core.cc.calls import (
     ComputeDetailsWarp,
     ComputeMigrationWarp,
     ComputeRIWarp,
-    ComputeUnderutilizedWarp,
-    ComputeUnderutilizedBreakdownWarp,
     DBDetailsWarp,
     DBIdleWarp,
     IAMUsersData,
@@ -311,18 +309,25 @@ class ComputeRI(DataRun):
 class ComputeUnderutilized(DataRun):
     class Meta:
         label = "compute-underutilized"
-        description = "Get the underutilized instance meta information"
+        description = "Get the underutilized instances"
 
     def run(self, **kwargs):
-        self.run_call(ComputeUnderutilizedWarp, **kwargs)
+        config = self.app.config
+        log = self.app.log
+        account = self.app.pargs.account
+        date = self.app.pargs.date
+        expire_cache = self.app.pargs.expire_cache
 
-class ComputeUnderutilizedBreakdown(DataRun):
-    class Meta:
-        label = "compute-underutilized-breakdown"
-        description = "Get the underutilized instance breakdown meta information"
+        report = ReportUnderutilized(
+            config,
+            account,
+            date,
+            expire_cache,
+            log,
+        )
+        cu_ddh = report.to_ddh()
 
-    def run(self, **kwargs):
-        self.run_call(ComputeUnderutilizedBreakdownWarp, **kwargs)
+        self.app.render(cu_ddh)
 
 class DBDetails(DataRun):
     class Meta:
@@ -720,7 +725,6 @@ __ALL__ = [
     ComputeRI,
     ComputeRIReport,
     ComputeUnderutilized,
-    ComputeUnderutilizedBreakdown,
     ComputeUnderutilizedReport,
     DBDetails,
     DBDetailsReport,

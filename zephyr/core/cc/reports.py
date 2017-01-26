@@ -438,69 +438,146 @@ class ReportRIs(Report):
 class ReportUnderutilized(Report):
     name = "Underutil"
     title = "EC2 Underutilized Instances"
-    cls = ComputeUnderutilizedWarp
 
-    def _xlsx(self, book, **kwargs):
+    def __init__(
+        self, config, account=None, date=None, expire_cache=None, log=None
+    ):
+        con = sqlite3.connect(":memory:")
+
+        self.account = account
+        self.con = con
+        self.config = config
+        self.date = date
+        self.ddh = None
+        self.expire_cache = expire_cache
+        self.log = log
+
+    def predicted_cost_by_environment(self, top=0, left=0):
+        book = self.book
+        con = self.con
+        sheet = self.sheet
+
+        df = pd.read_sql("""
+            SELECT
+                CASE cd."Environment"
+                    WHEN '' THEN 'No environment'
+                    ELSE cd."Environment"
+                END AS "Environment",
+                SUM(uu."Predicted Monthly Cost") AS "Cost"
+            FROM
+                cd LEFT OUTER JOIN
+                uu ON (cd."InstanceId"=uu."Instance ID")
+            WHERE uu."Average CPU Util" IS NOT NULL
+            GROUP BY cd."Environment"
+            ORDER BY SUM(uu."Predicted Monthly Cost") DESC
+        """, con)
+
+        # Account for hidden column
+        table_left = left + self.chart_width + self.cell_spacing + 1
+        table_top = top + self.cell_spacing
+
+        data = [list(row) for row in df.values]
+        ddh = DDH(data=data, header=list(df.columns))
+
+        # Write the data table to the sheet.
+        sheet = self.put_table(
+            book,
+            sheet,
+            ddh=ddh,
+            top=table_top,
+            left=table_left,
+            name="PredPrice_by_Env",
+        )
+
+        # Compute series location.
+        table_loc = (
+            table_top + 1, # Start of data series, accounting for header
+            table_top + len(data),
+            table_left,
+            table_left + 1,
+        )
+        title = "Predicted Monthly Cost by Environment"
+        self.put_chart(book, sheet, title, top+1, left, table_loc, "column")
+
+    def to_ddh(self):
+        account = self.account
+        con = self.con
+        config = self.config
+        date = self.date
+        expire_cache = self.expire_cache
+        log = self.log
+
+        # cd for compute-details
+        cd_report = ReportEC2(config, account, date, expire_cache, log)
+        cd_report.to_sql("cd", con)
+
+        # uu for underutilized
+        uu_client = ComputeUnderutilizedWarp(config=config)
+        uu_report = uu_client.cache_policy(account, date, expire_cache, log=log)
+        uu_client.parse(uu_report)
+        uu_ddh = uu_client.to_ddh()
+        uu_data = [[str(cell) for cell in row] for row in uu_ddh.data]
+        uu_df = pd.DataFrame(uu_data, columns=uu_ddh.header)
+        uu_df.to_sql("uu", con)
+
+        # cu for compute-details and underutilized joined 
+        cu_df = pd.read_sql("""
+            SELECT
+                cd."InstanceId",
+                cd."InstanceName",
+                cd."Environment",
+                uu."Average CPU Util",
+                uu."Predicted Monthly Cost"
+            FROM
+                cd LEFT OUTER JOIN
+                uu ON (cd."InstanceId"=uu."Instance ID")
+            WHERE uu."Average CPU Util" IS NOT NULL
+            ORDER BY cd."Environment" DESC
+        """, con)
+        cu_data = [list(row) for row in cu_df.values]
+        cu_ddh = DDH(data=cu_data, header=list(cu_df.columns))
+        self.ddh = cu_ddh
+        return self.ddh
+
+    def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
+        self.book = book
+
         # Insert raw report data.
         sheet = book.add_worksheet(self.title)
+        self.sheet = sheet
+        self.get_formatting()
         self.put_label(book, sheet, self.title)
 
-        self.put_table(book, sheet, top=1, name=self.name)
+        # Retrieve the data if it does not exist yet.
+        if(not self.ddh):
+            self.to_ddh()
 
-        breakdown_title = "EC2 Underutilized Instance Breakdown"
-        breakdown_name = "Breakdown"
-        breakdown_left = len(self.ddh.data[0]) + self.cell_spacing
+        # Hide the environment column by default
+        env_idx = self.ddh.header.index("Environment")
+        sheet.set_column(env_idx+1, env_idx+1, None, None, dict(hidden=1))
 
-        self.put_label(book, sheet, breakdown_name, left=breakdown_left)
+        # Format the report to visually separate the environments.
+        environment = None
+        header = [" "] + self.ddh.header
+        out = []
+        for row in self.ddh.data:
+            if environment != row[env_idx]:
+                environment = row[env_idx]
+                out.append(
+                    [environment]
+                    + [""]*env_idx
+                    + [environment]
+                    + [""]*(len(header) - (env_idx + 2))
+                )
+            out.append([""] + row)
 
-        header, data_ = self.get_category()
-        data = self.remove_repeated_names(data_)
+        ddh = DDH(header=header, data=out)
 
-        ddh = DDH(header=header, data=data)
+        self.put_table(book, sheet, ddh=ddh, top=1)
 
-        self.put_table(book, sheet, ddh, 1, breakdown_left, breakdown_name)
+        top = len(out) + 2 # Account for label and table columns
+        self.predicted_cost_by_environment(top=top, left=0)
 
         return sheet
 
-
-    def get_category(self):
-        """Returns the underutilized breakdown dataset including the category column."""
-        con = sqlite3.connect(":memory:")
-        data_ = self.clean_data()
-        df = pd.DataFrame(data_, columns=self.ddh.header)
-        df.to_sql("df", con, if_exists="replace", index=False)
-        query = """
-            SELECT
-                substr("Instance Name", 0, instr("Instance Name", '-')) AS Category,
-                *
-            FROM df
-            ORDER BY substr("Instance Name", 0, instr("Instance Name", '-'))
-        """
-
-        sql_group = pd.read_sql(query, con)
-        header = list(sql_group)
-        data = [list(row) for row in sql_group.values]
-
-        return header, data
-
-    def remove_repeated_names(self, data):
-        seen = set()
-        with_tags = list()
-        no_tags = list()
-        for row in data:
-            if "-" not in row[2]:
-                no_tags.append(row)
-                continue
-            if row[0] not in seen:
-                seen.add(row[0])
-                with_tags.append(row)
-                continue
-            row[0] = ""
-            with_tags.append(row)
-        if(len(no_tags)):
-            no_tags[0][0] = "No tag"
-
-        out = with_tags + no_tags
-
-        return out

@@ -1,5 +1,6 @@
 import datetime
 import json
+
 from decimal import Decimal
 
 DAY = datetime.timedelta(days=1)

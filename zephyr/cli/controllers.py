@@ -34,7 +34,6 @@ from ..core.cc.reports import (
 )
 from ..core.configure import create_config
 from ..core.client import Client
-from ..core.ddh import DDH
 from ..core.dy.calls import Billing
 from ..core.dy.reports import ReportBilling
 from ..core.lo.calls import ServiceRequests
@@ -46,88 +45,38 @@ class ZephyrCLI(CementBaseController):
     class Meta:
         label = "base"
         description = "The zephyr reporting toolkit"
+        arguments = CementBaseController.Meta.arguments
 
     @expose(hide=True)
     def default(self):
         self.app.args.print_help()
 
-class ZephyrMeta(ZephyrCLI):
+class ZephyrCall(ZephyrCLI):
     class Meta:
-        label = "meta"
-        stacked_on = "base"
-        stacked_type = "nested"
-        description = "Gather client meta information."
-        arguments = CementBaseController.Meta.arguments + [(
+        arguments = ZephyrCLI.Meta.arguments + [(
+            ["--account"], dict(
+                 type=str,
+                 help="The desired account slug."
+            )
+        ),
+        (
+            ["--date"], dict(
+                type=str,
+                help="The report date to request."
+            )
+        ),
+        (
             ["--expire-cache"], dict(
                 action="store_true",
                 help="Forces the cached data to be refreshed."
             )
-        )]
-
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
-    def run(self, **kwargs):
-        config = self.app.config
-        log = self.app.log
-        self.ZEPHYR_LINE_WIDTH = int(self.app.config.get("zephyr", "ZEPHYR_LINE_WIDTH"))
-        expire_cache = self.app.pargs.expire_cache
-        self.app.log.info("Collecting client metadata.")
-        projects = meta.LWProjects(config)
-        projects.cache_policy(expire_cache, log=log)
-        self.app.render(
-            projects.get_all_projects(),
-            line_width=self.ZEPHYR_LINE_WIDTH
-        )
-
-class ZephyrConfigure(ZephyrCLI):
-    class Meta:
-        label = "configure"
-        stacked_on = "base"
-        stacked_type = "nested"
-        description = "Gather configuration values."
-        arguments = CementBaseController.Meta.arguments + [(
-            ["--first-run"], dict(
-                action="store_true",
-                help=(
-                    "Alias for --write --no-prompt."
-                    " Initializes a configuration file with empty values."
-                ),
-            )
         ),
         (
-            ["--ini"], dict(
+            ["--all"], dict(
                 action="store_true",
-                help="Include sections, as in INI format.",
-            )
-        ),
-        (
-            ["--no-prompt"], dict(
-                action="store_true",
-                help="Do not ask for values, but print given values."
-            )
-        ),
-        (
-            ["--write"], dict(
-                action="store_true",
-                help="Write configuration file. This option implies --ini."
+                help="Run for all accounts."
             )
         )]
-
-
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
-    def run(self, **kwargs):
-        first_run = self.app.pargs.first_run
-        write = self.app.pargs.write or first_run # first_run implies write
-        # first_run implies no prompt
-        no_prompt = self.app.pargs.no_prompt or first_run
-        prompt = not no_prompt
-        ini = self.app.pargs.ini or write # write implies ini
-        create_config(self.app.config, prompt, write, ini)
 
 class ZephyrClearCache(ZephyrCLI):
     class Meta:
@@ -135,7 +84,7 @@ class ZephyrClearCache(ZephyrCLI):
         stacked_on = "base"
         stacked_type = "nested"
         description = "Clears cache in S3 and locally for a given account and date."
-        arguments = CementBaseController.Meta.arguments + [(
+        arguments = ZephyrCLI.Meta.arguments + [(
             ["--account"], dict(
                 type=str,
                 help="The desired account slug."
@@ -180,40 +129,156 @@ class ZephyrClearCache(ZephyrCLI):
             client.clear_cache_s3(acct, month, log)
             client.clear_cache_local(acct, month, log)
 
-class ZephyrData(ZephyrCLI):
+class ZephyrConfigure(ZephyrCLI):
     class Meta:
-        label = "data"
+        label = "configure"
         stacked_on = "base"
         stacked_type = "nested"
-        description = "Generate single table reports for an account."
-        arguments = CementBaseController.Meta.arguments + [(
-            ["--account"], dict(
-                 type=str,
-                 help="The desired account slug."
+        description = "Gather configuration values."
+        arguments = ZephyrCLI.Meta.arguments + [(
+            ["--first-run"], dict(
+                action="store_true",
+                help=(
+                    "Alias for --write --no-prompt."
+                    " Initializes a configuration file with empty values."
+                ),
             )
         ),
         (
-            ["--date"], dict(
-                type=str,
-                help="The report date to request."
+            ["--ini"], dict(
+                action="store_true",
+                help="Include sections, as in INI format.",
             )
         ),
         (
+            ["--no-prompt"], dict(
+                action="store_true",
+                help="Do not ask for values, but print given values."
+            )
+        ),
+        (
+            ["--write"], dict(
+                action="store_true",
+                help="Write configuration file. This option implies --ini."
+            )
+        )]
+
+
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        first_run = self.app.pargs.first_run
+        write = self.app.pargs.write or first_run # first_run implies write
+        # first_run implies no prompt
+        no_prompt = self.app.pargs.no_prompt or first_run
+        prompt = not no_prompt
+        ini = self.app.pargs.ini or write # write implies ini
+        create_config(self.app.config, prompt, write, ini)
+
+class ZephyrETL(ZephyrCLI):
+    class Meta:
+        label = "etl"
+        stacked_on = "base"
+        stacked_type = "nested"
+        description = "Perform Extract-Transform-Load operations on data."
+        arguments = ZephyrCall.Meta.arguments
+
+class ZephyrMeta(ZephyrCLI):
+    class Meta:
+        label = "meta"
+        stacked_on = "base"
+        stacked_type = "nested"
+        description = "Gather client meta information."
+        arguments = ZephyrCLI.Meta.arguments + [(
             ["--expire-cache"], dict(
                 action="store_true",
                 help="Forces the cached data to be refreshed."
-            )
-        ),
-        (
-            ["--all"], dict(
-                action="store_true",
-                help="Run for all accounts."
             )
         )]
 
     @expose(hide=True)
     def default(self):
-        self.app.args.print_help()
+        self.run(**vars(self.app.pargs))
+
+    def run(self, **kwargs):
+        config = self.app.config
+        log = self.app.log
+        self.ZEPHYR_LINE_WIDTH = int(self.app.config.get("zephyr", "ZEPHYR_LINE_WIDTH"))
+        expire_cache = self.app.pargs.expire_cache
+        self.app.log.info("Collecting client metadata.")
+        projects = meta.LWProjects(config)
+        projects.cache_policy(expire_cache, log=log)
+        self.app.render(
+            projects.get_all_projects(),
+            line_width=self.ZEPHYR_LINE_WIDTH
+        )
+
+class ZephyrDBRRI(ZephyrETL):
+    class Meta:
+        label = "dbr-ri"
+        stacked_on = "etl"
+        description = "Filter the DBR for only reserved instances."
+
+        arguments = ZephyrETL.Meta.arguments + [
+            (
+                ["--infile"], dict(
+                    type=str,
+                    help="Path to input file.",
+                    required=True,
+                ),
+            ),
+            (
+                ["--outfile"], dict(
+                    type=str,
+                    help="Path to output file.",
+                    required=True,
+                ),
+            ),
+            (
+                ["--no-tags"], dict(
+                     action="store_true",
+                     help="Removes tags in output file."
+                ),
+            ),
+        ]
+
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
+    def filter_ri_dbr(self, infile, outfile, no_tags):
+        with open(infile, "r") as dbrin, open(outfile, "w") as dbrout:
+            reader = csv.DictReader(dbrin)
+            header = reader.fieldnames
+            if no_tags:
+                header = [col for col in header if ":" not in col]
+            print(header)
+            writer = csv.DictWriter(dbrout, fieldnames=header, quoting=csv.QUOTE_ALL)
+            writer.writeheader()
+            for row in reader:
+                if row["ReservedInstance"] != "Y":
+                    continue
+                out = {col:row[col] for col in header}
+                writer.writerow(out)
+
+
+    def run(self, **kwargs):
+        infile = self.app.pargs.infile
+        outfile = self.app.pargs.outfile
+        no_tags = self.app.pargs.no_tags
+        self.app.log.info("Using input file: {infile}".format(infile=infile))
+        self.app.log.info("Using output file: {outfile}".format(outfile=outfile))
+        self.filter_ri_dbr(infile, outfile, no_tags)
+
+class ZephyrData(ZephyrCall):
+    class Meta:
+        label = "data"
+        stacked_on = "base"
+        stacked_type = "nested"
+        description = "Generate single table reports for an account."
+        arguments = ZephyrCall.Meta.arguments
 
 class DataRun(ZephyrData):
     class Meta:
@@ -447,109 +512,12 @@ class ComputeAV(DataRun):
         self.app.render(out)
         return out
 
-class ZephyrETL(CementBaseController):
-    class Meta:
-        label = "etl"
-        stacked_on = "base"
-        stacked_type = "nested"
-        description = "Perform Extract-Transform-Load operations on data."
-        arguments = CementBaseController.Meta.arguments
-
-    @expose(hide=True)
-    def default(self):
-        self.app.args.print_help()
-
-class ZephyrDBRRI(ZephyrETL):
-    class Meta:
-        label = "dbr-ri"
-        stacked_on = "etl"
-        description = "Filter the DBR for only reserved instances."
-
-        arguments = ZephyrETL.Meta.arguments + [
-            (
-                ["--infile"], dict(
-                    type=str,
-                    help="Path to input file.",
-                    required=True,
-                ),
-            ),
-            (
-                ["--outfile"], dict(
-                    type=str,
-                    help="Path to output file.",
-                    required=True,
-                ),
-            ),
-            (
-                ["--no-tags"], dict(
-                     action="store_true",
-                     help="Removes tags in output file."
-                ),
-            ),
-        ]
-
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
-    def filter_ri_dbr(self, infile, outfile, no_tags):
-        with open(infile, "r") as dbrin, open(outfile, "w") as dbrout:
-            reader = csv.DictReader(dbrin)
-            header = reader.fieldnames
-            if no_tags:
-                header = [col for col in header if ":" not in col]
-            print(header)
-            writer = csv.DictWriter(dbrout, fieldnames=header, quoting=csv.QUOTE_ALL)
-            writer.writeheader()
-            for row in reader:
-                if row["ReservedInstance"] != "Y":
-                    continue
-                out = {col:row[col] for col in header}
-                writer.writerow(out)
-
-
-    def run(self, **kwargs):
-        infile = self.app.pargs.infile
-        outfile = self.app.pargs.outfile
-        no_tags = self.app.pargs.no_tags
-        self.app.log.info("Using input file: {infile}".format(infile=infile))
-        self.app.log.info("Using output file: {outfile}".format(outfile=outfile))
-        self.filter_ri_dbr(infile, outfile, no_tags)
-
-class ZephyrReport(CementBaseController):
+class ZephyrReport(ZephyrCall):
     class Meta:
         label = "report"
         stacked_on = "base"
         stacked_type = "nested"
         description = "Generate advanced reports."
-        arguments = CementBaseController.Meta.arguments + [(
-            ["--account"], dict(
-                 type=str,
-                 help="The desired account slug."
-            )
-        ),
-        (
-            ["--date"], dict(
-                 type=str,
-                 help="The report date to request."
-            )
-        ),
-        (
-            ["--expire-cache"], dict(
-                action="store_true",
-                help="Forces the cached data to be refreshed."
-            )
-        ),
-        (
-            ["--all"], dict(
-                action="store_true",
-                help="Run for all accounts."
-            )
-        )]
-
-    @expose(hide=True)
-    def default(self):
-        self.app.args.print_help()
 
     def cache_key(self, slug, account, date):
         month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
@@ -624,7 +592,7 @@ class ZephyrReport(CementBaseController):
         if True not in sheet_set:
             self.app.log.info("No data to report!")
 
-class ZephyrReportRun(ZephyrReport):
+class ReportRun(ZephyrReport):
     class Meta:
         stacked_on = "report"
 
@@ -635,7 +603,7 @@ class ZephyrReportRun(ZephyrReport):
     def slug_valid(self, slug):
         return True
 
-class ZephyrAccountReview(ZephyrReportRun):
+class AccountReview(ReportRun):
     class Meta:
         label = "account-review"
         description = "Generate an account review for a given account."
@@ -656,7 +624,7 @@ class ZephyrAccountReview(ZephyrReportRun):
         client = CloudCheckr(config=self.app.config)
         return client.get_account_by_slug(slug)
 
-class BillingReport(ZephyrReportRun):
+class BillingReport(ReportRun):
     class Meta:
         label = "billing"
         description = "Generate the compute-details worksheet for a given account."
@@ -664,7 +632,7 @@ class BillingReport(ZephyrReportRun):
     def run(self, **kwargs):
         self._run(ReportBilling)
 
-class ComputeDetailsReport(ZephyrReportRun):
+class ComputeDetailsReport(ReportRun):
     class Meta:
         label = "ec2"
         description = "Generate the compute-details worksheet for a given account."
@@ -672,7 +640,7 @@ class ComputeDetailsReport(ZephyrReportRun):
     def run(self, **kwargs):
         self._run(ReportEC2)
 
-class ComputeMigrationReport(ZephyrReportRun):
+class ComputeMigrationReport(ReportRun):
     class Meta:
         label = "migration"
         description = "Generate the compute-migration worksheet for a given account."
@@ -680,7 +648,7 @@ class ComputeMigrationReport(ZephyrReportRun):
     def run(self, **kwargs):
         self._run(ReportMigration)
 
-class ComputeRIReport(ZephyrReportRun):
+class ComputeRIReport(ReportRun):
     class Meta:
         label = "ri-recs"
         description = "Generate the compute-ri worksheet for a given account."
@@ -688,7 +656,7 @@ class ComputeRIReport(ZephyrReportRun):
     def run(self, **kwargs):
         self._run(ReportRIs)
 
-class DBDetailsReport(ZephyrReportRun):
+class DBDetailsReport(ReportRun):
     class Meta:
         label = "rds"
         description = "Generate the db-details worksheet for a given account."
@@ -696,7 +664,7 @@ class DBDetailsReport(ZephyrReportRun):
     def run(self, **kwargs):
         self._run(ReportRDS)
 
-class ComputeUnderutilizedReport(ZephyrReportRun):
+class ComputeUnderutilizedReport(ReportRun):
     class Meta:
         label = "underutilized"
         description = "Generate the compute-underutilized worksheet for a given account."
@@ -704,7 +672,7 @@ class ComputeUnderutilizedReport(ZephyrReportRun):
     def run(self, **kwargs):
         self._run(ReportUnderutilized)
 
-class ServiceRequestReport(ZephyrReportRun):
+class ServiceRequestReport(ReportRun):
     class Meta:
         label = "sr"
         description = "Generate the service-requests worksheet for a given account."
@@ -714,6 +682,7 @@ class ServiceRequestReport(ZephyrReportRun):
 
 
 __ALL__ = [
+    AccountReview,
     BestPracticeChecksSummaryData,
     BillingLineItems,
     BillingReport,
@@ -736,12 +705,11 @@ __ALL__ = [
     ServiceRequestReport,
     ServiceRequestsRun,
     StorageDetached,
-    ZephyrAccountReview,
     ZephyrCLI,
-    ZephyrConfigure,
     ZephyrClearCache,
-    ZephyrData,
+    ZephyrConfigure,
     ZephyrDBRRI,
+    ZephyrData,
     ZephyrETL,
     ZephyrMeta,
     ZephyrReport,

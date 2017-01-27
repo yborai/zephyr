@@ -7,16 +7,10 @@ import requests
 from datetime import datetime
 
 from ..client import Client
-from ..utils import (
-	first_of_previous_month, get_config_values, ZephyrException
-)
+from ..utils import get_config_values
 
 class Logicops(Client):
-    @classmethod
-    def cache_key(cls, account, date):
-        month = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        filename = "service-requests.{date}.json".format(date=date)
-        return os.path.join(account, month, filename)
+    slug = "service-requests"
 
     @classmethod
     def get_cookies(cls, username, password):
@@ -34,41 +28,6 @@ class Logicops(Client):
         self.LO_PASSWORD = passwd
         self.LO_USER = user
         self.cookies = self.get_cookies(user, passwd)
-
-    def cache_policy(self, account, date, expired, log=None):
-        # If no date is given then default to the first of last month.
-        now = datetime.now()
-        if(not date):
-            date = first_of_previous_month().strftime("%Y-%m-%d")
-        # If local exists and expired is false then use the local cache
-        cache_key = self.cache_key(account, date)
-        cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
-        os.makedirs(os.path.dirname(cache_local), exist_ok=True)
-        cache_local_exists = os.path.isfile(cache_local)
-        if(cache_local_exists and not expired):
-            log.info("Using cached response: {cache}".format(cache=cache_local))
-            with open(cache_local, "r") as f:
-                return f.read()
-        # If local does not exist and expired is false then check s3
-        cache_s3 = self.get_object_from_s3(cache_key)
-        if(cache_s3 and not expired):
-            log.info("Using cached response from S3.")
-            with open(cache_local, "wb") as cache_fd:
-                cache_fd.write(cache_s3)
-            return cache_s3.decode("utf-8")
-        # If no cache exists and the report is not for today then break.
-        today = now.strftime("%Y-%m-%d")
-        if(date != today and not expired):
-            raise ZephyrException(
-                "Cache not found for date {}. "
-                "Specify today's date to run this report "
-                "for current Service Requests.".format(date)
-        )
-        # If we are this far then contact the API and cache the result
-        log.info("Retrieving data from {}".format(self.name))
-        response = self.request(account, date, log=log)
-        self.cache(response, cache_key, log=log)
-        return response
 
     def get_account_by_slug(self, slug):
         return pd.read_sql("""

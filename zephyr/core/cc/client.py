@@ -1,10 +1,8 @@
 import json
-import os
 
 import pandas as pd
 import requests
 
-from datetime import datetime
 from urllib.parse import urlencode
 
 from ..client import Client

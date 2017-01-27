@@ -6,7 +6,6 @@ from collections import OrderedDict
 from datetime import datetime
 from urllib.parse import urlencode
 
-from ..ddh import DDH
 from ..utils import first_of_previous_month
 from . import client as lo
 

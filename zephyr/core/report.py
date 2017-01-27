@@ -1,9 +1,9 @@
 import datetime
 import pandas as pd
 import sqlite3
-import xlsxwriter
 
 from decimal import Decimal
+
 from ..core.client import Client
 from ..core.utils import ZephyrException
 from .ddh import DDH
@@ -35,20 +35,9 @@ FORMATTING = {
     "legend_options" : {
         "none" : True,
     },
-    "pie_chart" : {
-        "type" : "pie",
-    },
     "table_style" : {
         "style" : "Table Style Light 1",
     },
-    "titles" : {
-        "Service Requests" : "srs",
-        "EC2 Details" : "ec2",
-    },
-    "total_row" : [
-        {"total_string" : "Total"},
-        {"total_function" : "sum"},
-    ],
     "book_options" : {
         "strings_to_numbers": True,
     },

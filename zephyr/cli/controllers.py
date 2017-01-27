@@ -519,6 +519,14 @@ class ZephyrReport(ZephyrCall):
         stacked_type = "nested"
         description = "Generate advanced reports."
 
+class ReportRun(ZephyrReport):
+    class Meta:
+        stacked_on = "report"
+
+    @expose(hide=True)
+    def default(self):
+        self.run(**vars(self.app.pargs))
+
     def cache_key(self, slug, account, date):
         month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
         filename = "{slug}.xlsx".format(slug=slug)
@@ -591,14 +599,6 @@ class ZephyrReport(ZephyrCall):
         sheet_set = {bool(value) for value in out.values()}
         if True not in sheet_set:
             self.app.log.info("No data to report!")
-
-class ReportRun(ZephyrReport):
-    class Meta:
-        stacked_on = "report"
-
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
 
     def slug_valid(self, slug):
         return True

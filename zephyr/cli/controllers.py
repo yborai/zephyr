@@ -121,7 +121,9 @@ class ZephyrClearCache(ZephyrCLI):
 
         month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
         client = Client(config)
-        accts = client.get_slugs(all_) or [account]
+        accts = [account]
+        if(all_):
+            accts = client.get_slugs()
         for acct in accts:
             if(not client.slug_valid(acct)):
                 log.info("Skipping {}".format(acct))
@@ -299,10 +301,12 @@ class DataRun(ZephyrData):
         if not any((account, date, expire_cache, all_)):
             self.app.args.print_help()
             sys.exit()
-        if not account:
+        if not any((account, all_)):
             raise ZephyrException("Account is a required parameter.")
         client = cls(config=self.app.config, **kwargs)
-        accts = client.get_slugs(all_) or [account]
+        accts = [account]
+        if(all_):
+            accts = client.get_slugs()
         for acct in accts:
             if(not client.slug_valid(acct)):
                 log.info("Skipping {}".format(acct))
@@ -532,34 +536,25 @@ class ReportRun(ZephyrReport):
         filename = "{slug}.xlsx".format(slug=slug)
         return os.path.join(account, month, filename)
 
-    def collate(self, sheets, account, date, expire_cache, all_, log):
-        config = self.app.config
+    def cache(self, filename, client, account, date):
+        cache_key = self.cache_key(self.Meta.label, account, date)
+        cache_local = os.path.join(client.ZEPHYR_CACHE_ROOT, cache_key)
+        copyfile(filename, cache_local)
+        # Cache result to local cache and S3
+        self.app.log.info(cache_local, cache_key)
+        client.s3.meta.client.upload_file(
+            cache_local, client.ZEPHYR_S3_BUCKET, cache_key
+        )
+
+    def to_xlsx(self, sheets, account, date, expire_cache, client):
         book_options = Report.formatting["book_options"]
-        out = dict()
-        client = Client(config)
-        accts = client.get_slugs(all_) or [account]
-        for acct in accts:
-            if(not self.slug_valid(acct)):
-                log.info("Skipping {}".format(acct))
-                continue
-            log.info("Running {report} for {account}".format(
-                report=self.Meta.label,
-                account=acct,
-            ))
-            filename = "{slug}.{label}.xlsx".format(
-                label=self.Meta.label, slug=acct
-            )
-            with xlsxwriter.Workbook(filename, book_options) as book:
-                out = self.reports(book, sheets, acct, date, expire_cache)
-            cache_key = self.cache_key(self.Meta.label, acct, date)
-            cache_local = os.path.join(client.ZEPHYR_CACHE_ROOT, cache_key)
-            copyfile(filename, cache_local)
-            # Cache result to local cache and S3
-            log.info(cache_local, cache_key)
-            client.s3.meta.client.upload_file(
-                cache_local, client.ZEPHYR_S3_BUCKET, cache_key
-            )
-        return out
+        filename = "{slug}.{label}.xlsx".format(
+            label=self.Meta.label, slug=account
+        )
+        with xlsxwriter.Workbook(filename, book_options) as book:
+            report = self.reports(book, sheets, account, date, expire_cache)
+        if(report):
+            self.cache(filename, client, account, date)
 
     def reports(self, book, sheets, account, date, expire_cache):
         config = self.app.config
@@ -590,12 +585,25 @@ class ReportRun(ZephyrReport):
         if not any((account, date, expire_cache, all_)):
             self.app.args.print_help()
             sys.exit()
-        if not account:
+        if not any((account, all_)):
             raise ZephyrException("Account is a required parameter.")
         # If no date is given then default to the first of last month.
         if(not date):
             date = first_of_previous_month().strftime("%Y-%m-%d")
-        out = self.collate(args, account, date, expire_cache, all_, log)
+        out = dict()
+        client = Client(self.app.config)
+        accts = [account]
+        if(all_):
+            accts = client.get_slugs()
+        for acct in accts:
+            if(not self.slug_valid(acct)):
+                log.info("Skipping {}".format(acct))
+                continue
+            log.info("Running {report} for {account}".format(
+                report=self.Meta.label,
+                account=acct,
+            ))
+            out[acct] = self.to_xlsx(args, acct, date, expire_cache, client)
         sheet_set = {bool(value) for value in out.values()}
         if True not in sheet_set:
             self.app.log.info("No data to report!")

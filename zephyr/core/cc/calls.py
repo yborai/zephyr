@@ -17,7 +17,7 @@ class BestPracticeChecksSummary(cc.CloudCheckr):
     slug = "best-practice"
     uri = "best_practice.json/get_best_practices"
 
-    def __init__(self, config, log=None):
+    def __init__(self, config, log=None, **kwargs):
         super().__init__(config)
         self.log = log
 
@@ -223,7 +223,7 @@ class IAMUsersData(cc.CloudCheckr):
     slug = "iam-users"
     uri = "inventory.json/get_resources_iam_users"
 
-    def __init__(self, json_string=None, config=None):
+    def __init__(self, json_string=None, config=None, **kwargs):
         if(config):
             super().__init__(config)
         if(json_string):

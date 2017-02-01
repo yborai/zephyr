@@ -9,7 +9,7 @@ from ..client import Client
 from ..utils import get_config_values, ZephyrException
 
 class Dynamics(Client):
-    def __init__(self, config):
+    def __init__(self, config, **kwargs):
         super().__init__(config)
         dy_config_keys = ("DY_HOST", "DY_USER", "DY_PASSWORD")
         host, user, password = get_config_values("lw-dy", dy_config_keys, config)

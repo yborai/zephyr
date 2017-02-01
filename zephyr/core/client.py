@@ -69,35 +69,38 @@ class Client(object):
 
     def clear_cache_s3(self, account, month, log=None):
         #Lists objects in the desired directory
+        cache_s3 = os.path.join(account, month)
         objects = self.s3.meta.client.list_objects(
-            Bucket="lw-zephyr",
-            Prefix="{}/{}".format(account, month)
+            Bucket=self.ZEPHYR_S3_BUCKET,
+            Prefix="{}".format(cache_s3)
         )
 
         #Delete files from folder in S3 if they exist
         if "Contents" not in objects:
-            return log.info("No cache in S3 for {}/{}".format(account, month))
+            return
         count = 0
         for obj in objects["Contents"]:
             log.debug("Deleting {}".format(obj["Key"]))
             self.s3.meta.client.delete_object(
-                Bucket="lw-zephyr",
+                Bucket=self.ZEPHYR_S3_BUCKET,
                 Key=obj["Key"]
             )
             count += 1
         log.info(
-            "Deleted {} files from {}/{} in S3".format(count, account, month)
+            "Deleted {count} files from {cache_s3} in S3".format(
+                count=count, cache_s3=cache_s3)
         )
 
     def clear_cache_local(self, account, month, log=None):
         #Delete directory locally
-        path = "{}/{}/{}".format(self.ZEPHYR_CACHE_ROOT, account, month)
-        if not os.path.exists(os.path.expanduser(path)):
-            return log.info("No local cache for {}/{}".format(account, month))
-        count = len(os.listdir(path))
-        rmtree(path)
+        cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, account, month)
+        if not os.path.exists(os.path.expanduser(cache_local)):
+            return
+        count = len(os.listdir(cache_local))
+        rmtree(cache_local)
         log.info(
-            "Deleted {} files from {}/{} locally.".format(count, account, month)
+            "Deleted {count} files from {cache_local}.".format(
+                count=count, cache_local=cache_local)
         )
 
     def get_object_from_s3(self, cache_key):

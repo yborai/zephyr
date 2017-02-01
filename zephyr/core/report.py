@@ -56,16 +56,6 @@ class Report(Client):
         cell_format = book.add_format(cls.formatting["label_format"])
         return table, header_format, cell_format
 
-    @classmethod
-    def put_label(cls, book, sheet, title, top=0, left=0):
-        """Inserts a properly formatted label into a workbook."""
-        # Configure formatting
-        cell_format = cls.book_formats(book)[2]
-
-        # Create label with cell_format
-        sheet.write(top, left, title, cell_format)
-        return sheet
-
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
     ):
@@ -116,7 +106,7 @@ class Report(Client):
         return header, data
 
     def count_by_pie_chart(
-        self, book, sheet, column_name, top, left, name
+        self, sheet, column_name, top, left, name
     ):
         """Insert a pie chart with data specified."""
         table_left = int(self.chart_width) + self.cell_spacing
@@ -126,11 +116,10 @@ class Report(Client):
         header, data = self.count_by(column_name)
         counts = DDH(header=header, data=data)
 
-        self.put_label(book, sheet, column_name, top, table_left)
+        self.put_label(sheet, column_name, top, table_left)
 
         # Write the data table to the sheet.
         sheet = self.put_table(
-            book,
             sheet,
             ddh=counts,
             top=table_top,
@@ -145,8 +134,8 @@ class Report(Client):
             table_left,
             table_left + 1,
         )
-        self.put_chart(book, sheet, column_name, top, left, table_loc, "pie")
-        return book
+        self.put_chart(sheet, column_name, top, left, table_loc, "pie")
+        return self.book
 
     def get_formatting(self):
         self.cell = self.formatting["cell_options"]
@@ -163,7 +152,6 @@ class Report(Client):
 
     def put_chart(
             self,
-            book,
             sheet,
             title,
             top,
@@ -175,7 +163,7 @@ class Report(Client):
         """Add a chart to an xlsx workbook located at data_loc."""
         if not formatting:
             formatting = self.formatting
-        chart = book.add_chart(dict(type=chart_type))
+        chart = self.book.add_chart(dict(type=chart_type))
         legend_options = formatting["legend_options"]
         top_, bottom, col_keys, col_values = data_loc
 
@@ -193,16 +181,26 @@ class Report(Client):
         sheet.insert_chart(top, left, chart)
         return sheet
 
+    def put_label(self, sheet, title, top=0, left=0):
+        """Inserts a properly formatted label into a workbook."""
+        # Configure formatting
+        cell_format = self.book_formats(self.book)[2]
+
+        # Create label with cell_format
+        sheet.write(top, left, title, cell_format)
+        return sheet
+
     def put_table(
-        self, book, sheet, ddh=None, top=0, left=0, name=None
+        self, sheet, ddh=None, top=0, left=0, name=None
     ):
+        """Creates an Excel table in a workbook."""
+        # Checks data
         if not ddh:
             ddh = self.ddh
         if not name:
             name = self.name
-        """Creates an Excel table in a workbook."""
         # Configure formatting
-        table_fmt, header_format, cell_format = self.book_formats(book)
+        table_fmt, header_format, cell_format = self.book_formats(self.book)
 
         # Write data to sheet
         sheet = self.rows_to_excel(sheet, ddh.data, top=top+1, left=left)
@@ -241,6 +239,8 @@ class Report(Client):
     def to_ddh(self):
         if(not self.ddh):
             self.ddh = self.client.to_ddh()
+        if(not self.ddh.data):
+            return False
         return self.ddh
 
     def to_sql(self, name, con):
@@ -249,18 +249,10 @@ class Report(Client):
         df = pd.DataFrame(data, columns=self.ddh.header)
         df.to_sql(name, con)
 
-    def to_xlsx(self, book):
-        self.ddh = self.client.to_ddh()
-        if not self.ddh.data:
-            return False
-        return self._xlsx(
-            book,
-            name=self.name
-        )
-
 class ReportCoverPage(Client):
     name = "coverpage"
     title = "Cover Page"
+    formatting = FORMATTING
 
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
@@ -286,10 +278,12 @@ class ReportCoverPage(Client):
         return matches["client"][0]
 
     def to_xlsx(self, book):
-        sheet = book.add_worksheet(self.title)
+        self.book = book
+        self.sheet = self.book.add_worksheet(self.title)
+        cell_format = self.book.add_format(self.formatting["label_format"])
         acct = self.get_account_by_slug(self.account)
-        Report.put_label(book, sheet, "Account Review")
-        Report.put_label(book, sheet, acct, top=1)
-        Report.put_label(book, sheet, self.date, top=2)
+        self.sheet.write(0, 0, "Account Review", cell_format)
+        self.sheet.write(1, 0, acct, cell_format)
+        self.sheet.write(2, 0, self.date, cell_format)
 
-        return sheet
+        return self.sheet

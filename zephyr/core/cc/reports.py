@@ -19,13 +19,20 @@ class ReportEC2(Report):
     title = "EC2 Details"
     cls = ComputeDetailsWarp
 
-    def _xlsx(self, book, **kwargs):
+    def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the EC2 report."""
-        # Insert raw report data.
-        sheet = book.add_worksheet(self.title)
-        self.put_label(book, sheet, self.title)
+        self.book = book
 
-        self.put_table(book, sheet, top=1, name=self.name)
+        # Insert raw report data.
+        sheet = self.book.add_worksheet(self.title)
+        self.sheet = sheet
+        self.put_label(sheet, self.title)
+
+        # Retrieve the data if it does not exist yet.
+        if(not self.ddh):
+            self.to_ddh()
+
+        self.put_table(sheet, top=1, name=self.name)
 
         # Where charts and other tables go
         n_rows = len(self.ddh.data)
@@ -35,31 +42,31 @@ class ReportEC2(Report):
 
         # Insert instances by region.
         self.count_by_pie_chart(
-            book, sheet, "Region", chart_start_row, 0, "ec2_region"
+            sheet, "Region", chart_start_row, 0, "ec2_region"
         )
 
         # Insert instances by platform
         platform_top = chart_start_row + chart_ceil + self.cell_spacing
         self.count_by_pie_chart(
-            book, sheet, "PricingPlatform", platform_top, 0, "pric_plat"
+            sheet, "PricingPlatform", platform_top, 0, "pric_plat"
         )
 
         # Insert instances by status
         status_top = platform_top + chart_ceil + self.cell_spacing
         self.count_by_pie_chart(
-            book, sheet, "Status", status_top, 0, "status"
+            sheet, "Status", status_top, 0, "status"
         )
 
         # Insert RI Qualifications
         ri_qual_top = status_top + chart_ceil + self.cell_spacing
         self.days_since_launch_pie_chart(
-            book, sheet, ri_qual_top, 0, "ri_qual"
+            sheet, ri_qual_top, 0, "ri_qual"
         )
 
         # Insert instances by type
         instance_top = ri_qual_top + chart_ceil + self.cell_spacing
         self.count_by_column_chart(
-            book, sheet, "InstanceType", instance_top, 0, "instance_type"
+            sheet, "InstanceType", instance_top, 0, "instance_type"
         )
         return sheet
 
@@ -87,7 +94,7 @@ class ReportEC2(Report):
         return header, data
 
     def count_by_column_chart(
-        self, book, sheet, column_name, top, left, name
+        self, sheet, column_name, top, left, name
     ):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
@@ -105,11 +112,10 @@ class ReportEC2(Report):
         data = sorted(data, key=itemgetter(1), reverse=True)
         counts = DDH(header=header, data=data)
 
-        self.put_label(book, sheet, column_name, top, self.table_left)
+        self.put_label(sheet, column_name, top, self.table_left)
 
         # Write the data table to the sheet.
         sheet = self.put_table(
-            book,
             sheet,
             ddh=counts,
             top=table_top,
@@ -134,11 +140,11 @@ class ReportEC2(Report):
             data_labels=dlf
         )
         self.put_chart(
-            book, sheet, column_name, top, left, table_loc, "column", ccf
+            sheet, column_name, top, left, table_loc, "column", ccf
         )
-        return book
+        return self.book
 
-    def days_since_launch_pie_chart(self, book, sheet, top, left, name):
+    def days_since_launch_pie_chart(self, sheet, top, left, name):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
 
@@ -154,10 +160,9 @@ class ReportEC2(Report):
         counts = DDH(header=header, data=data)
         title = "RI Qualified"
 
-        self.put_label(book, sheet, title, top, self.table_left)
+        self.put_label(sheet, title, top, self.table_left)
 
         sheet = self.put_table(
-            book,
             sheet,
             ddh=counts,
             top=table_top,
@@ -172,8 +177,8 @@ class ReportEC2(Report):
             self.table_left + 1,
         )
 
-        self.put_chart(book, sheet, title, top, left, table_loc, "pie")
-        return book
+        self.put_chart(sheet, title, top, left, table_loc, "pie")
+        return self.book
 
     def get_launch_times(self):
         launch_times = []
@@ -205,13 +210,20 @@ class ReportMigration(Report):
     title = "EC2 Migration Recommendations"
     cls = ComputeMigrationWarp
 
-    def _xlsx(self, book, **kwargs):
+    def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
-        # Insert raw report data.
-        sheet = book.add_worksheet(self.title)
-        self.put_label(book, sheet, self.title)
+        self.book = book
 
-        self.put_table(book, sheet, top=1, name=self.name)
+        # Insert raw report data.
+        sheet = self.book.add_worksheet(self.title)
+        self.sheet = sheet
+        self.put_label(sheet, self.title)
+
+        # Retrieve the data if it does not exist yet.
+        if(not self.ddh):
+            self.to_ddh()
+
+        self.put_table(sheet, top=1, name=self.name)
 
         return sheet
 
@@ -220,13 +232,20 @@ class ReportRDS(Report):
     title = "RDS Details"
     cls = DBDetailsWarp
 
-    def _xlsx(self, book, **kwargs):
+    def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
-        # Insert raw report data.
-        sheet = book.add_worksheet(self.title)
-        self.put_label(book, sheet, self.title)
+        self.book = book
 
-        self.put_table(book, sheet, top=1, name=self.name)
+        # Insert raw report data.
+        sheet = self.book.add_worksheet(self.title)
+        self.sheet = sheet
+        self.put_label(sheet, self.title)
+
+        # Retrieve the data if it does not exist yet.
+        if(not self.ddh):
+            self.to_ddh()
+
+        self.put_table(sheet, top=1, name=self.name)
 
         # Where charts and other tables go
         n_rows = len(self.ddh.data)
@@ -234,7 +253,7 @@ class ReportRDS(Report):
         chart_start_row = 1 + table_height + self.cell_spacing
 
         self.sum_and_count_by_column_chart(
-            book, sheet,
+            sheet,
             "DbInstanceClass",
             "MonthlyCost",
             chart_start_row,
@@ -265,7 +284,7 @@ class ReportRDS(Report):
         return header, data
 
     def sum_and_count_by_column_chart(
-        self, book, sheet, column_name, cost_column, top, left, name
+        self, sheet, column_name, cost_column, top, left, name
     ):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
@@ -274,11 +293,10 @@ class ReportRDS(Report):
 
         counts = DDH(header=header, data=data)
 
-        self.put_label(book, sheet, column_name, top, self.table_left)
+        self.put_label(sheet, column_name, top, self.table_left)
 
         # Write the data table to the sheet.
         sheet = self.put_table(
-            book,
             sheet,
             ddh=counts,
             top=table_top,
@@ -302,22 +320,29 @@ class ReportRDS(Report):
             data_labels=dlf
         )
         self.put_chart(
-            book, sheet, column_name, top, left, table_loc, "column", ccf
+            sheet, column_name, top, left, table_loc, "column", ccf
         )
-        return book
+        return self.book
 
 class ReportRIs(Report):
     name = "RIs"
     title = "EC2 RI Recommendations"
     cls = ComputeRIWarp
 
-    def _xlsx(self, book, **kwargs):
+    def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
-        # Insert raw report data.
-        sheet = book.add_worksheet(self.title)
-        self.put_label(book, sheet, self.title)
+        self.book = book
 
-        self.put_table(book, sheet, top=1, name=self.name)
+        # Insert raw report data.
+        sheet = self.book.add_worksheet(self.title)
+        self.sheet = sheet
+        self.put_label(sheet, self.title)
+
+        # Retrieve the data if it does not exist yet.
+        if(not self.ddh):
+            self.to_ddh()
+
+        self.put_table(sheet, top=1, name=self.name)
 
         # Where charts and other tables go
         n_rows = len(self.ddh.data)
@@ -325,15 +350,15 @@ class ReportRIs(Report):
         chart_start_row = 1 + table_height + self.cell_spacing
 
         self.sum_by_column_chart(
-            book, sheet, "Annual Savings", chart_start_row, 0, "ri_savings"
+            sheet, "Annual Savings", chart_start_row, 0, "ri_savings"
         )
         return sheet
 
     def put_two_series_chart(
-        self, book, sheet, title, top, left, data_loc, chart_type, formatting
+        self, sheet, title, top, left, data_loc, chart_type, formatting
     ):
         """Add RI chart to an xlsx workbook located at data_loc."""
-        chart = book.add_chart(dict(type=chart_type))
+        chart = self.book.add_chart(dict(type=chart_type))
         legend_options = formatting["legend_options"]
         top_, bottom, col_keys, col_values = data_loc
 
@@ -387,7 +412,7 @@ class ReportRIs(Report):
         return header, data_
 
     def sum_by_column_chart(
-        self, book, sheet, column_name, top, left, name
+        self, sheet, column_name, top, left, name
     ):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
@@ -406,11 +431,10 @@ class ReportRIs(Report):
         data = sorted(data, key=itemgetter(1), reverse=True)
         sums = DDH(header=header, data=data)
 
-        self.put_label(book, sheet, column_name, top, self.table_left)
+        self.put_label(sheet, column_name, top, self.table_left)
 
         # Write the data table to the sheet.
         sheet = self.put_table(
-            book,
             sheet,
             ddh=sums,
             top=table_top,
@@ -432,8 +456,8 @@ class ReportRIs(Report):
             legend_options=self.formatting["legend_options"],
             data_labels=dlf
         )
-        self.put_two_series_chart(book, sheet, column_name, top, left, table_loc, "column", ccf)
-        return book
+        self.put_two_series_chart(sheet, column_name, top, left, table_loc, "column", ccf)
+        return self.book
 
 class ReportUnderutilized(Report):
     name = "Underutil"
@@ -453,7 +477,6 @@ class ReportUnderutilized(Report):
         self.log = log
 
     def predicted_cost_by_environment(self, top=0, left=0):
-        book = self.book
         con = self.con
         sheet = self.sheet
 
@@ -481,7 +504,6 @@ class ReportUnderutilized(Report):
 
         # Write the data table to the sheet.
         sheet = self.put_table(
-            book,
             sheet,
             ddh=ddh,
             top=table_top,
@@ -497,7 +519,15 @@ class ReportUnderutilized(Report):
             table_left + 1,
         )
         title = "Predicted Monthly Cost by Environment"
-        self.put_chart(book, sheet, title, top+1, left, table_loc, "column")
+        # Create chart formatting.
+        dlf = dict()
+        dlf.update(self.formatting["data_labels"])
+        dlf["category"] = False
+        ccf = dict(
+            legend_options=self.formatting["legend_options"],
+            data_labels=dlf
+        )
+        self.put_chart(sheet, title, top+1, left, table_loc, "column", ccf)
 
     def to_ddh(self):
         account = self.account
@@ -547,7 +577,7 @@ class ReportUnderutilized(Report):
         sheet = book.add_worksheet(self.title)
         self.sheet = sheet
         self.get_formatting()
-        self.put_label(book, sheet, self.title)
+        self.put_label(sheet, self.title)
 
         # Retrieve the data if it does not exist yet.
         if(not self.ddh):
@@ -574,7 +604,7 @@ class ReportUnderutilized(Report):
 
         ddh = DDH(header=header, data=out)
 
-        self.put_table(book, sheet, ddh=ddh, top=1)
+        self.put_table(sheet, ddh=ddh, top=1)
 
         top = len(out) + 2 # Account for label and table columns
         self.predicted_cost_by_environment(top=top, left=0)

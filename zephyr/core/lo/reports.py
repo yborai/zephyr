@@ -6,13 +6,20 @@ class ReportSRs(Report):
     title = "Service Requests"
     cls = ServiceRequests
 
-    def _xlsx(self, book, **kwargs):
+    def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
-        # Insert raw report data.
-        sheet = book.add_worksheet(self.title)
-        self.put_label(book, sheet, self.title)
+        self.book = book
 
-        self.put_table(book, sheet, self.ddh, top=1, name=self.name)
+        # Insert raw report data.
+        sheet = self.book.add_worksheet(self.title)
+        self.sheet = sheet
+        self.put_label(sheet, self.title)
+
+        # Retrieve the data if it does not exist yet.
+        if(not self.ddh):
+            self.to_ddh()
+
+        self.put_table(sheet, self.ddh, top=1, name=self.name)
 
         # Where do charts and other tables go?
         n_rows = len(self.ddh.data)
@@ -22,12 +29,12 @@ class ReportSRs(Report):
 
         # Insert SRs by Area pie chart.
         self.count_by_pie_chart(
-            book, sheet, "Area", chart_start_row, 0, "sr_area"
+            sheet, "Area", chart_start_row, 0, "sr_area"
         )
 
         # Place SRs by Severity pie chart
         severity_top = chart_start_row + chart_ceil + self.cell_spacing
         self.count_by_pie_chart(
-            book, sheet, "Severity", severity_top, 0, "sr_sev"
+            sheet, "Severity", severity_top, 0, "sr_sev"
         )
         return sheet

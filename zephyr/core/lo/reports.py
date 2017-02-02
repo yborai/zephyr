@@ -11,15 +11,14 @@ class ReportSRs(Report):
         self.book = book
 
         # Insert raw report data.
-        sheet = self.book.add_worksheet(self.title)
-        self.sheet = sheet
-        self.put_label(sheet, self.title)
+        self.sheet = self.book.add_worksheet(self.title)
+        self.put_label(self.title)
 
         # Retrieve the data if it does not exist yet.
         if(not self.ddh):
             self.to_ddh()
 
-        self.put_table(sheet, self.ddh, top=1, name=self.name)
+        self.put_table(self.ddh, top=1, name=self.name)
 
         # Where do charts and other tables go?
         n_rows = len(self.ddh.data)
@@ -29,12 +28,12 @@ class ReportSRs(Report):
 
         # Insert SRs by Area pie chart.
         self.count_by_pie_chart(
-            sheet, "Area", chart_start_row, 0, "sr_area"
+            "Area", chart_start_row, 0, "sr_area"
         )
 
         # Place SRs by Severity pie chart
         severity_top = chart_start_row + chart_ceil + self.cell_spacing
         self.count_by_pie_chart(
-            sheet, "Severity", severity_top, 0, "sr_sev"
+            "Severity", severity_top, 0, "sr_sev"
         )
-        return sheet
+        return self.sheet

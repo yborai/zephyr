@@ -24,15 +24,14 @@ class ReportEC2(Report):
         self.book = book
 
         # Insert raw report data.
-        sheet = self.book.add_worksheet(self.title)
-        self.sheet = sheet
-        self.put_label(sheet, self.title)
+        self.sheet = self.book.add_worksheet(self.title)
+        self.put_label(self.title)
 
         # Retrieve the data if it does not exist yet.
         if(not self.ddh):
             self.to_ddh()
 
-        self.put_table(sheet, top=1, name=self.name)
+        self.put_table(top=1, name=self.name)
 
         # Where charts and other tables go
         n_rows = len(self.ddh.data)
@@ -42,33 +41,33 @@ class ReportEC2(Report):
 
         # Insert instances by region.
         self.count_by_pie_chart(
-            sheet, "Region", chart_start_row, 0, "ec2_region"
+            "Region", chart_start_row, 0, "ec2_region"
         )
 
         # Insert instances by platform
         platform_top = chart_start_row + chart_ceil + self.cell_spacing
         self.count_by_pie_chart(
-            sheet, "PricingPlatform", platform_top, 0, "pric_plat"
+            "PricingPlatform", platform_top, 0, "pric_plat"
         )
 
         # Insert instances by status
         status_top = platform_top + chart_ceil + self.cell_spacing
         self.count_by_pie_chart(
-            sheet, "Status", status_top, 0, "status"
+            "Status", status_top, 0, "status"
         )
 
         # Insert RI Qualifications
         ri_qual_top = status_top + chart_ceil + self.cell_spacing
         self.days_since_launch_pie_chart(
-            sheet, ri_qual_top, 0, "ri_qual"
+            ri_qual_top, 0, "ri_qual"
         )
 
         # Insert instances by type
         instance_top = ri_qual_top + chart_ceil + self.cell_spacing
         self.count_by_column_chart(
-            sheet, "InstanceType", instance_top, 0, "instance_type"
+            "InstanceType", instance_top, 0, "instance_type"
         )
-        return sheet
+        return self.sheet
 
     def count_by(self, column):
         """Count rows in data grouping by values in the column specified"""
@@ -94,7 +93,7 @@ class ReportEC2(Report):
         return header, data
 
     def count_by_column_chart(
-        self, sheet, column_name, top, left, name
+        self, column_name, top, left, name
     ):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
@@ -112,15 +111,11 @@ class ReportEC2(Report):
         data = sorted(data, key=itemgetter(1), reverse=True)
         counts = DDH(header=header, data=data)
 
-        self.put_label(sheet, column_name, top, self.table_left)
+        self.put_label(column_name, top, self.table_left)
 
         # Write the data table to the sheet.
-        sheet = self.put_table(
-            sheet,
-            ddh=counts,
-            top=table_top,
-            left=self.table_left,
-            name=name
+        self.sheet = self.put_table(
+            ddh=counts, top=table_top, left=self.table_left, name=name
         )
         # Compute series information.
         table_loc = (
@@ -140,11 +135,11 @@ class ReportEC2(Report):
             data_labels=dlf
         )
         self.put_chart(
-            sheet, column_name, top, left, table_loc, "column", ccf
+            column_name, top, left, table_loc, "column", ccf
         )
         return self.book
 
-    def days_since_launch_pie_chart(self, sheet, top, left, name):
+    def days_since_launch_pie_chart(self, top, left, name):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
 
@@ -160,14 +155,10 @@ class ReportEC2(Report):
         counts = DDH(header=header, data=data)
         title = "RI Qualified"
 
-        self.put_label(sheet, title, top, self.table_left)
+        self.put_label(title, top, self.table_left)
 
-        sheet = self.put_table(
-            sheet,
-            ddh=counts,
-            top=table_top,
-            left=self.table_left,
-            name=name
+        self.sheet = self.put_table(
+            ddh=counts, top=table_top, left=self.table_left, name=name
         )
 
         table_loc = (
@@ -177,7 +168,7 @@ class ReportEC2(Report):
             self.table_left + 1,
         )
 
-        self.put_chart(sheet, title, top, left, table_loc, "pie")
+        self.put_chart(title, top, left, table_loc, "pie")
         return self.book
 
     def get_launch_times(self):
@@ -215,17 +206,16 @@ class ReportMigration(Report):
         self.book = book
 
         # Insert raw report data.
-        sheet = self.book.add_worksheet(self.title)
-        self.sheet = sheet
-        self.put_label(sheet, self.title)
+        self.sheet = self.book.add_worksheet(self.title)
+        self.put_label(self.title)
 
         # Retrieve the data if it does not exist yet.
         if(not self.ddh):
             self.to_ddh()
 
-        self.put_table(sheet, top=1, name=self.name)
+        self.put_table(top=1, name=self.name)
 
-        return sheet
+        return self.sheet
 
 class ReportRDS(Report):
     name = "RDS"
@@ -237,15 +227,14 @@ class ReportRDS(Report):
         self.book = book
 
         # Insert raw report data.
-        sheet = self.book.add_worksheet(self.title)
-        self.sheet = sheet
-        self.put_label(sheet, self.title)
+        self.sheet = self.book.add_worksheet(self.title)
+        self.put_label(self.title)
 
         # Retrieve the data if it does not exist yet.
         if(not self.ddh):
             self.to_ddh()
 
-        self.put_table(sheet, top=1, name=self.name)
+        self.put_table(top=1, name=self.name)
 
         # Where charts and other tables go
         n_rows = len(self.ddh.data)
@@ -253,14 +242,13 @@ class ReportRDS(Report):
         chart_start_row = 1 + table_height + self.cell_spacing
 
         self.sum_and_count_by_column_chart(
-            sheet,
             "DbInstanceClass",
             "MonthlyCost",
             chart_start_row,
             0,
             "month_cost"
         )
-        return sheet
+        return self.sheet
 
     def sum_and_count_by(self, column_name, cost_column):
         """Count and sum rows in data grouping by values in the column specified"""
@@ -284,7 +272,7 @@ class ReportRDS(Report):
         return header, data
 
     def sum_and_count_by_column_chart(
-        self, sheet, column_name, cost_column, top, left, name
+        self, column_name, cost_column, top, left, name
     ):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
@@ -293,15 +281,11 @@ class ReportRDS(Report):
 
         counts = DDH(header=header, data=data)
 
-        self.put_label(sheet, column_name, top, self.table_left)
+        self.put_label(column_name, top, self.table_left)
 
         # Write the data table to the sheet.
-        sheet = self.put_table(
-            sheet,
-            ddh=counts,
-            top=table_top,
-            left=self.table_left,
-            name=name
+        self.sheet = self.put_table(
+            ddh=counts, top=table_top, left=self.table_left, name=name
         )
         # Compute series information.
         table_loc = (
@@ -320,7 +304,7 @@ class ReportRDS(Report):
             data_labels=dlf
         )
         self.put_chart(
-            sheet, column_name, top, left, table_loc, "column", ccf
+            column_name, top, left, table_loc, "column", ccf
         )
         return self.book
 
@@ -334,15 +318,14 @@ class ReportRIs(Report):
         self.book = book
 
         # Insert raw report data.
-        sheet = self.book.add_worksheet(self.title)
-        self.sheet = sheet
-        self.put_label(sheet, self.title)
+        self.sheet = self.book.add_worksheet(self.title)
+        self.put_label(self.title)
 
         # Retrieve the data if it does not exist yet.
         if(not self.ddh):
             self.to_ddh()
 
-        self.put_table(sheet, top=1, name=self.name)
+        self.put_table(top=1, name=self.name)
 
         # Where charts and other tables go
         n_rows = len(self.ddh.data)
@@ -350,12 +333,12 @@ class ReportRIs(Report):
         chart_start_row = 1 + table_height + self.cell_spacing
 
         self.sum_by_column_chart(
-            sheet, "Annual Savings", chart_start_row, 0, "ri_savings"
+            "Annual Savings", chart_start_row, 0, "ri_savings"
         )
-        return sheet
+        return self.sheet
 
     def put_two_series_chart(
-        self, sheet, title, top, left, data_loc, chart_type, formatting
+        self, title, top, left, data_loc, chart_type, formatting
     ):
         """Add RI chart to an xlsx workbook located at data_loc."""
         chart = self.book.add_chart(dict(type=chart_type))
@@ -363,8 +346,11 @@ class ReportRIs(Report):
         top_, bottom, col_keys, col_values = data_loc
 
         # Add first column
-        series_categories = [sheet.name, top_, col_keys, bottom, col_keys]
-        series1_values = [sheet.name, top_, col_values-1, bottom, col_values-1] # Looks at first column
+        series_categories = [self.sheet.name, top_, col_keys, bottom, col_keys]
+        # Look at first column
+        series1_values = [
+            self.sheet.name, top_, col_values-1, bottom, col_values-1
+        ]
         series1 = dict(
             categories=series_categories,
             values=series1_values,
@@ -373,7 +359,7 @@ class ReportRIs(Report):
         chart.add_series(series1)
 
         # Add the second column
-        series2_values = [sheet.name, top_, col_values, bottom, col_values]
+        series2_values = [self.sheet.name, top_, col_values, bottom, col_values]
         series2 = dict(
             categories=series_categories,
             values=series2_values,
@@ -383,8 +369,8 @@ class ReportRIs(Report):
 
         chart.set_title({"name": title})
         chart.set_legend(legend_options)
-        sheet.insert_chart(top, left, chart)
-        return sheet
+        self.sheet.insert_chart(top, left, chart)
+        return self.sheet
 
     def sum_by(self):
         """Sum rows in data grouping by values in the column specified"""
@@ -412,7 +398,7 @@ class ReportRIs(Report):
         return header, data_
 
     def sum_by_column_chart(
-        self, sheet, column_name, top, left, name
+        self, column_name, top, left, name
     ):
         """Insert a column chart with data specified."""
         table_top = top + 1 # Account for label.
@@ -431,15 +417,11 @@ class ReportRIs(Report):
         data = sorted(data, key=itemgetter(1), reverse=True)
         sums = DDH(header=header, data=data)
 
-        self.put_label(sheet, column_name, top, self.table_left)
+        self.put_label(column_name, top, self.table_left)
 
         # Write the data table to the sheet.
-        sheet = self.put_table(
-            sheet,
-            ddh=sums,
-            top=table_top,
-            left=self.table_left,
-            name=name
+        self.sheet = self.put_table(
+            ddh=sums, top=table_top, left=self.table_left, name=name
         )
         # Compute series information.
         table_loc = (
@@ -456,7 +438,7 @@ class ReportRIs(Report):
             legend_options=self.formatting["legend_options"],
             data_labels=dlf
         )
-        self.put_two_series_chart(sheet, column_name, top, left, table_loc, "column", ccf)
+        self.put_two_series_chart(column_name, top, left, table_loc, "column", ccf)
         return self.book
 
 class ReportUnderutilized(Report):
@@ -478,7 +460,6 @@ class ReportUnderutilized(Report):
 
     def predicted_cost_by_environment(self, top=0, left=0):
         con = self.con
-        sheet = self.sheet
 
         df = pd.read_sql("""
             SELECT
@@ -503,12 +484,8 @@ class ReportUnderutilized(Report):
         ddh = DDH(data=data, header=list(df.columns))
 
         # Write the data table to the sheet.
-        sheet = self.put_table(
-            sheet,
-            ddh=ddh,
-            top=table_top,
-            left=table_left,
-            name="PredPrice_by_Env",
+        self.sheet = self.put_table(
+            ddh=ddh, top=table_top, left=table_left, name="PredPrice_by_Env"
         )
 
         # Compute series location.
@@ -527,7 +504,7 @@ class ReportUnderutilized(Report):
             legend_options=self.formatting["legend_options"],
             data_labels=dlf
         )
-        self.put_chart(sheet, title, top+1, left, table_loc, "column", ccf)
+        self.put_chart(title, top+1, left, table_loc, "column", ccf)
 
     def to_ddh(self):
         account = self.account
@@ -574,10 +551,9 @@ class ReportUnderutilized(Report):
         self.book = book
 
         # Insert raw report data.
-        sheet = book.add_worksheet(self.title)
-        self.sheet = sheet
+        self.sheet = book.add_worksheet(self.title)
         self.get_formatting()
-        self.put_label(sheet, self.title)
+        self.put_label(self.title)
 
         # Retrieve the data if it does not exist yet.
         if(not self.ddh):
@@ -585,7 +561,7 @@ class ReportUnderutilized(Report):
 
         # Hide the environment column by default
         env_idx = self.ddh.header.index("Environment")
-        sheet.set_column(env_idx+1, env_idx+1, None, None, dict(hidden=1))
+        self.sheet.set_column(env_idx+1, env_idx+1, None, None, dict(hidden=1))
 
         # Format the report to visually separate the environments.
         environment = None
@@ -604,10 +580,10 @@ class ReportUnderutilized(Report):
 
         ddh = DDH(header=header, data=out)
 
-        self.put_table(sheet, ddh=ddh, top=1)
+        self.put_table(ddh=ddh, top=1)
 
         top = len(out) + 2 # Account for label and table columns
         self.predicted_cost_by_environment(top=top, left=0)
 
-        return sheet
+        return self.sheet
 

@@ -64,15 +64,14 @@ class ReportBilling(Report):
         self.book = book
 
         # Insert raw report data.
-        sheet = self.book.add_worksheet(self.title)
-        self.sheet = sheet
-        self.put_label(sheet, self.title)
+        self.sheet = self.book.add_worksheet(self.title)
+        self.put_label(self.title)
 
         # Retrieve the data if it does not exist yet.
         if(not self.ddh):
             self.to_ddh()
 
-        self.put_table(sheet, top=1, name=self.name)
+        self.put_table(top=1, name=self.name)
 
         aggs_name = "Aggregates"
         aggs_title = "Billing Line Item Aggregates"
@@ -84,10 +83,10 @@ class ReportBilling(Report):
 
         aggs_ddh = self.group_by_lineitem()
 
-        self.put_label(sheet, aggs_title, left=table_width)
+        self.put_label(aggs_title, left=table_width)
 
         self.put_table(
-            sheet, aggs_ddh, self.cell_spacing, table_width, aggs_name
+            aggs_ddh, self.cell_spacing, table_width, aggs_name
         )
 
         aggs_n_rows = len(aggs_ddh.data)
@@ -96,12 +95,12 @@ class ReportBilling(Report):
         monthly_top = 1 + aggs_table_height + self.cell_spacing # Account for label
 
         self.put_label(
-            sheet, monthly_title, top=monthly_top, left=table_width
+            monthly_title, top=monthly_top, left=table_width
         )
 
         table_top = monthly_top + self.cell_spacing
         self.put_table(
-            sheet, monthly_ddh, table_top, table_width, monthly_name
+            monthly_ddh, table_top, table_width, monthly_name
         )
 
-        return sheet
+        return self.sheet

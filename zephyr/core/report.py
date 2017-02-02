@@ -48,14 +48,6 @@ class Report(Client):
     title = None
     formatting = FORMATTING
 
-    @classmethod
-    def book_formats(cls, book):
-        """Get format objects from book."""
-        table = cls.formatting["table_style"]
-        header_format = book.add_format(cls.formatting["header_format"])
-        cell_format = book.add_format(cls.formatting["label_format"])
-        return table, header_format, cell_format
-
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
     ):
@@ -73,6 +65,13 @@ class Report(Client):
         self.ddh = None
         self.get_formatting()
         self.table_left = int(self.chart_width) + self.cell_spacing
+
+    def book_formats(self):
+        """Get format objects from book."""
+        table = self.formatting["table_style"]
+        header_format = self.book.add_format(self.formatting["header_format"])
+        cell_format = self.book.add_format(self.formatting["label_format"])
+        return table, header_format, cell_format
 
     def clean_data(self):
         new_data = []
@@ -106,7 +105,7 @@ class Report(Client):
         return header, data
 
     def count_by_pie_chart(
-        self, sheet, column_name, top, left, name
+        self, column_name, top, left, name
     ):
         """Insert a pie chart with data specified."""
         table_left = int(self.chart_width) + self.cell_spacing
@@ -116,11 +115,10 @@ class Report(Client):
         header, data = self.count_by(column_name)
         counts = DDH(header=header, data=data)
 
-        self.put_label(sheet, column_name, top, table_left)
+        self.put_label(column_name, top, table_left)
 
         # Write the data table to the sheet.
-        sheet = self.put_table(
-            sheet,
+        self.sheet = self.put_table(
             ddh=counts,
             top=table_top,
             left=table_left,
@@ -134,7 +132,7 @@ class Report(Client):
             table_left,
             table_left + 1,
         )
-        self.put_chart(sheet, column_name, top, left, table_loc, "pie")
+        self.put_chart(column_name, top, left, table_loc, "pie")
         return self.book
 
     def get_formatting(self):
@@ -151,14 +149,7 @@ class Report(Client):
         return header
 
     def put_chart(
-            self,
-            sheet,
-            title,
-            top,
-            left,
-            data_loc,
-            chart_type,
-            formatting=None
+            self, title, top, left, data_loc, chart_type, formatting=None
         ):
         """Add a chart to an xlsx workbook located at data_loc."""
         if not formatting:
@@ -167,8 +158,8 @@ class Report(Client):
         legend_options = formatting["legend_options"]
         top_, bottom, col_keys, col_values = data_loc
 
-        series_categories = [sheet.name, top_, col_keys, bottom, col_keys]
-        series_values = [sheet.name, top_, col_values, bottom, col_values]
+        series_categories = [self.sheet.name, top_, col_keys, bottom, col_keys]
+        series_values = [self.sheet.name, top_, col_values, bottom, col_values]
         series = dict(
             categories=series_categories,
             values=series_values,
@@ -178,20 +169,20 @@ class Report(Client):
 
         chart.set_title({"name": title})
         chart.set_legend(legend_options)
-        sheet.insert_chart(top, left, chart)
-        return sheet
+        self.sheet.insert_chart(top, left, chart)
+        return self.sheet
 
-    def put_label(self, sheet, title, top=0, left=0):
+    def put_label(self, title, top=0, left=0):
         """Inserts a properly formatted label into a workbook."""
         # Configure formatting
-        cell_format = self.book_formats(self.book)[2]
+        cell_format = self.book_formats()[2]
 
         # Create label with cell_format
-        sheet.write(top, left, title, cell_format)
-        return sheet
+        self.sheet.write(top, left, title, cell_format)
+        return self.sheet
 
     def put_table(
-        self, sheet, ddh=None, top=0, left=0, name=None
+        self, ddh=None, top=0, left=0, name=None
     ):
         """Creates an Excel table in a workbook."""
         # Checks data
@@ -200,10 +191,10 @@ class Report(Client):
         if not name:
             name = self.name
         # Configure formatting
-        table_fmt, header_format, cell_format = self.book_formats(self.book)
+        table_fmt, header_format, cell_format = self.book_formats()
 
         # Write data to sheet
-        sheet = self.rows_to_excel(sheet, ddh.data, top=top+1, left=left)
+        self.sheet = self.rows_to_excel(ddh.data, top=top+1, left=left)
 
         # Create format dict for xlsxwriter
         total_row = []
@@ -220,10 +211,10 @@ class Report(Client):
         n_cols = len(ddh.data[0])
 
         # Tell Excel this array is a table. Note: Xlsxwriter is 0 indexed.
-        sheet.add_table(top, left, top + n_rows, left + n_cols - 1, table_format)
-        return sheet
+        self.sheet.add_table(top, left, top + n_rows, left + n_cols - 1, table_format)
+        return self.sheet
 
-    def rows_to_excel(self, sheet, rows, top=1, left=0):
+    def rows_to_excel(self, rows, top=1, left=0):
         """
         Take rows, an iterable of iterables, and write it to a given sheet
         with the top, left cell at (top, left).
@@ -233,8 +224,8 @@ class Report(Client):
         for i in range(n_rows):
             row = rows[i]
             for j in range(n_cells):
-                sheet.write(top+i, left+j, row[j])
-        return sheet
+                self.sheet.write(top+i, left+j, row[j])
+        return self.sheet
 
     def to_ddh(self):
         if(not self.ddh):

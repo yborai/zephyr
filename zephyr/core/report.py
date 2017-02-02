@@ -64,6 +64,7 @@ class Report(Client):
         self.date = date
         self.ddh = None
         self.get_formatting()
+        self.sheet = None
         self.table_left = int(self.chart_width) + self.cell_spacing
 
     def book_formats(self):
@@ -148,6 +149,15 @@ class Report(Client):
         [header[i].update(total_row[i]) for i in range(len(total_row))]
         return header
 
+    def load_data(self):
+        # Retrieve the data if it does not exist yet.
+        if(not self.ddh):
+            self.to_ddh()
+
+        if(not len(self.ddh.data)):
+            return
+        return True
+
     def put_chart(
             self, title, top, left, data_loc, chart_type, formatting=None
         ):
@@ -190,6 +200,8 @@ class Report(Client):
             ddh = self.ddh
         if not name:
             name = self.name
+        if not len(ddh.data):
+            return self.sheet
         # Configure formatting
         table_fmt, header_format, cell_format = self.book_formats()
 

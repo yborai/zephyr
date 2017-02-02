@@ -63,13 +63,14 @@ class ReportBilling(Report):
         # Insert raw report data.
         self.book = book
 
+        # Load the data
+        data_loaded = self.load_data()
+        if not data_loaded:
+            return
+
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
-
-        # Retrieve the data if it does not exist yet.
-        if(not self.ddh):
-            self.to_ddh()
 
         self.put_table(top=1, name=self.name)
 

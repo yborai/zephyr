@@ -555,6 +555,7 @@ class ReportRun(ZephyrReport):
             report = self.reports(book, sheets, account, date, expire_cache)
         if(report):
             self.cache(filename, client, account, date)
+        return report
 
     def reports(self, book, sheets, account, date, expire_cache):
         config = self.app.config
@@ -569,6 +570,11 @@ class ReportRun(ZephyrReport):
                     expire_cache=expire_cache,
                     log=log
                 ).to_xlsx(book)
+                if not out[Sheet]:
+                    log.info(
+                        "{} is empty and will be skipped."
+                        .format(Sheet.title)
+                    )
             except ZephyrException as e:
                 message = e.args[0]
                 log.error("Error in {sheet}: {message}".format(
@@ -604,9 +610,9 @@ class ReportRun(ZephyrReport):
                 account=acct,
             ))
             out[acct] = self.to_xlsx(args, acct, date, expire_cache, client)
-        sheet_set = {bool(value) for value in out.values()}
-        if True not in sheet_set:
-            self.app.log.info("No data to report!")
+            sheet_set = {bool(value) for value in out[acct].values()}
+            if True not in sheet_set:
+                self.app.log.info("No data to report for {}!".format(acct))
 
     def slug_valid(self, slug):
         return True

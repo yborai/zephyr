@@ -6,6 +6,7 @@ from datetime import datetime
 
 from ..ddh import DDH
 from ..report import Report
+from ..utils import ZephyrException
 from .calls import (
     ComputeDetailsWarp,
     ComputeMigrationWarp,
@@ -23,13 +24,14 @@ class ReportEC2(Report):
         """Format the sheet and insert the data for the EC2 report."""
         self.book = book
 
+        # Load the data
+        data_loaded = self.load_data()
+        if not data_loaded:
+            return
+
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
-
-        # Retrieve the data if it does not exist yet.
-        if(not self.ddh):
-            self.to_ddh()
 
         self.put_table(top=1, name=self.name)
 
@@ -197,13 +199,14 @@ class ReportMigration(Report):
         """Format the sheet and insert the data for the SR report."""
         self.book = book
 
+        # Load the data
+        data_loaded = self.load_data()
+        if not data_loaded:
+            return
+
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
-
-        # Retrieve the data if it does not exist yet.
-        if(not self.ddh):
-            self.to_ddh()
 
         self.put_table(top=1, name=self.name)
 
@@ -218,13 +221,14 @@ class ReportRDS(Report):
         """Format the sheet and insert the data for the SR report."""
         self.book = book
 
+        # Load the data
+        data_loaded = self.load_data()
+        if not data_loaded:
+            return
+
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
-
-        # Retrieve the data if it does not exist yet.
-        if(not self.ddh):
-            self.to_ddh()
 
         self.put_table(top=1, name=self.name)
 
@@ -307,13 +311,14 @@ class ReportRIs(Report):
         """Format the sheet and insert the data for the SR report."""
         self.book = book
 
+        # Load the data
+        data_loaded = self.load_data()
+        if not data_loaded:
+            return
+
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
-
-        # Retrieve the data if it does not exist yet.
-        if(not self.ddh):
-            self.to_ddh()
 
         self.put_table(top=1, name=self.name)
 
@@ -506,6 +511,8 @@ class ReportUnderutilized(Report):
 
         # cd for compute-details
         cd_report = ReportEC2(config, account, date, expire_cache, log)
+        if cd_report.client.data['Count'] == 0:
+            raise ZephyrException("There is no instance information to examine.")
         cd_report.to_sql("cd", con)
 
         # uu for underutilized
@@ -540,14 +547,15 @@ class ReportUnderutilized(Report):
         """Format the sheet and insert the data for the SR report."""
         self.book = book
 
+        # Load the data
+        data_loaded = self.load_data()
+        if not data_loaded:
+            return
+
         # Insert raw report data.
         self.sheet = book.add_worksheet(self.title)
         self.get_formatting()
         self.put_label(self.title)
-
-        # Retrieve the data if it does not exist yet.
-        if(not self.ddh):
-            self.to_ddh()
 
         # Hide the environment column by default
         env_idx = self.ddh.header.index("Environment")

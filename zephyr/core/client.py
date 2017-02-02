@@ -109,7 +109,14 @@ class Client(object):
         return aws.get_object_from_s3(self.ZEPHYR_S3_BUCKET, cache_key, self.s3)
 
     def get_slugs(self):
-        query = 'SELECT "Name" AS slug FROM aws ORDER BY "Name"'
+        query = ("""
+            SELECT aws."Name" AS slug
+            FROM
+                projects AS p LEFT OUTER JOIN
+                aws ON (p.Id=aws.Assoc_Project__c)
+            WHERE aws."Name" IS NOT NULL
+            ORDER BY aws."Name"
+        """)
         slugs = DDH.read_sql(query, self.database)
         return list(zip(*slugs.data))[0]
 

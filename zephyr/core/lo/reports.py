@@ -27,13 +27,9 @@ class ReportSRs(Report):
         chart_ceil = self.chart_height + 1
 
         # Insert SRs by Area pie chart.
-        self.count_by_pie_chart(
-            "Area", chart_start_row, 0, "sr_area"
-        )
+        self.count_by_pie_chart("Area", chart_start_row, 0, "sr_area")
 
         # Place SRs by Severity pie chart
         severity_top = chart_start_row + chart_ceil + self.cell_spacing
-        self.count_by_pie_chart(
-            "Severity", severity_top, 0, "sr_sev"
-        )
+        self.count_by_pie_chart("Severity", severity_top, 0, "sr_sev")
         return self.sheet

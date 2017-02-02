@@ -40,9 +40,7 @@ class ReportEC2(Report):
         chart_ceil = self.chart_height + 1
 
         # Insert instances by region.
-        self.count_by_pie_chart(
-            "Region", chart_start_row, 0, "ec2_region"
-        )
+        self.count_by_pie_chart("Region", chart_start_row, 0, "ec2_region")
 
         # Insert instances by platform
         platform_top = chart_start_row + chart_ceil + self.cell_spacing
@@ -52,15 +50,11 @@ class ReportEC2(Report):
 
         # Insert instances by status
         status_top = platform_top + chart_ceil + self.cell_spacing
-        self.count_by_pie_chart(
-            "Status", status_top, 0, "status"
-        )
+        self.count_by_pie_chart("Status", status_top, 0, "status")
 
         # Insert RI Qualifications
         ri_qual_top = status_top + chart_ceil + self.cell_spacing
-        self.days_since_launch_pie_chart(
-            ri_qual_top, 0, "ri_qual"
-        )
+        self.days_since_launch_pie_chart(ri_qual_top, 0, "ri_qual")
 
         # Insert instances by type
         instance_top = ri_qual_top + chart_ceil + self.cell_spacing
@@ -134,9 +128,7 @@ class ReportEC2(Report):
             legend_options=self.formatting["legend_options"],
             data_labels=dlf
         )
-        self.put_chart(
-            column_name, top, left, table_loc, "column", ccf
-        )
+        self.put_chart(column_name, top, left, table_loc, "column", ccf)
         return self.book
 
     def days_since_launch_pie_chart(self, top, left, name):
@@ -303,9 +295,7 @@ class ReportRDS(Report):
             legend_options=self.formatting["legend_options"],
             data_labels=dlf
         )
-        self.put_chart(
-            column_name, top, left, table_loc, "column", ccf
-        )
+        self.put_chart(column_name, top, left, table_loc, "column", ccf)
         return self.book
 
 class ReportRIs(Report):
@@ -586,4 +576,3 @@ class ReportUnderutilized(Report):
         self.predicted_cost_by_environment(top=top, left=0)
 
         return self.sheet
-

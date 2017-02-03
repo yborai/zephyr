@@ -18,7 +18,7 @@ class CloudCheckr(Client):
         self.name = "CloudCheckr"
 
     def get_account_by_slug(self, acc_short_name):
-        return pd.read_sql("""
+        matches = pd.read_sql("""
             SELECT a.name AS slug, c.name AS cc_name
             FROM
                 aws AS a LEFT OUTER JOIN
@@ -26,8 +26,16 @@ class CloudCheckr(Client):
             WHERE a.name = '{slug}'
             """.format(slug=acc_short_name),
             self.database
-        )["cc_name"][0]
+        )["cc_name"]
 
+        if not len(matches):
+            raise ZephyrException(
+                "No matching account for {}. "
+                "Please see zephyr meta for a list of accounts."
+                .format(acc_short_name)
+            )
+
+        return matches[0]
     @classmethod
     def get_params(cls, cc_api_key, name, date):
         return dict(

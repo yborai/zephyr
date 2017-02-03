@@ -116,7 +116,7 @@ class ZephyrClearCache(ZephyrCLI):
         if not any((account, date, all_)):
             self.app.args.print_help()
             sys.exit()
-        if not all((account, date)):
+        if not (date and any((account, all_))):
             raise ZephyrException("Account and date are required parameters.")
 
         month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")

@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 
 from ..client import Client
-from ..utils import get_config_values
+from ..utils import get_config_values, ZephyrException
 
 class Logicops(Client):
     slug = "service-requests"
@@ -30,7 +30,7 @@ class Logicops(Client):
         self.cookies = self.get_cookies(user, passwd)
 
     def get_account_by_slug(self, slug):
-        return pd.read_sql("""
+        name = pd.read_sql("""
             SELECT a.name AS slug, l.name AS lo_name
             FROM
                 aws AS a LEFT OUTER JOIN
@@ -39,7 +39,14 @@ class Logicops(Client):
             WHERE a.name = '{slug}'
             """.format(slug=slug),
             self.database
-        )["lo_name"][0]
+        )["lo_name"]
+
+        if not name[0]:
+            raise ZephyrException(
+                "No matching Logicops ID found in Salesforce."
+            )
+
+        return name[0]
 
     def request(self, account):
         raise NotImplementedError

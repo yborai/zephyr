@@ -4,6 +4,7 @@ from .calls import ServiceRequests
 class ReportSRs(Report):
     name = "SRs"
     title = "Service Requests"
+    calls = (ServiceRequests,)
     cls = ServiceRequests
 
     def to_xlsx(self, book, **kwargs):

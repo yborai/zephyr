@@ -246,15 +246,10 @@ class Report(Client):
             return False
         return self.ddh
 
-    def to_sql(self, name, con):
-        ddh = self.to_ddh()
-        data = [[str(cell) for cell in row] for row in ddh.data]
-        df = pd.DataFrame(data, columns=self.ddh.header)
-        df.to_sql(name, con)
-
 class ReportCoverPage(Client):
     name = "coverpage"
     title = "Cover Page"
+    calls = ()
 
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None

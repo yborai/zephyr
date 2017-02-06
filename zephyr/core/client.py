@@ -1,6 +1,8 @@
 import os
 import sqlite3
 
+import pandas as pd
+
 from datetime import datetime
 from shutil import rmtree
 
@@ -125,3 +127,9 @@ class Client(object):
 
     def to_ddh(self):
         return DDH(header=self.header, data=self.data)
+
+    def to_sql(self, name, con):
+        ddh = self.to_ddh()
+        data = [[str(cell) for cell in row] for row in ddh.data]
+        df = pd.DataFrame(data, columns=self.ddh.header)
+        df.to_sql(name, con)

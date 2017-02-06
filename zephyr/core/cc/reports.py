@@ -18,6 +18,7 @@ from .calls import (
 class ReportEC2(Report):
     name = "EC2s"
     title = "EC2 Details"
+    calls = (ComputeDetailsWarp,)
     cls = ComputeDetailsWarp
 
     def to_xlsx(self, book, **kwargs):
@@ -193,6 +194,7 @@ class ReportEC2(Report):
 class ReportMigration(Report):
     name = "Migration"
     title = "EC2 Migration Recommendations"
+    calls = (ComputeMigrationWarp,)
     cls = ComputeMigrationWarp
 
     def to_xlsx(self, book, **kwargs):
@@ -215,6 +217,7 @@ class ReportMigration(Report):
 class ReportRDS(Report):
     name = "RDS"
     title = "RDS Details"
+    calls = (DBDetailsWarp,)
     cls = DBDetailsWarp
 
     def to_xlsx(self, book, **kwargs):
@@ -305,6 +308,7 @@ class ReportRDS(Report):
 class ReportRIs(Report):
     name = "RIs"
     title = "EC2 RI Recommendations"
+    calls = (ComputeRIWarp,)
     cls = ComputeRIWarp
 
     def to_xlsx(self, book, **kwargs):
@@ -439,6 +443,7 @@ class ReportRIs(Report):
 class ReportUnderutilized(Report):
     name = "Underutil"
     title = "EC2 Underutilized Instances"
+    calls = (ComputeDetailsWarp, ComputeUnderutilizedWarp)
 
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
@@ -453,9 +458,21 @@ class ReportUnderutilized(Report):
         self.expire_cache = expire_cache
         self.log = log
 
+    def call(self, cls, **kwargs):
+        client = cls(config=self.config)
+        response = client.cache_policy(
+            self.account, self.date, self.expire_cache, log=self.log
+        )
+        client.parse(response)
+        ddh = client.to_ddh()
+        data = [[str(cell) for cell in row] for row in ddh.data]
+        df = pd.DataFrame(data, columns=ddh.header)
+        df.to_sql(client.slug, self.con)
+        return client
+
     def predicted_cost_by_environment(self, top=0, left=0):
         con = self.con
-
+        CD, UU = self.calls
         df = pd.read_sql("""
             SELECT
                 CASE cd."Environment"
@@ -464,12 +481,12 @@ class ReportUnderutilized(Report):
                 END AS "Environment",
                 SUM(uu."Predicted Monthly Cost") AS "Cost"
             FROM
-                cd LEFT OUTER JOIN
-                uu ON (cd."InstanceId"=uu."Instance ID")
+                "{cd}" AS cd LEFT OUTER JOIN
+                "{uu}" AS uu ON (cd."InstanceId"=uu."Instance ID")
             WHERE uu."Average CPU Util" IS NOT NULL
             GROUP BY cd."Environment"
             ORDER BY SUM(uu."Predicted Monthly Cost") DESC
-        """, con)
+        """.format(cd=CD.slug, uu=UU.slug), con)
 
         # Account for hidden column
         table_left = left + self.chart_width + self.cell_spacing + 1
@@ -503,6 +520,7 @@ class ReportUnderutilized(Report):
 
     def to_ddh(self):
         account = self.account
+        CD, UU = self.calls
         con = self.con
         config = self.config
         date = self.date
@@ -510,19 +528,12 @@ class ReportUnderutilized(Report):
         log = self.log
 
         # cd for compute-details
-        cd_report = ReportEC2(config, account, date, expire_cache, log)
-        if cd_report.client.data['Count'] == 0:
+        cd_client = self.call(CD)
+        if cd_client.data['Count'] == 0:
             raise ZephyrException("There is no instance information to examine.")
-        cd_report.to_sql("cd", con)
 
         # uu for underutilized
-        uu_client = ComputeUnderutilizedWarp(config=config)
-        uu_report = uu_client.cache_policy(account, date, expire_cache, log=log)
-        uu_client.parse(uu_report)
-        uu_ddh = uu_client.to_ddh()
-        uu_data = [[str(cell) for cell in row] for row in uu_ddh.data]
-        uu_df = pd.DataFrame(uu_data, columns=uu_ddh.header)
-        uu_df.to_sql("uu", con)
+        uu_client = self.call(UU)
 
         # cu for compute-details and underutilized joined 
         cu_df = pd.read_sql("""
@@ -533,11 +544,11 @@ class ReportUnderutilized(Report):
                 uu."Average CPU Util",
                 uu."Predicted Monthly Cost"
             FROM
-                cd LEFT OUTER JOIN
-                uu ON (cd."InstanceId"=uu."Instance ID")
+                "{cd}" AS cd LEFT OUTER JOIN
+                "{uu}" AS uu ON (cd."InstanceId"=uu."Instance ID")
             WHERE uu."Average CPU Util" IS NOT NULL
             ORDER BY cd."Environment" DESC
-        """, con)
+        """.format(cd=CD.slug, uu=UU.slug), con)
         cu_data = [list(row) for row in cu_df.values]
         cu_ddh = DDH(data=cu_data, header=list(cu_df.columns))
         self.ddh = cu_ddh

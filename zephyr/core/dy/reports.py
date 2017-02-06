@@ -9,6 +9,7 @@ class ReportBilling(Report):
     name = "Billing"
     title = "Billing Line Items"
     cls = Billing
+    calls = (Billing,)
 
     def group_by_lineitem(self):
         """Groups rows by line item"""

@@ -445,31 +445,6 @@ class ReportUnderutilized(Report):
     title = "EC2 Underutilized Instances"
     calls = (ComputeDetailsWarp, ComputeUnderutilizedWarp)
 
-    def __init__(
-        self, config, account=None, date=None, expire_cache=None, log=None
-    ):
-        con = sqlite3.connect(":memory:")
-
-        self.account = account
-        self.con = con
-        self.config = config
-        self.date = date
-        self.ddh = None
-        self.expire_cache = expire_cache
-        self.log = log
-
-    def call(self, cls, **kwargs):
-        client = cls(config=self.config)
-        response = client.cache_policy(
-            self.account, self.date, self.expire_cache, log=self.log
-        )
-        client.parse(response)
-        ddh = client.to_ddh()
-        data = [[str(cell) for cell in row] for row in ddh.data]
-        df = pd.DataFrame(data, columns=ddh.header)
-        df.to_sql(client.slug, self.con)
-        return client
-
     def predicted_cost_by_environment(self, top=0, left=0):
         con = self.con
         CD, UU = self.calls

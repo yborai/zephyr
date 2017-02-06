@@ -52,18 +52,15 @@ class Report(Client):
         self, config, account=None, date=None, expire_cache=None, log=None
     ):
         super().__init__(config)
-        client = self.cls(config=config)
-        response = client.cache_policy(
-            account,
-            date,
-            expire_cache,
-            log=log,
-        )
-        client.parse(response)
-        self.client = client
+        con = sqlite3.connect(":memory:")
+
+        self.account = account
+        self.clients = None
+        self.con = con
         self.date = date
-        self.ddh = None
+        self.expire_cache = expire_cache
         self.get_formatting()
+        self.log = log
         self.sheet = None
         self.table_left = int(self.chart_width) + self.cell_spacing
 
@@ -73,6 +70,18 @@ class Report(Client):
         header_format = self.book.add_format(self.formatting["header_format"])
         cell_format = self.book.add_format(self.formatting["label_format"])
         return table, header_format, cell_format
+
+    def call(self, cls):
+        client = cls(config=self.config)
+        response = client.cache_policy(
+            self.account, self.date, self.expire_cache, log=self.log
+        )
+        client.parse(response)
+        ddh = client.to_ddh()
+        data = [[str(cell) for cell in row] for row in ddh.data]
+        df = pd.DataFrame(data, columns=ddh.header)
+        df.to_sql(client.slug, self.con)
+        return client
 
     def clean_data(self):
         new_data = []
@@ -240,10 +249,14 @@ class Report(Client):
         return self.sheet
 
     def to_ddh(self):
+        if(len(self.calls) != 1):
+            raise NotImplementedError
         if(not self.ddh):
-            self.ddh = self.client.to_ddh()
-        if(not self.ddh.data):
+            cls = self.calls[0]
+            client = self.call(cls)
+        if(not client.ddh or not client.ddh.data):
             return False
+        self.ddh = client.ddh
         return self.ddh
 
 class ReportCoverPage(Client):

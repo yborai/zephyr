@@ -29,6 +29,7 @@ class Client(object):
         self.ZEPHYR_CACHE_ROOT = cache_root
         self.config = config
         self.database = sqlite3.connect(os.path.join(cache_root, db))
+        self.ddh = None
         self.ZEPHYR_DATABASE = db
         self.AWS_ACCESS_KEY_ID = key_id
         self.AWS_SECRET_ACCESS_KEY = secret
@@ -37,10 +38,16 @@ class Client(object):
 
     def cache(self, response, cache_key, log=None):
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
-        log.info("Caching {} response locally.".format(self.name))
+        log.info("Caching {api} response for {call} locally.".format(
+            api=self.name,
+            call=self.slug,
+        ))
         with open(cache_local, "w") as f:
             f.write(response)
-        log.info("Caching {} response in S3.".format(self.name))
+        log.info("Caching {api} response for {call} in S3.".format(
+            api=self.name,
+            call=self.slug,
+        ))
         self.s3.meta.client.upload_file(cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
 
     def cache_policy(self, account, date, expired, log=None):
@@ -59,12 +66,15 @@ class Client(object):
         # If local does not exist and expired is false then check s3
         cache_s3 = self.get_object_from_s3(cache_key)
         if(cache_s3 and not expired):
-            log.info("Using cached response from S3.")
+            log.info("Using cached response for {} from S3.".format(self.slug))
             with open(cache_local, "wb") as cache_fd:
                 cache_fd.write(cache_s3)
             return cache_s3.decode("utf-8")
         # If we are this far then contact the API and cache the result
-        log.info("Retrieving data from {}.".format(self.name))
+        log.info("Retrieving data for {call} from {api}.".format(
+            api=self.name,
+            call=self.slug,
+        ))
         response = self.request(account, date, log=log)
         self.cache(response, cache_key, log=log)
         return response
@@ -126,7 +136,8 @@ class Client(object):
         return True
 
     def to_ddh(self):
-        return DDH(header=self.header, data=self.data)
+        self.ddh = DDH(header=self.header, data=self.data)
+        return self.ddh
 
     def to_sql(self, name, con):
         ddh = self.to_ddh()

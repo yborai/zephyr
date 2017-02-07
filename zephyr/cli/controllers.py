@@ -1,15 +1,15 @@
 import csv
 import datetime
-import os
 import sys
-
-import xlsxwriter
-
-from shutil import copyfile
 
 from cement.core.controller import CementBaseController, expose
 
 from ..core import meta
+from ..core.book import Book
+from ..core.client import Client
+from ..core.configure import create_config
+from ..core.report import Report, ReportCoverPage
+from ..core.utils import first_of_previous_month, ZephyrException
 from ..core.bd.calls import compute_av
 from ..core.boto.calls import domains
 from ..core.cc.calls import (
@@ -32,14 +32,10 @@ from ..core.cc.reports import (
     ReportRIs,
     ReportUnderutilized,
 )
-from ..core.configure import create_config
-from ..core.client import Client
 from ..core.dy.calls import Billing
 from ..core.dy.reports import ReportBilling
 from ..core.lo.calls import ServiceRequests
 from ..core.lo.reports import ReportSRs
-from ..core.report import Report, ReportCoverPage
-from ..core.utils import first_of_previous_month, ZephyrException
 
 class ZephyrCLI(CementBaseController):
     class Meta:
@@ -303,6 +299,9 @@ class DataRun(ZephyrData):
             sys.exit()
         if not any((account, all_)):
             raise ZephyrException("Account is a required parameter.")
+        # If no date is given then default to the first of last month.
+        if(not date):
+            date = first_of_previous_month().strftime("%Y-%m-%d")
         client = cls(config=self.app.config, **kwargs)
         accts = [account]
         if(all_):
@@ -531,58 +530,8 @@ class ReportRun(ZephyrReport):
     def default(self):
         self.run(**vars(self.app.pargs))
 
-    def cache_key(self, slug, account, date):
-        month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        filename = "{slug}.xlsx".format(slug=slug)
-        return os.path.join(account, month, filename)
-
-    def cache(self, filename, client, account, date):
-        cache_key = self.cache_key(self.Meta.label, account, date)
-        cache_local = os.path.join(client.ZEPHYR_CACHE_ROOT, cache_key)
-        copyfile(filename, cache_local)
-        # Cache result to local cache and S3
-        self.app.log.info(cache_local, cache_key)
-        client.s3.meta.client.upload_file(
-            cache_local, client.ZEPHYR_S3_BUCKET, cache_key
-        )
-
-    def to_xlsx(self, sheets, account, date, expire_cache, client):
-        book_options = Report.formatting["book_options"]
-        filename = "{slug}.{label}.xlsx".format(
-            label=self.Meta.label, slug=account
-        )
-        with xlsxwriter.Workbook(filename, book_options) as book:
-            report = self.reports(book, sheets, account, date, expire_cache)
-        if(report):
-            self.cache(filename, client, account, date)
-        return report
-
-    def reports(self, book, sheets, account, date, expire_cache):
+    def _run(self, *sheets):
         config = self.app.config
-        log = self.app.log
-        out = dict()
-        for Sheet in sheets:
-            try:
-                out[Sheet] = Sheet(
-                    config,
-                    account=account,
-                    date=date,
-                    expire_cache=expire_cache,
-                    log=log
-                ).to_xlsx(book)
-                if not out[Sheet]:
-                    log.info(
-                        "{} is empty and will be skipped."
-                        .format(Sheet.title)
-                    )
-            except ZephyrException as e:
-                message = e.args[0]
-                log.error("Error in {sheet}: {message}".format(
-                    sheet=Sheet.title, message=message
-                ))
-        return out
-
-    def _run(self, *args):
         log = self.app.log
         account = self.app.pargs.account
         all_ = self.app.pargs.all
@@ -596,8 +545,7 @@ class ReportRun(ZephyrReport):
         # If no date is given then default to the first of last month.
         if(not date):
             date = first_of_previous_month().strftime("%Y-%m-%d")
-        out = dict()
-        client = Client(self.app.config)
+        client = Client(config)
         accts = [account]
         if(all_):
             accts = client.get_slugs()
@@ -609,9 +557,13 @@ class ReportRun(ZephyrReport):
                 report=self.Meta.label,
                 account=acct,
             ))
-            out[acct] = self.to_xlsx(args, acct, date, expire_cache, client)
-            sheet_set = {bool(value) for value in out[acct].values()}
-            if True not in sheet_set:
+            book = Book(
+                config, self.Meta.label, acct, date, expire_cache, log=log
+            )
+            out = book.to_xlsx(sheets)
+            # Test to see if this book has any data
+            sheet_set = {bool(value) for value in out.values()}
+            if not any(sheet_set):
                 self.app.log.info("No data to report for {}!".format(acct))
 
     def slug_valid(self, slug):

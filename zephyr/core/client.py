@@ -51,9 +51,6 @@ class Client(object):
         self.s3.meta.client.upload_file(cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
 
     def cache_policy(self, account, date, expired, log=None):
-        # If no date is given then default to the first of last month.
-        if(not date):
-            date = first_of_previous_month().strftime("%Y-%m-%d")
         # If local exists and expired is false then use the local cache
         cache_key = self.cache_key(account, date)
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)

@@ -163,7 +163,7 @@ class Report(Client):
         if(not self.ddh):
             self.to_ddh()
 
-        if(not len(self.ddh.data)):
+        if(not self.ddh or not self.ddh.data):
             return
         return True
 

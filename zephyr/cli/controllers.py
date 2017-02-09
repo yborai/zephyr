@@ -24,7 +24,6 @@ from ..core.cc.calls import (
     RIPricingWarp,
     StorageDetachedWarp,
 )
-from ..core.cc.client import CloudCheckr
 from ..core.cc.reports import (
     ReportEC2,
     ReportMigration,
@@ -395,7 +394,6 @@ class ComputeUnderutilized(DataRun):
             log,
         )
         cu_ddh = report.to_ddh()
-
         self.app.render(cu_ddh)
 
 class DBDetails(DataRun):
@@ -548,27 +546,24 @@ class ReportRun(ZephyrReport):
             date = first_of_previous_month().strftime("%Y-%m-%d")
         client = Client(config)
         accts = [account]
-        if(all_):
+        if all_:
             accts = client.get_slugs()
         for acct in accts:
-            if(not self.slug_valid(acct)):
+            book = Book(
+                config, self.Meta.label, sheets, acct, date, expire_cache, log=log
+            )
+            if not book.slug_valid(acct):
                 log.info("Skipping {}".format(acct))
                 continue
             log.info("Running {report} for {account}".format(
                 report=self.Meta.label,
                 account=acct,
             ))
-            book = Book(
-                config, self.Meta.label, acct, date, expire_cache, log=log
-            )
-            out = book.to_xlsx(sheets)
+            out = book.to_xlsx()
             # Test to see if this book has any data
             sheet_set = {bool(value) for value in out.values()}
             if not any(sheet_set):
                 self.app.log.info("No data to report for {}!".format(acct))
-
-    def slug_valid(self, slug):
-        return True
 
 class AccountReview(ReportRun):
     class Meta:
@@ -586,10 +581,6 @@ class AccountReview(ReportRun):
             ReportSRs,
             ReportUnderutilized,
         )
-
-    def slug_valid(self, slug):
-        client = CloudCheckr(config=self.app.config)
-        return client.get_account_by_slug(slug)
 
 class BillingReport(ReportRun):
     class Meta:

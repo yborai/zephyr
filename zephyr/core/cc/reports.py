@@ -495,20 +495,13 @@ class ReportUnderutilized(Report):
 
     def to_ddh(self):
         account = self.account
+        # CD for compute-details, UU for underutilized
         CD, UU = self.calls
         con = self.con
         config = self.config
         date = self.date
         expire_cache = self.expire_cache
         log = self.log
-
-        # cd for compute-details
-        cd_client = self.call(CD)
-        if cd_client.data['Count'] == 0:
-            raise ZephyrException("There is no instance information to examine.")
-
-        # uu for underutilized
-        uu_client = self.call(UU)
 
         # cu for compute-details and underutilized joined 
         cu_df = pd.read_sql("""

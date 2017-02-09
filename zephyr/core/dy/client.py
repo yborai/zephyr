@@ -14,7 +14,10 @@ class Dynamics(Client):
         dy_config_keys = ("DY_HOST", "DY_USER", "DY_PASSWORD")
         host, user, password = get_config_values("lw-dy", dy_config_keys, config)
         self.name = "Dynamics"
-        conn = pymssql.connect(host, user, password, "DTI")
+        try:
+            conn = pymssql.connect(host, user, password, "DTI", login_timeout=5)
+        except pymssql.OperationalError:
+            raise ZephyrException("Could not connect to Dynamics.")
         self.dy = conn.cursor()
 
     def get_account_by_slug(self, slug):

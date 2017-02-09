@@ -44,9 +44,9 @@ FORMATTING = {
 }
 
 class Report(Client):
+    formatting = FORMATTING
     name = None
     title = None
-    formatting = FORMATTING
 
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
@@ -55,7 +55,6 @@ class Report(Client):
         con = sqlite3.connect(":memory:")
 
         self.account = account
-        self.clients = None
         self.con = con
         self.date = date
         self.expire_cache = expire_cache
@@ -63,6 +62,7 @@ class Report(Client):
         self.log = log
         self.sheet = None
         self.table_left = int(self.chart_width) + self.cell_spacing
+        self.clients = tuple([Call(config=config) for Call in self.calls])
 
     def book_formats(self):
         """Get format objects from book."""
@@ -80,7 +80,7 @@ class Report(Client):
         ddh = client.to_ddh()
         data = [[str(cell) for cell in row] for row in ddh.data]
         df = pd.DataFrame(data, columns=ddh.header)
-        df.to_sql(client.slug, self.con)
+        df.to_sql(client.slug, self.con, if_exists='replace')
         return client
 
     def clean_data(self):
@@ -159,6 +159,16 @@ class Report(Client):
         return header
 
     def load_data(self):
+        for client in self.clients:
+            response = client.cache_policy(
+                self.account, self.date, self.expire_cache, log=self.log
+            )
+            client.parse(response)
+            ddh = client.to_ddh()
+            data = [[str(cell) for cell in row] for row in ddh.data]
+            df = pd.DataFrame(data, columns=ddh.header)
+            df.to_sql(client.slug, self.con, if_exists='replace')
+
         # Retrieve the data if it does not exist yet.
         if(not self.ddh):
             self.to_ddh()
@@ -253,7 +263,7 @@ class Report(Client):
             raise NotImplementedError
         if(not self.ddh):
             cls = self.calls[0]
-            client = self.call(cls)
+            client = self.clients[0]
         if(not client.ddh or not client.ddh.data):
             return False
         self.ddh = client.ddh

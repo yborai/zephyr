@@ -15,7 +15,7 @@ FORMATTING = {
 
 class Book(Client):
     def __init__(
-        self, config, label, account, date, expire_cache, log=None
+        self, config, label, sheets, account, date, expire_cache, log=None
     ):
         super().__init__(config)
         self.account = account
@@ -25,7 +25,13 @@ class Book(Client):
         self.has_data = False
         self.label = label
         self.log = log
-        self.sheets = None
+        self.sheets = tuple([Sheet(
+            config,
+            account=account,
+            date=date,
+            expire_cache=expire_cache,
+            log=log
+        ) for Sheet in sheets])
         self.filename = "{slug}.{label}.xlsx".format(
             label=self.label, slug=self.account
         )
@@ -45,38 +51,50 @@ class Book(Client):
         filename = "{slug}.xlsx".format(slug=slug)
         return os.path.join(account, month, filename)
 
-    def collate(self, sheets):
+    def collate(self):
         account = self.account
         config = self.config
         date = self.date
         expire_cache = self.expire_cache
         log = self.log
         out = dict()
-        for Sheet in sheets:
+        for sheet in self.sheets:
             try:
-                out[Sheet] = Sheet(
-                    config,
-                    account=account,
-                    date=date,
-                    expire_cache=expire_cache,
-                    log=log
-                ).to_xlsx(self.book)
-                if not out[Sheet]:
+                out[sheet.name] = sheet.to_xlsx(self.book)
+                if not out[sheet.name]:
                     log.info(
                         "{} is empty and will be skipped."
-                        .format(Sheet.title)
+                        .format(sheet.title)
                     )
             except ZephyrException as e:
                 message = e.args[0]
                 log.error("Error in {sheet}: {message}".format(
-                    sheet=Sheet.title, message=message
+                    sheet=sheet.title, message=message
                 ))
         return out
 
-    def to_xlsx(self, sheets):
+    def slug_valid(self, slug):
+        return all([
+            api.slug_valid(slug)
+            for api in self.slug_validators()
+        ])
+
+    def slug_validators(self):
+        """
+        For each client in each sheet in a book,
+        collect the unique slug validation methods.
+        """
+        return {
+            call.slug_valid.__func__: call
+            for sheet in self.sheets
+            for call in getattr(sheet, "clients", [])
+        }.values()
+
+
+    def to_xlsx(self):
         options = FORMATTING["book_options"]
         with xlsxwriter.Workbook(self.filename, options) as self.book:
-            report = self.collate(sheets)
+            report = self.collate()
         if(report):
             self.cache()
         return report

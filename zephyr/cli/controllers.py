@@ -385,7 +385,8 @@ class ComputeUnderutilized(DataRun):
         account = self.app.pargs.account
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
-
+        if(not date):
+            date = first_of_previous_month().strftime("%Y-%m-%d")
         report = ReportUnderutilized(
             config,
             account,

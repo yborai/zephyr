@@ -22,11 +22,9 @@ class ServiceRequests(lo.Logicops):
         ("closed_date", "Closed Date"),
     ])
 
-    def __init__(self, json_string=None, config=None, **kwargs):
+    def __init__(self, config=None, **kwargs):
         if(config):
             super().__init__(config)
-        if(json_string):
-            self.parse(json_string)
 
     def parse(self, json_string):
         self.response = json.loads(json_string)

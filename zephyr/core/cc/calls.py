@@ -59,13 +59,11 @@ class ComputeDetailsWarp(Warp):
     slug = "compute-details"
     uri = "inventory.json/get_resources_ec2_details"
 
-    def __init__(self, json_string=None, config=None, **kwargs):
+    def __init__(self, config=None, **kwargs):
         if(config):
             super().__init__(config=config)
         self.data = {}
         self.all_tags = kwargs.get("all_tags")
-        if(json_string):
-            self.parse(json_string)
 
     def _key(self):
         return "Ec2Instances"
@@ -224,11 +222,9 @@ class IAMUsersData(cc.CloudCheckr):
     slug = "iam-users"
     uri = "inventory.json/get_resources_iam_users"
 
-    def __init__(self, json_string=None, config=None, **kwargs):
+    def __init__(self, config=None, **kwargs):
         if(config):
             super().__init__(config)
-        if(json_string):
-            self.parse(json_string)
 
     def parse(self, json_string):
         self.raw_json = json.loads(json_string)

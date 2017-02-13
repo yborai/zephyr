@@ -57,18 +57,12 @@ class Book(Client):
         expire_cache = self.expire_cache
         out = dict()
         for sheet in self.sheets:
-            try:
-                out[sheet.name] = sheet.to_xlsx(self.book)
-                if not out[sheet.name]:
-                    self.log.info(
-                        "{} is empty and will be skipped."
-                        .format(sheet.title)
-                    )
-            except ZephyrException as e:
-                message = e.args[0]
-                self.log.error("Error in {sheet}: {message}".format(
-                    sheet=sheet.title, message=message
-                ))
+            out[sheet.name] = sheet.to_xlsx(self.book)
+            if not out[sheet.name]:
+                self.log.info(
+                    "{} is empty and will be skipped."
+                    .format(sheet.title)
+                )
         return out
 
     def slug_valid(self, slug):

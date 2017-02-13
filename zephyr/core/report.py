@@ -295,7 +295,8 @@ class ReportCoverPage(Client):
             self.database
         )
         if not len(matches):
-            raise ZephyrException("There are no projects associated with this slug.")
+            self.log.error("There are no projects associated with this slug.")
+            return slug
         return matches["client"][0]
 
     def to_xlsx(self, book):

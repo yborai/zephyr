@@ -9,8 +9,8 @@ from ..client import Client
 from ..utils import get_config_values, timed, ZephyrException
 
 class CloudCheckr(Client):
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self, config, log=None, **kwargs):
+        super().__init__(config, log=log)
         cc_config_keys = ("CC_API_KEY", "CC_API_BASE")
         CC_API_KEY, CC_API_BASE = get_config_values("lw-cc", cc_config_keys, config)
         self.CC_API_KEY = CC_API_KEY
@@ -74,7 +74,7 @@ class CloudCheckr(Client):
             out.append(obj)
         return out
 
-    def request(self, account, date, log=None):
+    def request(self, account, date):
         cc_name = self.get_account_by_slug(account)
         params = self.get_params(self.CC_API_KEY, cc_name, date)
         url = "".join([
@@ -83,8 +83,8 @@ class CloudCheckr(Client):
             "?",
             urlencode(params),
         ])
-        log.debug(url)
-        response = self.load_pages(url, timing=True, log=log.info)
+        self.log.debug(url)
+        response = self.load_pages(url, timing=True, log=self.log.info)
         return json.dumps(response)
 
     def slug_valid(self, slug):

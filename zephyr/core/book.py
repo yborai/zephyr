@@ -17,14 +17,13 @@ class Book(Client):
     def __init__(
         self, config, label, sheets, account, date, expire_cache, log=None
     ):
-        super().__init__(config)
+        super().__init__(config, log=log)
         self.account = account
         self.config = config
         self.date = date
         self.expire_cache = expire_cache
         self.has_data = False
         self.label = label
-        self.log = log
         self.sheets = tuple([Sheet(
             config,
             account=account,
@@ -56,19 +55,18 @@ class Book(Client):
         config = self.config
         date = self.date
         expire_cache = self.expire_cache
-        log = self.log
         out = dict()
         for sheet in self.sheets:
             try:
                 out[sheet.name] = sheet.to_xlsx(self.book)
                 if not out[sheet.name]:
-                    log.info(
+                    self.log.info(
                         "{} is empty and will be skipped."
                         .format(sheet.title)
                     )
             except ZephyrException as e:
                 message = e.args[0]
-                log.error("Error in {sheet}: {message}".format(
+                self.log.error("Error in {sheet}: {message}".format(
                     sheet=sheet.title, message=message
                 ))
         return out

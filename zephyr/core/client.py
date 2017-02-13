@@ -17,7 +17,7 @@ class Client(object):
         filename = "{slug}.json".format(slug=cls.slug)
         return os.path.join(account, month, filename)
 
-    def __init__(self, config):
+    def __init__(self, config, log=None):
         aws_config_keys = ("ZEPHYR_S3_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
         bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, config)
         zephyr_config_keys = ("ZEPHYR_CACHE_ROOT", "ZEPHYR_DATABASE")
@@ -30,53 +30,54 @@ class Client(object):
         self.config = config
         self.database = sqlite3.connect(os.path.join(cache_root, db))
         self.ddh = None
+        self.log = log
         self.ZEPHYR_DATABASE = db
         self.AWS_ACCESS_KEY_ID = key_id
         self.AWS_SECRET_ACCESS_KEY = secret
         self.session = aws.get_session(key_id, secret)
         self.s3 = self.session.resource("s3")
 
-    def cache(self, response, cache_key, log=None):
+    def cache(self, response, cache_key):
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
-        log.info("Caching {api} response for {call} locally.".format(
+        self.log.info("Caching {api} response for {call} locally.".format(
             api=self.name,
             call=self.slug,
         ))
         with open(cache_local, "w") as f:
             f.write(response)
-        log.info("Caching {api} response for {call} in S3.".format(
+        self.log.info("Caching {api} response for {call} in S3.".format(
             api=self.name,
             call=self.slug,
         ))
         self.s3.meta.client.upload_file(cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
 
-    def cache_policy(self, account, date, expired, log=None):
+    def cache_policy(self, account, date, expired):
         # If local exists and expired is false then use the local cache
         cache_key = self.cache_key(account, date)
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
         os.makedirs(os.path.dirname(cache_local), exist_ok=True)
         cache_local_exists = os.path.isfile(cache_local)
         if(cache_local_exists and not expired):
-            log.info("Using cached response: {cache}".format(cache=cache_local))
+            self.log.info("Using cached response: {cache}".format(cache=cache_local))
             with open(cache_local, "r") as f:
                 return f.read()
         # If local does not exist and expired is false then check s3
         cache_s3 = self.get_object_from_s3(cache_key)
         if(cache_s3 and not expired):
-            log.info("Using cached response for {} from S3.".format(self.slug))
+            self.log.info("Using cached response for {} from S3.".format(self.slug))
             with open(cache_local, "wb") as cache_fd:
                 cache_fd.write(cache_s3)
             return cache_s3.decode("utf-8")
         # If we are this far then contact the API and cache the result
-        log.info("Retrieving data for {call} from {api}.".format(
+        self.log.info("Retrieving data for {call} from {api}.".format(
             api=self.name,
             call=self.slug,
         ))
-        response = self.request(account, date, log=log)
-        self.cache(response, cache_key, log=log)
+        response = self.request(account, date)
+        self.cache(response, cache_key)
         return response
 
-    def clear_cache_s3(self, account, month, log=None):
+    def clear_cache_s3(self, account, month):
         #Lists objects in the desired directory
         cache_s3 = os.path.join(account, month)
         objects = self.s3.meta.client.list_objects(
@@ -89,25 +90,25 @@ class Client(object):
             return
         count = 0
         for obj in objects["Contents"]:
-            log.debug("Deleting {}".format(obj["Key"]))
+            self.log.debug("Deleting {}".format(obj["Key"]))
             self.s3.meta.client.delete_object(
                 Bucket=self.ZEPHYR_S3_BUCKET,
                 Key=obj["Key"]
             )
             count += 1
-        log.info(
+        self.log.info(
             "Deleted {count} files from {cache_s3} in S3".format(
                 count=count, cache_s3=cache_s3)
         )
 
-    def clear_cache_local(self, account, month, log=None):
+    def clear_cache_local(self, account, month):
         #Delete directory locally
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, account, month)
         if not os.path.exists(os.path.expanduser(cache_local)):
             return
         count = len(os.listdir(cache_local))
         rmtree(cache_local)
-        log.info(
+        self.log.info(
             "Deleted {count} files from {cache_local}.".format(
                 count=count, cache_local=cache_local)
         )

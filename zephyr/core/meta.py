@@ -9,13 +9,13 @@ from .ddh import DDH
 from .utils import get_config_values
 
 class LWProjects(Client):
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self, config, log=None):
+        super().__init__(config, log=log)
         sf_config_keys = ("SF_USER", "SF_PASSWORD", "SF_TOKEN")
         sf_config = get_config_values("lw-sf", sf_config_keys, config)
         self.sf_config = sf_config
 
-    def cache_policy(self, expired=False, log=None):
+    def cache_policy(self, expired=False):
         """
         Obtains a local database connection,
         retrieving data from S3 or Salesforce as necessary.
@@ -27,7 +27,7 @@ class LWProjects(Client):
         db_exists = os.path.isfile(db)
         # If a local cache exists and it is not expired then use that.
         if(db_exists and not expired):
-            log.info("Database exists locally.")
+            self.log.info("Database exists locally.")
             return sqlite3.connect(db)
         session = aws.get_session(self.AWS_ACCESS_KEY_ID , self.AWS_SECRET_ACCESS_KEY)
         s3 = session.resource("s3")
@@ -36,25 +36,25 @@ class LWProjects(Client):
         then check S3 for a backup.
         """
         if(not db_exists and not expired):
-            log.info("Checking S3 for cached copy of database.")
+            self.log.info("Checking S3 for cached copy of database.")
             cache_s3 = aws.get_object_from_s3(self.ZEPHYR_S3_BUCKET, s3_key, s3)
             if(cache_s3):
-                log.info("Downloaded cached database from S3.")
+                self.log.info("Downloaded cached database from S3.")
                 with open(db, "wb") as cache_fd:
                     cache_fd.write(cache_s3)
                 return self.database
-            log.info("Cached database not found on S3.")
+            self.log.info("Cached database not found on S3.")
         """
         If there is no local database, no S3 cache or the cache is expired
         then get metadata from Logicops and Salesforce.
         """
-        log.info("Loading account metadata from Salesforce.")
+        self.log.info("Loading account metadata from Salesforce.")
         sf.cache(db, config=self.sf_config)
-        log.info("Loading account metadata from Cloudcheckr.")
-        cc.CloudCheckrAccounts(self.config, log=log).request()
-        log.info("Loading account metadata from Logicops.")
+        self.log.info("Loading account metadata from Cloudcheckr.")
+        cc.CloudCheckrAccounts(self.config, log=self.log).request()
+        self.log.info("Loading account metadata from Logicops.")
         lo.LogicopsAccounts(self.config).request()
-        log.info("Caching account metadata in S3.")
+        self.log.info("Caching account metadata in S3.")
         s3.meta.client.upload_file(db, self.ZEPHYR_S3_BUCKET, s3_key)
         return self.database
 

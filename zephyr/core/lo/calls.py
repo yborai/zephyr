@@ -22,9 +22,9 @@ class ServiceRequests(lo.Logicops):
         ("closed_date", "Closed Date"),
     ])
 
-    def __init__(self, config=None, **kwargs):
+    def __init__(self, config=None, log=None, **kwargs):
         if(config):
-            super().__init__(config)
+            super().__init__(config, log=log)
 
     def parse(self, json_string):
         self.response = json.loads(json_string)
@@ -39,7 +39,7 @@ class ServiceRequests(lo.Logicops):
         self.data = [[row[index] for index in self.column_indexes] for row in data_raw]
         return self.response
 
-    def request(self, slug, date, log=None):
+    def request(self, slug, date):
         lo_acct = self.get_account_by_slug(slug)
         date_obj = datetime.strptime(date, "%Y-%m-%d")
         start_date = first_of_previous_month(date_obj).strftime("%Y-%m-%d")
@@ -58,7 +58,7 @@ class ServiceRequests(lo.Logicops):
             "?",
             urlencode(params),
         ])
-        log.debug(url)
+        self.log.debug(url)
         r = requests.get(url, cookies=self.cookies, verify=False)
         return r.content.decode("utf-8")
 

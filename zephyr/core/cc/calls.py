@@ -17,10 +17,6 @@ class BestPracticeChecksSummary(cc.CloudCheckr):
     slug = "best-practice"
     uri = "best_practice.json/get_best_practices"
 
-    def __init__(self, config, log=None, **kwargs):
-        super().__init__(config)
-        self.log = log
-
     def parse(self, json_string):
         self.raw_json = json.loads(json_string)
         bpcs = self.raw_json[0]["BestPracticeChecks"]
@@ -29,9 +25,6 @@ class BestPracticeChecksSummary(cc.CloudCheckr):
 
 class CloudCheckrAccounts(cc.CloudCheckr):
     uri = "account.json/get_accounts_v2"
-    def __init__(self, config, log=None):
-        super().__init__(config)
-        self.log = log
 
     def request(self):
         params = dict(access_key=self.CC_API_KEY)
@@ -59,9 +52,9 @@ class ComputeDetailsWarp(Warp):
     slug = "compute-details"
     uri = "inventory.json/get_resources_ec2_details"
 
-    def __init__(self, config=None, **kwargs):
+    def __init__(self, config=None, log=None, **kwargs):
         if(config):
-            super().__init__(config=config)
+            super().__init__(config=config, log=log, **kwargs)
         self.data = {}
         self.all_tags = kwargs.get("all_tags")
 
@@ -222,9 +215,9 @@ class IAMUsersData(cc.CloudCheckr):
     slug = "iam-users"
     uri = "inventory.json/get_resources_iam_users"
 
-    def __init__(self, config=None, **kwargs):
+    def __init__(self, config=None, log=None, **kwargs):
         if(config):
-            super().__init__(config)
+            super().__init__(config, log=log, **kwargs)
 
     def parse(self, json_string):
         self.raw_json = json.loads(json_string)

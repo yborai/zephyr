@@ -19,8 +19,8 @@ class Logicops(Client):
         r = requests.post(url_auth, data=lo_, verify=False)
         return r.cookies
 
-    def __init__(self, config):
-        super().__init__(config)
+    def __init__(self, config, log=None):
+        super().__init__(config, log=log)
         self.LO_API_BASE = "https://logicops.logicworks.net/api/v1/"
         lo_config_keys = ("LO_USER", "LO_PASSWORD")
         user, passwd = get_config_values("lw-lo", lo_config_keys, config)

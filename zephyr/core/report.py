@@ -51,7 +51,7 @@ class Report(Client):
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
     ):
-        super().__init__(config)
+        super().__init__(config, log=log)
         con = sqlite3.connect(":memory:")
 
         self.account = account
@@ -59,10 +59,11 @@ class Report(Client):
         self.date = date
         self.expire_cache = expire_cache
         self.get_formatting()
-        self.log = log
         self.sheet = None
         self.table_left = int(self.chart_width) + self.cell_spacing
-        self.clients = tuple([Call(config=config) for Call in self.calls])
+        self.clients = tuple(
+            [Call(config=config, log=log) for Call in self.calls]
+        )
 
     def book_formats(self):
         """Get format objects from book."""
@@ -74,7 +75,7 @@ class Report(Client):
     def call(self, cls):
         client = cls(config=self.config)
         response = client.cache_policy(
-            self.account, self.date, self.expire_cache, log=self.log
+            self.account, self.date, self.expire_cache
         )
         client.parse(response)
         ddh = client.to_ddh()
@@ -161,7 +162,7 @@ class Report(Client):
     def load_data(self):
         for client in self.clients:
             response = client.cache_policy(
-                self.account, self.date, self.expire_cache, log=self.log
+                self.account, self.date, self.expire_cache
             )
             client.parse(response)
             ddh = client.to_ddh()
@@ -277,7 +278,7 @@ class ReportCoverPage(Client):
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
     ):
-        super().__init__(config)
+        super().__init__(config, log=log)
         self.account = account
         date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
         self.date = date_obj.strftime("%B %d, %Y")

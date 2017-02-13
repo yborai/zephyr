@@ -115,7 +115,7 @@ class ZephyrClearCache(ZephyrCLI):
             raise ZephyrException("Account and date are required parameters.")
 
         month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        client = Client(config)
+        client = Client(config, log=log)
         accts = [account]
         if(all_):
             accts = client.get_slugs()
@@ -123,8 +123,8 @@ class ZephyrClearCache(ZephyrCLI):
             if(not client.slug_valid(acct)):
                 log.info("Skipping {}".format(acct))
                 continue
-            client.clear_cache_s3(acct, month, log)
-            client.clear_cache_local(acct, month, log)
+            client.clear_cache_s3(acct, month)
+            client.clear_cache_local(acct, month)
 
 class ZephyrConfigure(ZephyrCLI):
     class Meta:
@@ -205,8 +205,8 @@ class ZephyrMeta(ZephyrCLI):
         self.ZEPHYR_LINE_WIDTH = int(self.app.config.get("zephyr", "ZEPHYR_LINE_WIDTH"))
         expire_cache = self.app.pargs.expire_cache
         self.app.log.info("Collecting client metadata.")
-        projects = meta.LWProjects(config)
-        projects.cache_policy(expire_cache, log=log)
+        projects = meta.LWProjects(config, log=log)
+        projects.cache_policy(expire_cache)
         self.app.render(
             projects.get_all_projects(),
             line_width=self.ZEPHYR_LINE_WIDTH
@@ -301,7 +301,7 @@ class DataRun(ZephyrData):
         # If no date is given then default to the first of last month.
         if(not date):
             date = first_of_previous_month().strftime("%Y-%m-%d")
-        client = cls(config=self.app.config, **kwargs)
+        client = cls(config=self.app.config, log=log, **kwargs)
         accts = [account]
         if(all_):
             accts = client.get_slugs()
@@ -317,8 +317,7 @@ class DataRun(ZephyrData):
                 response = client.cache_policy(
                     acct,
                     date,
-                    expire_cache,
-                    log=log,
+                    expire_cache
                 )
             except ZephyrException as e:
                 message = e.args[0]
@@ -390,8 +389,7 @@ class ComputeUnderutilized(DataRun):
             config,
             account,
             date,
-            expire_cache,
-            log,
+            expire_cache
         )
         cu_ddh = report.to_ddh()
         self.app.render(cu_ddh)
@@ -544,7 +542,7 @@ class ReportRun(ZephyrReport):
         # If no date is given then default to the first of last month.
         if(not date):
             date = first_of_previous_month().strftime("%Y-%m-%d")
-        client = Client(config)
+        client = Client(config, log=log)
         accts = [account]
         if all_:
             accts = client.get_slugs()

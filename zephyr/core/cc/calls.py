@@ -118,8 +118,8 @@ class ComputeDetailsWarp(Warp):
             for row in parsed
         ]
 
-        self.ddh = DDH(header=header, data=data)
-        return self.ddh
+        self._ddh = DDH(header=header, data=data)
+        return self._ddh
 
 class ComputeMigrationWarp(SplitInstanceWarp):
     bpc_id = 240

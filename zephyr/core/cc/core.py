@@ -37,8 +37,8 @@ class Warp(cc.CloudCheckr):
             for row in parsed
         ]
 
-        self.ddh = DDH(header=header, data=data)
-        return self.ddh
+        self._ddh = DDH(header=header, data=data)
+        return self._ddh
 
     def _fieldnames(self):
         raise NotImplementedError

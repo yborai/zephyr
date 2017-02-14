@@ -389,10 +389,10 @@ class ComputeUnderutilized(DataRun):
             config,
             account,
             date,
-            expire_cache
+            expire_cache,
+            log=log,
         )
-        cu_ddh = report.to_ddh()
-        self.app.render(cu_ddh)
+        self.app.render(report.ddh)
 
 class DBDetails(DataRun):
     class Meta:

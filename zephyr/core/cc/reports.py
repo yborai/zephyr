@@ -23,12 +23,11 @@ class ReportEC2(Report):
 
     def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the EC2 report."""
-        self.book = book
-
         # Load the data
-        data_loaded = self.load_data()
-        if not data_loaded:
+        if not self.ddh:
             return
+
+        self.book = book
 
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)
@@ -199,12 +198,11 @@ class ReportMigration(Report):
 
     def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
-        self.book = book
-
         # Load the data
-        data_loaded = self.load_data()
-        if not data_loaded:
+        if not self.ddh:
             return
+
+        self.book = book
 
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)
@@ -222,12 +220,11 @@ class ReportRDS(Report):
 
     def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
-        self.book = book
-
         # Load the data
-        data_loaded = self.load_data()
-        if not data_loaded:
+        if not self.ddh:
             return
+
+        self.book = book
 
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)
@@ -313,12 +310,11 @@ class ReportRIs(Report):
 
     def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
-        self.book = book
-
         # Load the data
-        data_loaded = self.load_data()
-        if not data_loaded:
+        if not self.ddh:
             return
+
+        self.book = book
 
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)
@@ -494,14 +490,12 @@ class ReportUnderutilized(Report):
         self.put_chart(title, top+1, left, table_loc, "column", ccf)
 
     def to_ddh(self):
-        account = self.account
+        if(self._ddh):
+            return self._ddh
+
         # CD for compute-details, UU for underutilized
         CD, UU = self.calls
         con = self.con
-        config = self.config
-        date = self.date
-        expire_cache = self.expire_cache
-        log = self.log
 
         # cu for compute-details and underutilized joined 
         cu_df = pd.read_sql("""
@@ -519,17 +513,16 @@ class ReportUnderutilized(Report):
         """.format(cd=CD.slug, uu=UU.slug), con)
         cu_data = [list(row) for row in cu_df.values]
         cu_ddh = DDH(data=cu_data, header=list(cu_df.columns))
-        self.ddh = cu_ddh
-        return self.ddh
+        self._ddh = cu_ddh
+        return self._ddh
 
     def to_xlsx(self, book, **kwargs):
-        """Format the sheet and insert the data for the SR report."""
-        self.book = book
-
+        """Format the sheet and insert the data for the Underutilized report."""
         # Load the data
-        data_loaded = self.load_data()
-        if not data_loaded:
+        if not self.ddh:
             return
+
+        self.book = book
 
         # Insert raw report data.
         self.sheet = book.add_worksheet(self.title)

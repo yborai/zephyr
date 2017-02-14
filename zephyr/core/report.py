@@ -65,6 +65,14 @@ class Report(Client):
             [Call(config=config, log=log) for Call in self.calls]
         )
 
+    @property
+    def ddh(self):
+        if self._ddh:
+            return self._ddh
+        self.load_data()
+        self._ddh = self.to_ddh()
+        return self._ddh
+
     def book_formats(self):
         """Get format objects from book."""
         table = self.formatting["table_style"]
@@ -160,23 +168,19 @@ class Report(Client):
         return header
 
     def load_data(self):
+        client_data = list()
         for client in self.clients:
             response = client.cache_policy(
                 self.account, self.date, self.expire_cache
             )
             client.parse(response)
             ddh = client.to_ddh()
+            client_data.append(bool(ddh) and bool(ddh.data))
             data = [[str(cell) for cell in row] for row in ddh.data]
             df = pd.DataFrame(data, columns=ddh.header)
             df.to_sql(client.slug, self.con, if_exists='replace')
 
-        # Retrieve the data if it does not exist yet.
-        if(not self.ddh):
-            self.to_ddh()
-
-        if(not self.ddh or not self.ddh.data):
-            return
-        return True
+        return all(client_data)
 
     def put_chart(
             self, title, top, left, data_loc, chart_type, formatting=None
@@ -260,15 +264,16 @@ class Report(Client):
         return self.sheet
 
     def to_ddh(self):
+        if(self._ddh):
+            return self._ddh
         if(len(self.calls) != 1):
             raise NotImplementedError
-        if(not self.ddh):
-            cls = self.calls[0]
-            client = self.clients[0]
+        cls = self.calls[0]
+        client = self.clients[0]
         if(not client.ddh or not client.ddh.data):
             return False
-        self.ddh = client.ddh
-        return self.ddh
+        self._ddh = client.ddh
+        return self._ddh
 
 class ReportCoverPage(Client):
     name = "coverpage"

@@ -25,17 +25,25 @@ class Client(object):
             os.path.expanduser(path)
             for path in get_config_values("zephyr", zephyr_config_keys, config)
         ]
+        self._ddh = None
         self.ZEPHYR_S3_BUCKET = bucket
         self.ZEPHYR_CACHE_ROOT = cache_root
         self.config = config
         self.database = sqlite3.connect(os.path.join(cache_root, db))
-        self.ddh = None
         self.log = log
         self.ZEPHYR_DATABASE = db
         self.AWS_ACCESS_KEY_ID = key_id
         self.AWS_SECRET_ACCESS_KEY = secret
         self.session = aws.get_session(key_id, secret)
         self.s3 = self.session.resource("s3")
+
+    @property
+    def ddh(self):
+        return self._ddh
+
+    @ddh.setter
+    def ddh(self, value):
+        self._ddh = value
 
     def cache(self, response, cache_key):
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
@@ -135,7 +143,7 @@ class Client(object):
 
     def to_ddh(self):
         self.ddh = DDH(header=self.header, data=self.data)
-        return self.ddh
+        return self._ddh
 
     def to_sql(self, name, con):
         ddh = self.to_ddh()

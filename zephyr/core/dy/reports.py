@@ -61,13 +61,11 @@ class ReportBilling(Report):
 
     def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the SR report."""
-        # Insert raw report data.
-        self.book = book
-
         # Load the data
-        data_loaded = self.load_data()
-        if not data_loaded:
+        if not self.ddh:
             return
+
+        self.book = book
 
         # Insert raw report data.
         self.sheet = self.book.add_worksheet(self.title)

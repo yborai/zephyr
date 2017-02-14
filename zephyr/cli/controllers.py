@@ -372,28 +372,6 @@ class ComputeRI(DataRun):
     def run(self, **kwargs):
         self.run_call(ComputeRIWarp, **kwargs)
 
-class ComputeUnderutilized(DataRun):
-    class Meta:
-        label = "compute-underutilized"
-        description = "Get the underutilized instances"
-
-    def run(self, **kwargs):
-        config = self.app.config
-        log = self.app.log
-        account = self.app.pargs.account
-        date = self.app.pargs.date
-        expire_cache = self.app.pargs.expire_cache
-        if(not date):
-            date = first_of_previous_month().strftime("%Y-%m-%d")
-        sheet = SheetUnderutilized(
-            config,
-            account,
-            date,
-            expire_cache,
-            log=log,
-        )
-        self.app.render(sheet.ddh)
-
 class DBDetails(DataRun):
     class Meta:
         label = "db-details"
@@ -562,6 +540,7 @@ class SheetRun(ZephyrSheet):
             sheet_set = {bool(value) for value in out.values()}
             if not any(sheet_set):
                 self.app.log.info("No data to report for {}!".format(acct))
+        return book
 
 class AccountReview(SheetRun):
     class Meta:
@@ -619,6 +598,16 @@ class DBDetailsSheet(SheetRun):
 
     def run(self, **kwargs):
         self._run(SheetRDS)
+
+class ComputeUnderutilized(SheetRun):
+    class Meta:
+        description = "Get the underutilized instances"
+        label = "compute-underutilized"
+        stacked_on = "data"
+
+    def run(self, **kwargs):
+        book = self._run(SheetUnderutilized)
+        self.app.render(book.sheets[0].ddh)
 
 class ComputeUnderutilizedSheet(SheetRun):
     class Meta:

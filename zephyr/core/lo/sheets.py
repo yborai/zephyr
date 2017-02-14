@@ -1,21 +1,21 @@
-from ..report import Report
+from ..sheet import Sheet
 from .calls import ServiceRequests
 
-class ReportSRs(Report):
+class SheetSRs(Sheet):
     name = "SRs"
     title = "Service Requests"
     calls = (ServiceRequests,)
     cls = ServiceRequests
 
     def to_xlsx(self, book, **kwargs):
-        """Format the sheet and insert the data for the SR report."""
-        # Load the data
+        """Format the SR sheet."""
+        # Load the data.
         if not self.ddh:
             return
 
         self.book = book
 
-        # Insert raw report data.
+        # Insert raw data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
 

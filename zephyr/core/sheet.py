@@ -5,7 +5,6 @@ import sqlite3
 from decimal import Decimal
 
 from ..core.client import Client
-from ..core.utils import ZephyrException
 from .ddh import DDH
 
 FORMATTING = {
@@ -43,7 +42,7 @@ FORMATTING = {
     },
 }
 
-class Report(Client):
+class Sheet(Client):
     formatting = FORMATTING
     name = None
     title = None
@@ -275,7 +274,7 @@ class Report(Client):
         self._ddh = client.ddh
         return self._ddh
 
-class ReportCoverPage(Client):
+class CoverPage(Client):
     name = "coverpage"
     title = "Cover Page"
     calls = ()
@@ -307,7 +306,7 @@ class ReportCoverPage(Client):
     def to_xlsx(self, book):
         self.book = book
         self.sheet = self.book.add_worksheet(self.title)
-        cell_format = self.book.add_format(Report.formatting["label_format"])
+        cell_format = self.book.add_format(Sheet.formatting["label_format"])
         acct = self.get_account_by_slug(self.account)
         self.sheet.write(0, 0, "Account Review", cell_format)
         self.sheet.write(1, 0, acct, cell_format)

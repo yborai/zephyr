@@ -8,7 +8,7 @@ from ..core import meta
 from ..core.book import Book
 from ..core.client import Client
 from ..core.configure import create_config
-from ..core.report import Report, ReportCoverPage
+from ..core.sheet import CoverPage
 from ..core.utils import first_of_previous_month, ZephyrException
 from ..core.bd.calls import compute_av
 from ..core.boto.calls import domains
@@ -24,17 +24,17 @@ from ..core.cc.calls import (
     RIPricingWarp,
     StorageDetachedWarp,
 )
-from ..core.cc.reports import (
-    ReportEC2,
-    ReportMigration,
-    ReportRDS,
-    ReportRIs,
-    ReportUnderutilized,
+from ..core.cc.sheets import (
+    SheetEC2,
+    SheetMigration,
+    SheetRDS,
+    SheetRIs,
+    SheetUnderutilized,
 )
 from ..core.dy.calls import Billing
-from ..core.dy.reports import ReportBilling
+from ..core.dy.sheets import SheetBilling
 from ..core.lo.calls import ServiceRequests
-from ..core.lo.reports import ReportSRs
+from ..core.lo.sheets import SheetSRs
 
 class ZephyrCLI(CementBaseController):
     class Meta:
@@ -309,8 +309,8 @@ class DataRun(ZephyrData):
             if(not client.slug_valid(acct)):
                 log.info("Skipping {}".format(acct))
                 continue
-            log.info("Running {report} for {account}".format(
-                report=self.Meta.label,
+            log.info("Retrieving {call} data for {account}".format(
+                call=self.Meta.label,
                 account=acct,
             ))
             try:
@@ -385,14 +385,14 @@ class ComputeUnderutilized(DataRun):
         expire_cache = self.app.pargs.expire_cache
         if(not date):
             date = first_of_previous_month().strftime("%Y-%m-%d")
-        report = ReportUnderutilized(
+        sheet = SheetUnderutilized(
             config,
             account,
             date,
             expire_cache,
             log=log,
         )
-        self.app.render(report.ddh)
+        self.app.render(sheet.ddh)
 
 class DBDetails(DataRun):
     class Meta:
@@ -512,14 +512,14 @@ class ComputeAV(DataRun):
         self.app.render(out)
         return out
 
-class ZephyrReport(ZephyrCall):
+class ZephyrSheet(ZephyrCall):
     class Meta:
         label = "report"
         stacked_on = "base"
         stacked_type = "nested"
         description = "Generate advanced reports."
 
-class ReportRun(ZephyrReport):
+class SheetRun(ZephyrSheet):
     class Meta:
         stacked_on = "report"
 
@@ -551,7 +551,7 @@ class ReportRun(ZephyrReport):
                 config, self.Meta.label, sheets, acct, date, expire_cache, log=log
             )
             if not book.slug_valid(acct):
-                log.info("Skipping {}".format(acct))
+                log.info("Skipping {} because of missing configuration.".format(acct))
                 continue
             log.info("Running {report} for {account}".format(
                 report=self.Meta.label,
@@ -563,102 +563,102 @@ class ReportRun(ZephyrReport):
             if not any(sheet_set):
                 self.app.log.info("No data to report for {}!".format(acct))
 
-class AccountReview(ReportRun):
+class AccountReview(SheetRun):
     class Meta:
         label = "account-review"
         description = "Generate an account review for a given account."
 
     def run(self, **kwargs):
         self._run(
-            ReportCoverPage,
-            ReportBilling,
-            ReportEC2,
-            ReportRDS,
-            ReportMigration,
-            ReportRIs,
-            ReportSRs,
-            ReportUnderutilized,
+            CoverPage,
+            SheetBilling,
+            SheetEC2,
+            SheetRDS,
+            SheetMigration,
+            SheetRIs,
+            SheetSRs,
+            SheetUnderutilized,
         )
 
-class BillingReport(ReportRun):
+class BillingSheet(SheetRun):
     class Meta:
         label = "billing"
         description = "Generate the compute-details worksheet for a given account."
 
     def run(self, **kwargs):
-        self._run(ReportBilling)
+        self._run(SheetBilling)
 
-class ComputeDetailsReport(ReportRun):
+class ComputeDetailsSheet(SheetRun):
     class Meta:
         label = "ec2"
         description = "Generate the compute-details worksheet for a given account."
 
     def run(self, **kwargs):
-        self._run(ReportEC2)
+        self._run(SheetEC2)
 
-class ComputeMigrationReport(ReportRun):
+class ComputeMigrationSheet(SheetRun):
     class Meta:
         label = "migration"
         description = "Generate the compute-migration worksheet for a given account."
 
     def run(self, **kwargs):
-        self._run(ReportMigration)
+        self._run(SheetMigration)
 
-class ComputeRIReport(ReportRun):
+class ComputeRISheet(SheetRun):
     class Meta:
         label = "ri-recs"
         description = "Generate the compute-ri worksheet for a given account."
 
     def run(self, **kwargs):
-        self._run(ReportRIs)
+        self._run(SheetRIs)
 
-class DBDetailsReport(ReportRun):
+class DBDetailsSheet(SheetRun):
     class Meta:
         label = "rds"
         description = "Generate the db-details worksheet for a given account."
 
     def run(self, **kwargs):
-        self._run(ReportRDS)
+        self._run(SheetRDS)
 
-class ComputeUnderutilizedReport(ReportRun):
+class ComputeUnderutilizedSheet(SheetRun):
     class Meta:
         label = "underutilized"
         description = "Generate the compute-underutilized worksheet for a given account."
 
     def run(self, **kwargs):
-        self._run(ReportUnderutilized)
+        self._run(SheetUnderutilized)
 
-class ServiceRequestReport(ReportRun):
+class ServiceRequestSheet(SheetRun):
     class Meta:
         label = "sr"
         description = "Generate the service-requests worksheet for a given account."
 
     def run(self, **kwargs):
-        self._run(ReportSRs)
+        self._run(SheetSRs)
 
 
 __ALL__ = [
     AccountReview,
     BestPracticeChecksSummaryData,
     BillingLineItems,
-    BillingReport,
+    BillingSheet,
     ComputeAV,
     ComputeDetails,
-    ComputeDetailsReport,
+    ComputeDetailsSheet,
     ComputeMigration,
-    ComputeMigrationReport,
+    ComputeMigrationSheet,
     ComputeRI,
-    ComputeRIReport,
+    ComputeRISheet,
     ComputeUnderutilized,
-    ComputeUnderutilizedReport,
+    ComputeUnderutilizedSheet,
     DBDetails,
-    DBDetailsReport,
+    DBDetailsSheet,
     DBIdle,
     Domains,
     IAMUsers,
     LBIdle,
     RIPricings,
-    ServiceRequestReport,
+    ServiceRequestSheet,
     ServiceRequestsRun,
     StorageDetached,
     ZephyrCLI,
@@ -668,5 +668,5 @@ __ALL__ = [
     ZephyrData,
     ZephyrETL,
     ZephyrMeta,
-    ZephyrReport,
+    ZephyrSheet,
 ]

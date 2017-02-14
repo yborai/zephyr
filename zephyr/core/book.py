@@ -5,7 +5,6 @@ import xlsxwriter
 from shutil import copyfile
 
 from .client import Client
-from .utils import ZephyrException
 
 FORMATTING = {
     "book_options" : {

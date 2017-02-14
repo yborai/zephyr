@@ -2,10 +2,10 @@ import sqlite3
 import pandas as pd
 
 from ..ddh import DDH
-from ..report import Report
+from ..sheet import Sheet
 from .calls import Billing
 
-class ReportBilling(Report):
+class SheetBilling(Sheet):
     name = "Billing"
     title = "Billing Line Items"
     cls = Billing
@@ -60,14 +60,14 @@ class ReportBilling(Report):
         return ddh
 
     def to_xlsx(self, book, **kwargs):
-        """Format the sheet and insert the data for the SR report."""
-        # Load the data
+        """Format the Billing sheet."""
+        # Load the data.
         if not self.ddh:
             return
 
         self.book = book
 
-        # Insert raw report data.
+        # Insert raw data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
 

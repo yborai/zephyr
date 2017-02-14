@@ -5,7 +5,6 @@ import os
 import sys
 
 from cement.core.foundation import CementApp
-from cement.core.exc import FrameworkError
 from cement.utils.misc import init_defaults
 
 from .core.configure import CONFIG_PATH, CRED_ITEMS

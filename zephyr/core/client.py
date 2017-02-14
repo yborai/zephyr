@@ -8,7 +8,7 @@ from shutil import rmtree
 
 from . import aws
 from .ddh import DDH
-from .utils import first_of_previous_month, get_config_values
+from .utils import get_config_values
 
 class Client(object):
     @classmethod

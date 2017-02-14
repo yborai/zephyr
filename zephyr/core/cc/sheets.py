@@ -5,7 +5,7 @@ from operator import itemgetter
 from datetime import datetime
 
 from ..ddh import DDH
-from ..report import Report
+from ..sheet import Sheet
 from ..utils import ZephyrException
 from .calls import (
     ComputeDetailsWarp,
@@ -15,21 +15,21 @@ from .calls import (
     DBDetailsWarp,
 )
 
-class ReportEC2(Report):
+class SheetEC2(Sheet):
     name = "EC2s"
     title = "EC2 Details"
     calls = (ComputeDetailsWarp,)
     cls = ComputeDetailsWarp
 
     def to_xlsx(self, book, **kwargs):
-        """Format the sheet and insert the data for the EC2 report."""
-        # Load the data
+        """Format the sheet and insert the data for the EC2 sheet."""
+        # Load the data.
         if not self.ddh:
             return
 
         self.book = book
 
-        # Insert raw report data.
+        # Insert raw data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
 
@@ -190,21 +190,21 @@ class ReportEC2(Report):
 
         return launch_times, days_90, days_180, days_270
 
-class ReportMigration(Report):
+class SheetMigration(Sheet):
     name = "Migration"
     title = "EC2 Migration Recommendations"
     calls = (ComputeMigrationWarp,)
     cls = ComputeMigrationWarp
 
     def to_xlsx(self, book, **kwargs):
-        """Format the sheet and insert the data for the SR report."""
-        # Load the data
+        """Format the Migration sheet."""
+        # Load the data.
         if not self.ddh:
             return
 
         self.book = book
 
-        # Insert raw report data.
+        # Insert raw data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
 
@@ -212,21 +212,21 @@ class ReportMigration(Report):
 
         return self.sheet
 
-class ReportRDS(Report):
+class SheetRDS(Sheet):
     name = "RDS"
     title = "RDS Details"
     calls = (DBDetailsWarp,)
     cls = DBDetailsWarp
 
     def to_xlsx(self, book, **kwargs):
-        """Format the sheet and insert the data for the SR report."""
-        # Load the data
+        """Format the RDS sheet."""
+        # Load the data.
         if not self.ddh:
             return
 
         self.book = book
 
-        # Insert raw report data.
+        # Insert raw data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
 
@@ -302,21 +302,21 @@ class ReportRDS(Report):
         self.put_chart(column_name, top, left, table_loc, "column", ccf)
         return self.book
 
-class ReportRIs(Report):
+class SheetRIs(Sheet):
     name = "RIs"
     title = "EC2 RI Recommendations"
     calls = (ComputeRIWarp,)
     cls = ComputeRIWarp
 
     def to_xlsx(self, book, **kwargs):
-        """Format the sheet and insert the data for the SR report."""
-        # Load the data
+        """Format the Reserved Instance sheet."""
+        # Load the data.
         if not self.ddh:
             return
 
         self.book = book
 
-        # Insert raw report data.
+        # Insert raw data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)
 
@@ -436,7 +436,7 @@ class ReportRIs(Report):
         self.put_two_series_chart(column_name, top, left, table_loc, "column", ccf)
         return self.book
 
-class ReportUnderutilized(Report):
+class SheetUnderutilized(Sheet):
     name = "Underutil"
     title = "EC2 Underutilized Instances"
     calls = (ComputeDetailsWarp, ComputeUnderutilizedWarp)
@@ -517,14 +517,14 @@ class ReportUnderutilized(Report):
         return self._ddh
 
     def to_xlsx(self, book, **kwargs):
-        """Format the sheet and insert the data for the Underutilized report."""
-        # Load the data
+        """Format the Underutilized sheet."""
+        # Load the data.
         if not self.ddh:
             return
 
         self.book = book
 
-        # Insert raw report data.
+        # Insert raw data.
         self.sheet = book.add_worksheet(self.title)
         self.get_formatting()
         self.put_label(self.title)
@@ -533,7 +533,7 @@ class ReportUnderutilized(Report):
         env_idx = self.ddh.header.index("Environment")
         self.sheet.set_column(env_idx+1, env_idx+1, None, None, dict(hidden=1))
 
-        # Format the report to visually separate the environments.
+        # Visually separate the environments.
         environment = None
         header = [" "] + self.ddh.header
         out = []

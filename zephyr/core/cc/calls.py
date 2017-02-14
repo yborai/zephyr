@@ -9,7 +9,7 @@ from itertools import groupby
 from urllib.parse import urlencode
 
 from ..ddh import DDH
-from ..utils import ZephyrException, timed
+from ..utils import timed
 from . import client as cc
 from .core import BestPracticesWarp, SplitInstanceWarp, Warp
 

@@ -139,7 +139,7 @@ class Client(object):
         return list(zip(*slugs.data))[0]
 
     def slug_valid(self, slug):
-        return True
+        return self.get_account_by_slug(slug)
 
     def to_ddh(self):
         self.ddh = DDH(header=self.header, data=self.data)

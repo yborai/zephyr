@@ -21,7 +21,7 @@ class Dynamics(Client):
         self.dy = conn.cursor()
 
     def get_account_by_slug(self, slug):
-        return pd.read_sql("""
+        name = pd.read_sql("""
             SELECT a.name AS slug, p."Dynamics_ID__c" AS dy_name
             FROM
                 aws AS a LEFT OUTER JOIN
@@ -30,7 +30,12 @@ class Dynamics(Client):
             """,
             self.database,
             params=dict(slug=slug),
-        )["dy_name"][0]
+        )["dy_name"]
+
+        if not len(name):
+            raise ZephyrException(
+                "No matching Dynamics ID found in Salesforce."
+            )
 
     def request(self, account):
         raise NotImplementedError

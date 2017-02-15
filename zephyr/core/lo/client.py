@@ -41,7 +41,7 @@ class Logicops(Client):
             self.database
         )["lo_name"]
 
-        if not name[0]:
+        if not len(name):
             raise ZephyrException(
                 "No matching Logicops ID found in Salesforce."
             )

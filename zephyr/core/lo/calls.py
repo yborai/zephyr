@@ -1,5 +1,6 @@
 import json
 
+import pandas as pd
 import requests
 
 from collections import OrderedDict
@@ -62,7 +63,19 @@ class ServiceRequests(lo.Logicops):
         r = requests.get(url, cookies=self.cookies, verify=False)
         return r.content.decode("utf-8")
 
+class LogicopsAccounts(lo.Logicops):
+    def request(self):
+        url_accts = "https://logicops.logicworks.net/api/v1/accounts/"
+        r = requests.get(url_accts, cookies=self.cookies, verify=False)
+        accts = r.json()
+        accounts = accts["accounts"]
+        header = ["id", "name"]
+        data = [[account[col] for col in header] for account in accounts]
+        df = pd.DataFrame(data, columns=header)
+        df.to_sql("lo_accounts", self.database, if_exists="replace")
+        return r.content.decode("utf-8")
 
 __ALL__ = [
-    ServiceRequests
+    LogicopsAccounts,
+    ServiceRequests,
 ]

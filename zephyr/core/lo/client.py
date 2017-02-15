@@ -1,10 +1,5 @@
-import json
-import os
-
 import pandas as pd
 import requests
-
-from datetime import datetime
 
 from ..client import Client
 from ..utils import get_config_values, ZephyrException
@@ -33,9 +28,9 @@ class Logicops(Client):
         name = pd.read_sql("""
             SELECT a.name AS slug, l.name AS lo_name
             FROM
-                aws AS a LEFT OUTER JOIN
-                projects AS p ON (p."Id" = a."Assoc_Project__c") LEFT OUTER JOIN
-                logicops_accounts AS l ON (p.LogicOps_ID__c = l.id)
+                sf_aws AS a LEFT OUTER JOIN
+                sf_projects AS p ON (p."Id" = a."Assoc_Project__c") LEFT OUTER JOIN
+                lo_accounts AS l ON (p.LogicOps_ID__c = l.id)
             WHERE a.name = '{slug}'
             """.format(slug=slug),
             self.database
@@ -50,18 +45,3 @@ class Logicops(Client):
 
     def request(self, account):
         raise NotImplementedError
-
-class LogicopsAccounts(Logicops):
-    def __init__(self, config):
-        super().__init__(config)
-
-    def request(self):
-        url_accts = "https://logicops.logicworks.net/api/v1/accounts/"
-        r = requests.get(url_accts, cookies=self.cookies, verify=False)
-        accts = r.json()
-        accounts = accts["accounts"]
-        header = ["id", "name"]
-        data = [[account[col] for col in header] for account in accounts]
-        df = pd.DataFrame(data, columns=header)
-        df.to_sql("logicops_accounts", self.database, if_exists="replace")
-        return r.content.decode("utf-8")

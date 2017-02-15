@@ -1,12 +1,11 @@
 import io
 import os
-import sys
 
 from .utils import ZephyrException
 
 CONFIG_PATH = os.path.expanduser("~/.zephyr/config")
 ZEPHYR_CACHE_ROOT_DEFAULT = os.path.expanduser("~/.zephyr/cache/")
-ZEPHYR_DATABASE_DEFAULT = "meta/lcoal.db"
+ZEPHYR_DATABASE_DEFAULT = ".meta/local.db"
 CRED_ITEMS = [
     (
         "lw-aws", [

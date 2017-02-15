@@ -46,7 +46,7 @@ class CloudCheckrAccounts(cc.CloudCheckr):
             for acct in accts["accounts_and_users"]
         ]
         df = pd.DataFrame(data, columns=header)
-        df.to_sql("cloudcheckr_accounts", self.database, if_exists="replace")
+        df.to_sql("cc_accounts", self.database, if_exists="replace")
 
 class ComputeDetailsWarp(Warp):
     slug = "compute-details"

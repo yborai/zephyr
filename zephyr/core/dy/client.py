@@ -1,9 +1,5 @@
-import os
-
 import pandas as pd
 import pymssql
-
-from datetime import datetime
 
 from ..client import Client
 from ..utils import get_config_values, ZephyrException
@@ -24,8 +20,8 @@ class Dynamics(Client):
         name = pd.read_sql("""
             SELECT a.name AS slug, p."Dynamics_ID__c" AS dy_name
             FROM
-                aws AS a LEFT OUTER JOIN
-                projects AS p ON (p."Id" = a."Assoc_Project__c")
+                sf_aws AS a LEFT OUTER JOIN
+                sf_projects AS p ON (p."Id" = a."Assoc_Project__c")
             WHERE a.name = :slug
             """,
             self.database,
@@ -36,6 +32,8 @@ class Dynamics(Client):
             raise ZephyrException(
                 "No matching Dynamics ID found in Salesforce."
             )
+
+        return name[0]
 
     def request(self, account):
         raise NotImplementedError

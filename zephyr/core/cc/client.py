@@ -21,8 +21,8 @@ class CloudCheckr(Client):
         matches = pd.read_sql("""
             SELECT a.name AS slug, c.name AS cc_name
             FROM
-                aws AS a LEFT OUTER JOIN
-                cloudcheckr_accounts AS c ON (c.aws_account = a."Acct_Number__c")
+                sf_aws AS a LEFT OUTER JOIN
+                cc_accounts AS c ON (c.aws_account = a."Acct_Number__c")
             WHERE a.name = '{slug}'
             """.format(slug=acc_short_name),
             self.database

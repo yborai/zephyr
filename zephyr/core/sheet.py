@@ -291,9 +291,9 @@ class CoverPage(Client):
         matches = pd.read_sql("""
             SELECT a.name AS client
             FROM
-                accounts AS a LEFT OUTER JOIN
-                projects AS p ON (a.Id=p.Account__c) LEFT OUTER JOIN
-                aws ON (p.Id=aws.Assoc_Project__c)
+                sf_accounts AS a LEFT OUTER JOIN
+                sf_projects AS p ON (a.Id=p.Account__c) LEFT OUTER JOIN
+                sf_aws AS aws ON (p.Id=aws.Assoc_Project__c)
             WHERE aws.name = '{slug}'
             """.format(slug=slug),
             self.database

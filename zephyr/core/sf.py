@@ -21,7 +21,7 @@ def get_accounts(salesforce, database):
     """
     return soql_to_sql(
         query_acct,
-        "accounts",
+        "sf_accounts",
         salesforce,
         database,
     )
@@ -38,7 +38,7 @@ def get_aws_accounts(salesforce, database):
     """
     return soql_to_sql(
         query_aws,
-        "aws",
+        "sf_aws",
         salesforce,
         database,
     )
@@ -59,7 +59,7 @@ def get_projects(salesforce, database):
     """
     return soql_to_sql(
         query_project,
-        "projects",
+        "sf_projects",
         salesforce,
         database,
     )

@@ -133,8 +133,8 @@ class Client(object):
         query = ("""
             SELECT aws."Name" AS slug
             FROM
-                projects AS p LEFT OUTER JOIN
-                aws ON (p.Id=aws.Assoc_Project__c)
+                sf_projects AS p LEFT OUTER JOIN
+                sf_aws AS aws ON (p.Id=aws.Assoc_Project__c)
             WHERE aws."Name" IS NOT NULL
             ORDER BY aws."Name"
         """)

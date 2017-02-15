@@ -3,7 +3,7 @@ import sqlite3
 
 from . import aws, sf
 from .cc import calls as cc
-from .lo import client as lo
+from .lo import calls as lo
 from .client import Client
 from .ddh import DDH
 from .utils import get_config_values
@@ -74,10 +74,10 @@ class LWProjects(Client):
             aws.Cloudcheckr_ID__c AS cloudcheckr_id,
             aws.Cloudcheckr_Name__c AS cloudcheckr_name,
             aws.Bitdefender_ID__c AS bitdefender
-        FROM accounts AS a
-            LEFT OUTER JOIN projects AS p ON (a.Id=p.Account__c)
-            LEFT OUTER JOIN aws ON (p.Id=aws.Assoc_Project__c)
-            LEFT OUTER JOIN logicops_accounts as lo ON (p.LogicOps_ID__c=lo.id)
+        FROM sf_accounts AS a
+            LEFT OUTER JOIN sf_projects AS p ON (a.Id=p.Account__c)
+            LEFT OUTER JOIN sf_aws AS aws ON (p.Id=aws.Assoc_Project__c)
+            LEFT OUTER JOIN lo_accounts AS lo ON (p.LogicOps_ID__c=lo.id)
         WHERE 1
             AND aws.Name IS NOT NULL
         ORDER BY client

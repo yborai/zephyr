@@ -121,6 +121,9 @@ class Client(object):
                 count=count, cache_local=cache_local)
         )
 
+    def get_account_by_slug(self, slug):
+        raise NotImplementedError
+
     def get_object_from_s3(self, cache_key):
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
         session = aws.get_session(self.AWS_ACCESS_KEY_ID, self.AWS_SECRET_ACCESS_KEY)

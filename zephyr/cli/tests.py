@@ -4,7 +4,7 @@ import sqlite3
 from cement.utils import test
 
 from ..__main__ import Zephyr
-from ..core.fixtures import test_account
+from ..core.fixtures import fixtures
 from ..core.utils import get_config_values, ZephyrException
 
 def get_db_path():
@@ -33,8 +33,9 @@ class TestZephyr(Zephyr):
         with cls(argv=args) as app:
             with obj.assertRaises(ZephyrException) as exc:
                 app.run()
-            obj.eq(
-                bool(exc.exception.args[0]),
+            obj.eq(True
+                and len(exc.exception.args)>0
+                and bool(exc.exception.args[0]),
                 True,
                 msg="Expected an appropriate error message."
             )
@@ -44,24 +45,24 @@ class TestZephyrFixtures(test.CementTestCase):
 
     @classmethod
     def _delete_fixtures(cls, cur):
-        for table in test_account.keys():
+        for table in fixtures.keys():
             cur.execute("""
-                DELETE FROM {} WHERE "index"=-1
+                DELETE FROM {} WHERE "index" IN (-1, -2)
             """.format(table))
 
     @classmethod
     def _load_fixtures(cls, cur):
         cls._delete_fixtures(cur)
-        cur.execute("""
+        cur.executemany("""
             INSERT INTO cc_accounts values (:index, :aws_account, :id, :name)
-        """, test_account["cc_accounts"])
-        cur.execute("""
+        """, fixtures["cc_accounts"])
+        cur.executemany("""
             INSERT INTO lo_accounts values (:index, :id, :name)
-        """, test_account["lo_accounts"])
-        cur.execute("""
+        """, fixtures["lo_accounts"])
+        cur.executemany("""
             INSERT INTO sf_accounts values (:index, :Id, :Name, :Type)
-        """, test_account["sf_accounts"])
-        cur.execute("""
+        """, fixtures["sf_accounts"])
+        cur.executemany("""
             INSERT INTO sf_aws values (
                 :index,
                 :Name,
@@ -71,8 +72,8 @@ class TestZephyrFixtures(test.CementTestCase):
                 :Cloudcheckr_Name__c,
                 :Bitdefender_ID__c
             )
-        """, test_account["sf_aws"])
-        cur.execute("""
+        """, fixtures["sf_aws"])
+        cur.executemany("""
             INSERT INTO sf_projects values (
                 :index,
                 :Id,
@@ -85,7 +86,7 @@ class TestZephyrFixtures(test.CementTestCase):
                 :MRR__c,
                 :Planned_Spend__c
             )
-        """, test_account["sf_projects"])
+        """, fixtures["sf_projects"])
 
     @classmethod
     def setUpClass(cls):
@@ -94,18 +95,23 @@ class TestZephyrFixtures(test.CementTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        return
         with sqlite3.connect(get_db_path()) as con:
             cls._delete_fixtures(con.cursor())
 
-    def test_one(self):
+    def test_account_unrecognized(self):
         TestZephyr.assert_zephyr_expected_failure(self, [
             "report",
             "account-review",
             "--account=..",
         ])
 
-    def test_two(self):
-        return True
+    def test_account_no_dynamics(self):
+        TestZephyr.assert_zephyr_expected_failure(self, [
+            "report",
+            "account-review",
+            "--account=.no_dynamics",
+        ])
 
 class TestZephyrBase(test.CementTestCase):
     app_class = TestZephyr

@@ -120,7 +120,7 @@ class ZephyrClearCache(ZephyrCLI):
         if(all_):
             accts = client.get_slugs()
         for acct in accts:
-            if(not client.slug_valid(acct)):
+            if(not client.get_account_by_slug(acct)):
                 log.info("Skipping {}".format(acct))
                 continue
             client.clear_cache_s3(acct, month)
@@ -306,7 +306,7 @@ class DataRun(ZephyrData):
         if(all_):
             accts = client.get_slugs()
         for acct in accts:
-            if(not client.slug_valid(acct)):
+            if(not client.get_account_by_slug(acct)):
                 log.info("Skipping {}".format(acct))
                 continue
             log.info("Retrieving {call} data for {account}".format(
@@ -529,6 +529,16 @@ class SheetRun(ZephyrSheet):
                 config, self.Meta.label, sheets, acct, date, expire_cache, log=log
             )
             if not book.slug_valid(acct):
+                if(not all_):
+                    raise ZephyrException(
+                        "Configuration missing for the following: {}.".format(
+                            " ".join({
+                                validator.name
+                                for validator in book.slug_validators()
+                                if(not validator.get_account_by_slug(acct))
+                            })
+                        )
+                    )
                 log.info("Skipping {} because of missing configuration.".format(acct))
                 continue
             log.info("Running {report} for {account}".format(

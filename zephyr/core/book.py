@@ -66,7 +66,7 @@ class Book(Client):
 
     def slug_valid(self, slug):
         return all([
-            api.slug_valid(slug)
+            api.get_account_by_slug(slug)
             for api in self.slug_validators()
         ])
 
@@ -75,11 +75,12 @@ class Book(Client):
         For each client in each sheet in a book,
         collect the unique slug validation methods.
         """
-        return {
-            call.slug_valid.__func__: call
+        out = {
+            client.get_account_by_slug.__func__: client
             for sheet in self.sheets
-            for call in getattr(sheet, "clients", [])
-        }.values()
+            for client in getattr(sheet, "clients", [])
+        }
+        return out.values()
 
 
     def to_xlsx(self):

@@ -86,6 +86,3 @@ class CloudCheckr(Client):
         self.log.debug(url)
         response = self.load_pages(url, timing=True, log=self.log.info)
         return json.dumps(response)
-
-    def slug_valid(self, slug):
-        return self.get_account_by_slug(slug)

@@ -202,7 +202,9 @@ class ZephyrMeta(ZephyrCLI):
     def run(self, **kwargs):
         config = self.app.config
         log = self.app.log
-        self.ZEPHYR_LINE_WIDTH = int(self.app.config.get("zephyr", "ZEPHYR_LINE_WIDTH"))
+        self.ZEPHYR_LINE_WIDTH = int(
+            self.app.config.get("zephyr", "ZEPHYR_LINE_WIDTH")
+        )
         expire_cache = self.app.pargs.expire_cache
         self.app.log.info("Collecting client metadata.")
         projects = meta.LWProjects(config, log=log)
@@ -257,7 +259,7 @@ class ZephyrDBRRI(ZephyrETL):
             for row in reader:
                 if row["ReservedInstance"] != "Y":
                     continue
-                out = {col:row[col] for col in header}
+                out = {col: row[col] for col in header}
                 writer.writerow(out)
 
 
@@ -482,10 +484,16 @@ class ComputeAV(DataRun):
         compute_details = self.app.pargs.compute_details
         if(not cache_file):
             raise NotImplementedError # We will add fetching later.
-        self.app.log.info("Using cached response: {cache}".format(cache=cache_file))
+        self.app.log.info(
+            "Using cached response: {cache}"
+            .format(cache=cache_file)
+        )
         if(not compute_details):
             raise NotImplementedError
-        self.app.log.info("Using compute_details response: {compute_details}".format(compute_details=compute_details))
+        self.app.log.info(
+            "Using compute_details response: {compute_details}"
+            .format(compute_details=compute_details)
+        )
         out = compute_av(cache_file, compute_details)
         self.app.render(out)
         return out
@@ -505,7 +513,19 @@ class SheetRun(ZephyrSheet):
     def default(self):
         self.run(**vars(self.app.pargs))
 
+    def alert_config_missing(self, acct, missing):
+        if not self.app.pargs.all:
+            raise ZephyrException(
+                "Configuration missing for the following: {}."
+                .format(missing)
+            )
+        self.app.log.info(
+            "Skipped {acct}. Configuration is missing for {miss}."
+            .format(acct=acct, miss=missing)
+        )
+
     def _run(self, *sheets):
+        label = self.Meta.label
         config = self.app.config
         log = self.app.log
         account = self.app.pargs.account
@@ -526,23 +546,18 @@ class SheetRun(ZephyrSheet):
             accts = client.get_slugs()
         for acct in accts:
             book = Book(
-                config, self.Meta.label, sheets, acct, date, expire_cache, log=log
+                config, label, sheets, acct, date, expire_cache, log=log
             )
             if not book.slug_valid(acct):
-                if(not all_):
-                    raise ZephyrException(
-                        "Configuration missing for the following: {}.".format(
-                            " ".join({
-                                validator.name
-                                for validator in book.slug_validators()
-                                if(not validator.get_account_by_slug(acct))
-                            })
-                        )
-                    )
-                log.info("Skipping {} because of missing configuration.".format(acct))
+                missing = ", ".join({
+                    validator.name
+                    for validator in book.slug_validators()
+                    if(not validator.get_account_by_slug(acct))
+                })
+                self.alert_config_missing(acct, missing)
                 continue
             log.info("Running {report} for {account}".format(
-                report=self.Meta.label,
+                report=label,
                 account=acct,
             ))
             out = book.to_xlsx()
@@ -572,7 +587,7 @@ class AccountReview(SheetRun):
 class BillingSheet(SheetRun):
     class Meta:
         label = "billing"
-        description = "Generate the compute-details worksheet for a given account."
+        description = "Generate the compute-details worksheet."
 
     def run(self, **kwargs):
         self._run(SheetBilling)
@@ -580,7 +595,7 @@ class BillingSheet(SheetRun):
 class ComputeDetailsSheet(SheetRun):
     class Meta:
         label = "ec2"
-        description = "Generate the compute-details worksheet for a given account."
+        description = "Generate the compute-details worksheet."
 
     def run(self, **kwargs):
         self._run(SheetEC2)
@@ -588,7 +603,7 @@ class ComputeDetailsSheet(SheetRun):
 class ComputeMigrationSheet(SheetRun):
     class Meta:
         label = "migration"
-        description = "Generate the compute-migration worksheet for a given account."
+        description = "Generate the compute-migration worksheet."
 
     def run(self, **kwargs):
         self._run(SheetMigration)
@@ -596,7 +611,7 @@ class ComputeMigrationSheet(SheetRun):
 class ComputeRISheet(SheetRun):
     class Meta:
         label = "ri-recs"
-        description = "Generate the compute-ri worksheet for a given account."
+        description = "Generate the compute-ri worksheet."
 
     def run(self, **kwargs):
         self._run(SheetRIs)
@@ -604,7 +619,7 @@ class ComputeRISheet(SheetRun):
 class DBDetailsSheet(SheetRun):
     class Meta:
         label = "rds"
-        description = "Generate the db-details worksheet for a given account."
+        description = "Generate the db-details worksheet."
 
     def run(self, **kwargs):
         self._run(SheetRDS)
@@ -622,7 +637,7 @@ class ComputeUnderutilized(SheetRun):
 class ComputeUnderutilizedSheet(SheetRun):
     class Meta:
         label = "underutilized"
-        description = "Generate the compute-underutilized worksheet for a given account."
+        description = "Generate the compute-underutilized worksheet."
 
     def run(self, **kwargs):
         self._run(SheetUnderutilized)
@@ -630,7 +645,7 @@ class ComputeUnderutilizedSheet(SheetRun):
 class ServiceRequestSheet(SheetRun):
     class Meta:
         label = "sr"
-        description = "Generate the service-requests worksheet for a given account."
+        description = "Generate the service-requests worksheet."
 
     def run(self, **kwargs):
         self._run(SheetSRs)

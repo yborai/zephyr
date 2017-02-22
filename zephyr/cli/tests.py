@@ -106,10 +106,17 @@ class TestZephyrFixtures(test.CementTestCase):
             "--account=..",
         ])
 
-    def test_account_no_dynamics(self):
+    def test_account_account_review_no_dynamics(self):
         TestZephyr.assert_zephyr_expected_failure(self, [
             "report",
             "account-review",
+            "--account=.no_dynamics",
+        ])
+
+    def test_account_billing_no_dynamics(self):
+        TestZephyr.assert_zephyr_expected_failure(self, [
+            "report",
+            "billing",
             "--account=.no_dynamics",
         ])
 

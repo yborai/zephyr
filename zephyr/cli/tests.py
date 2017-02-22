@@ -4,11 +4,13 @@ import sqlite3
 from cement.utils import test
 
 from ..__main__ import Zephyr
+from ..core.configure import CRED_ITEMS, DEFAULTS
 from ..core.fixtures import fixtures
 from ..core.utils import get_config_values, ZephyrException
 
 def get_db_path():
     with Zephyr() as app:
+        app.configure()
         config = app.config
     zephyr_config_keys = ("ZEPHYR_CACHE_ROOT", "ZEPHYR_DATABASE")
     cache_root, db = [
@@ -24,6 +26,7 @@ class TestZephyr(Zephyr):
     @classmethod
     def assert_zephyr_success(cls, obj, args):
         with cls(argv=args) as app:
+            app.configure()
             with obj.assertRaises(SystemExit) as cm:
                 app.run()
             obj.eq(cm.exception.code, 0, msg="Expected to return SystemExit: 0")
@@ -31,6 +34,7 @@ class TestZephyr(Zephyr):
     @classmethod
     def assert_zephyr_expected_failure(cls, obj, args):
         with cls(argv=args) as app:
+            app.configure()
             with obj.assertRaises(ZephyrException) as exc:
                 app.run()
             obj.eq(True
@@ -125,6 +129,7 @@ class TestZephyrBase(test.CementTestCase):
 
     def test_zephyr(self):
         with self.app as app:
+            app.configure()
             app.run()
 
 class TestZephyrData(test.CementTestCase):
@@ -132,6 +137,7 @@ class TestZephyrData(test.CementTestCase):
 
     def test_zephyr_data(self):
         with TestZephyr(argv=["data"]) as app:
+            app.configure()
             app.run()
 
     def test_billing_monthly(self):
@@ -258,6 +264,7 @@ class TestZephyrETL(test.CementTestCase):
 
     def test_zephyr_etl(self):
         with TestZephyr(argv=["etl"]) as app:
+            app.configure()
             app.run()
 
     def test_dbr_ri(self):
@@ -272,6 +279,7 @@ class TestZephyrReport(test.CementTestCase):
 
     def test_zephyr_report(self):
         with TestZephyr(argv=["report"]) as app:
+            app.configure()
             app.run()
 
     def test_account_review(self):

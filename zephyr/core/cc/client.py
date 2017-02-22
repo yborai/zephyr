@@ -9,13 +9,21 @@ from ..client import Client
 from ..utils import get_config_values, timed, ZephyrException
 
 class CloudCheckr(Client):
+    name = "CloudCheckr"
+
     def __init__(self, config, log=None, **kwargs):
         super().__init__(config, log=log)
+        self._CC_API_KEY = None
+
+    @property
+    def CC_API_KEY(self):
+        if self._CC_API_KEY:
+            return self._CC_API_KEY
         cc_config_keys = ("CC_API_KEY", "CC_API_BASE")
-        CC_API_KEY, CC_API_BASE = get_config_values("lw-cc", cc_config_keys, config)
-        self.CC_API_KEY = CC_API_KEY
+        CC_API_KEY, CC_API_BASE = get_config_values("lw-cc", cc_config_keys, self.config)
+        self._CC_API_KEY = CC_API_KEY
         self.CC_API_BASE = CC_API_BASE
-        self.name = "CloudCheckr"
+        return self._CC_API_KEY
 
     def get_account_by_slug(self, acc_short_name):
         matches = pd.read_sql("""

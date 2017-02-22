@@ -19,11 +19,11 @@ class ZephyrException(Exception):
     pass
 
 def first_of_previous_month(date=None):
-	if not date:
-		date = datetime.datetime.now()
-	fom = datetime.datetime(year=date.year, month=date.month, day=1)
-	dlm = fom - DAY
-	return datetime.datetime(year=dlm.year, month=dlm.month, day=1)
+    if not date:
+        date = datetime.datetime.now()
+    fom = datetime.datetime(year=date.year, month=date.month, day=1)
+    dlm = fom - DAY
+    return datetime.datetime(year=dlm.year, month=dlm.month, day=1)
 
 def get_config_values(section, keys, config):
     """Get a list of configuration values from the same section."""

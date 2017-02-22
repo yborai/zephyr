@@ -5,6 +5,7 @@ from ..client import Client
 from ..utils import get_config_values, ZephyrException
 
 class Logicops(Client):
+    name = "Logicops"
     slug = "service-requests"
 
     @classmethod
@@ -16,13 +17,19 @@ class Logicops(Client):
 
     def __init__(self, config, log=None):
         super().__init__(config, log=log)
-        self.LO_API_BASE = "https://logicops.logicworks.net/api/v1/"
+        self._LO_API_BASE = None
+
+    @property
+    def LO_API_BASE(self):
+        if self._LO_API_BASE:
+            return self._LO_API_BASE
+        self._LO_API_BASE = "https://logicops.logicworks.net/api/v1/"
         lo_config_keys = ("LO_USER", "LO_PASSWORD")
-        user, passwd = get_config_values("lw-lo", lo_config_keys, config)
-        self.name = "Logicops"
+        user, passwd = get_config_values("lw-lo", lo_config_keys, self.config)
         self.LO_PASSWORD = passwd
         self.LO_USER = user
         self.cookies = self.get_cookies(user, passwd)
+        return self._LO_API_BASE
 
     def get_account_by_slug(self, slug):
         name = pd.read_sql("""

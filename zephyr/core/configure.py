@@ -4,8 +4,6 @@ import os
 from .utils import ZephyrException
 
 CONFIG_PATH = os.path.expanduser("~/.zephyr/config")
-ZEPHYR_CACHE_ROOT_DEFAULT = os.path.expanduser("~/.zephyr/cache/")
-ZEPHYR_DATABASE_DEFAULT = ".meta/local.db"
 CRED_ITEMS = [
     (
         "lw-aws", [
@@ -48,6 +46,10 @@ CRED_ITEMS = [
         ],
     ),
 ]
+DEFAULTS = {
+    "ZEPHYR_CACHE_ROOT": os.path.expanduser("~/.zephyr/cache/"),
+    "ZEPHYR_DATABASE": ".meta/local.db",
+}
 
 def create_config(config, prompt=None, write=None, ini=None):
     if prompt:
@@ -74,10 +76,12 @@ def create_config(config, prompt=None, write=None, ini=None):
             ))
     if write:
         cache_root = os.path.expanduser(config.get(
-            "zephyr", "ZEPHYR_CACHE_ROOT", fallback=ZEPHYR_CACHE_ROOT_DEFAULT
+            "zephyr",
+            "ZEPHYR_CACHE_ROOT",
+            fallback=DEFAULTS["ZEPHYR_CACHE_ROOT"]
         ))
         db = config.get(
-            "zephyr", "ZEPHYR_DATABASE" , fallback=ZEPHYR_DATABASE_DEFAULT
+            "zephyr", "ZEPHYR_DATABASE", fallback=DEFAULTS["ZEPHYR_DATABASE"]
         )
         db_dir = os.path.dirname(os.path.join(cache_root, db))
         os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)

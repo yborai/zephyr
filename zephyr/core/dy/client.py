@@ -5,16 +5,24 @@ from ..client import Client
 from ..utils import get_config_values, ZephyrException
 
 class Dynamics(Client):
+    name = "Dynamics"
+
     def __init__(self, config, log=None, **kwargs):
         super().__init__(config, log=log)
+        self._dy = None
+
+    @property
+    def dy(self):
+        if self._dy:
+            return self._dy
         dy_config_keys = ("DY_HOST", "DY_USER", "DY_PASSWORD")
-        host, user, password = get_config_values("lw-dy", dy_config_keys, config)
-        self.name = "Dynamics"
+        host, user, password = get_config_values("lw-dy", dy_config_keys, self.config)
         try:
-            conn = pymssql.connect(host, user, password, "DTI", login_timeout=5)
+            self.conn = pymssql.connect(host, user, password, "DTI", login_timeout=5)
         except pymssql.OperationalError:
             raise ZephyrException("Could not connect to Dynamics.")
-        self.dy = conn.cursor()
+        self._dy = self.conn.cursor()
+        return self._dy
 
     def get_account_by_slug(self, slug):
         name = pd.read_sql("""

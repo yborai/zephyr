@@ -18,24 +18,18 @@ class Client(object):
         return os.path.join(account, month, filename)
 
     def __init__(self, config, log=None):
-        aws_config_keys = ("ZEPHYR_S3_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
-        bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, config)
         zephyr_config_keys = ("ZEPHYR_CACHE_ROOT", "ZEPHYR_DATABASE")
         cache_root, db = [
             os.path.expanduser(path)
             for path in get_config_values("zephyr", zephyr_config_keys, config)
         ]
         self._ddh = None
-        self.ZEPHYR_S3_BUCKET = bucket
+        self._s3 = None
         self.ZEPHYR_CACHE_ROOT = cache_root
         self.config = config
         self.database = sqlite3.connect(os.path.join(cache_root, db))
         self.log = log
         self.ZEPHYR_DATABASE = db
-        self.AWS_ACCESS_KEY_ID = key_id
-        self.AWS_SECRET_ACCESS_KEY = secret
-        self.session = aws.get_session(key_id, secret)
-        self.s3 = self.session.resource("s3")
 
     @property
     def ddh(self):
@@ -44,6 +38,19 @@ class Client(object):
     @ddh.setter
     def ddh(self, value):
         self._ddh = value
+
+    @property
+    def s3(self):
+        if self._s3:
+            return self._s3
+        aws_config_keys = ("ZEPHYR_S3_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
+        bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, self.config)
+        self.AWS_ACCESS_KEY_ID = key_id
+        self.AWS_SECRET_ACCESS_KEY = secret
+        self.ZEPHYR_S3_BUCKET = bucket
+        self.session = aws.get_session(key_id, secret)
+        self._s3 = self.session.resource("s3")
+        return self._s3
 
     def cache(self, response, cache_key):
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
@@ -125,8 +132,7 @@ class Client(object):
         raise NotImplementedError
 
     def get_object_from_s3(self, cache_key):
-        cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, cache_key)
-        session = aws.get_session(self.AWS_ACCESS_KEY_ID, self.AWS_SECRET_ACCESS_KEY)
+        s3 = self.s3  # This is a bit kludgy. TODO: Fix this.
         return aws.get_object_from_s3(self.ZEPHYR_S3_BUCKET, cache_key, self.s3)
 
     def get_slugs(self):

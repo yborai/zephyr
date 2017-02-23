@@ -1,73 +1,74 @@
 fixtures = {
-    "cc_accounts": [
-        {
-            "index": -1,
-            "aws_account": "aws_id_1",
-            "id": "1,729",
-            "name": "Test Account"
-        },
-        {
-            "index": -2,
-            "aws_account": "aws_id_2",
-            "id": "1,728",
-            "name": "No Dynamics"
-        }
-    ],
-    "lo_accounts": [{
-        "index": -1,
-        "id": "536904",
-        "name": "Logicworks R&D"
-    }],
-    "sf_accounts": [{
-        "index": -1,
-        "Id": "sf_account_id_1",
-        "Name": "Test Account",
-        "Type": "Active"
-    }],
-    "sf_aws": [
-        {
-            "index": -1,
-            "Name": ".meta",
-            "Acct_Number__c": "aws_id_1",
-            "Assoc_Project__c": "sf_project_id_1",
-            "Cloudcheckr_ID__c": "",
-            "Cloudcheckr_Name__c": "",
-            "Bitdefender_ID__c": "bd_id_1"
-        },
-        {
-            "index": -2,
-            "Name": ".no_dynamics",
-            "Acct_Number__c": "aws_id_2",
-            "Assoc_Project__c": "sf_project_id_2",
-            "Cloudcheckr_ID__c": "",
-            "Cloudcheckr_Name__c": "",
-            "Bitdefender_ID__c": "bd_id_2"
-        },
-    ],
-    "sf_projects": [
-        {
-            "index": -1,
-            "Id": "sf_project_id_1",
-            "Name": "Test Account",
-            "Account__c": "sf_account_id_1",
-            "Dynamics_ID__c": "LOGICWORKSRND",
-            "JIRAKey__c": "ZEP",
-            "LogicOps_ID__c": "536904",
-            "Main_Project_POC__c": "",
-            "MRR__c": "",
-            "Planned_Spend__c": "100000.0"
-        },
-        {
-            "index": -2,
-            "Id": "sf_project_id_2",
-            "Name": "No Dynamics",
-            "Account__c": "sf_account_id_1",
-            "Dynamics_ID__c": "",
-            "JIRAKey__c": "",
-            "LogicOps_ID__c": "",
-            "Main_Project_POC__c": "",
-            "MRR__c": "",
-            "Planned_Spend__c": ""
-        }
-    ]
+    "cc_accounts": {
+        "header": ("index", "aws_account", "id", "name"),
+        "data": (
+            (-1, "aws_id_1", "1,729", "Test Account"),
+            (-2, "aws_id_2", "1,728", "No Dynamics"),
+        ),
+    },
+    "lo_accounts": {
+        "header": ("index", "id", "name"),
+        "data": (
+            (-1, 536904, "Logicworks R&D"),
+        ),
+    },
+    "sf_accounts": {
+        "header": ("index", "Id", "Name", "Type"),
+        "data": (
+            (-1, "sf_account_id_1", "Test Account", "Active"),
+        )
+    },
+    "sf_aws": {
+        "header": (
+            "index",
+            "Name",
+            "Acct_Number__c",
+            "Assoc_Project__c",
+            "Cloudcheckr_ID__c",
+            "Cloudcheckr_Name__c",
+            "Bitdefender_ID__c",
+        ),
+        "data": (
+            (-1, ".meta", "aws_id_1", "sf_project_id_1", "", "", "bd_id_1"),
+            (-2, ".no_dynamics", "aws_id_2", "sf_project_id_2", "", "", "bd_id_2"),
+        )
+    },
+    "sf_projects": {
+        "header": (
+            "index",
+            "Id",
+            "Name",
+            "Account__c",
+            "Dynamics_ID__c",
+            "JIRAKey__c",
+            "LogicOps_ID__c",
+            "Main_Project_POC__c",
+            "MRR__c",
+            "Planned_Spend__c"
+        ),
+        "data": ((
+            -1,
+            "sf_project_id_1",
+            "Test Account",
+            "sf_account_id_1",
+            "LOGICWORKSRND",
+            "ZEP",
+            "536904",
+            "",
+            0.0,
+            100000.0
+        ),
+        (
+            -2,
+            "sf_project_id_2",
+            "No Dynamics",
+            "sf_account_id_1",
+            "",
+            "",
+            "",
+            "",
+            0.0,
+            100000.0
+        ))
+    }
 }

@@ -1,6 +1,8 @@
 import os
 import sqlite3
 
+import pandas as pd
+
 from cement.utils import test
 
 from ..__main__ import Zephyr
@@ -56,50 +58,33 @@ class TestZephyrFixtures(test.CementTestCase):
 
     @classmethod
     def _load_fixtures(cls, cur):
-        cls._delete_fixtures(cur)
-        cur.executemany("""
-            INSERT INTO cc_accounts values (:index, :aws_account, :id, :name)
-        """, fixtures["cc_accounts"])
-        cur.executemany("""
-            INSERT INTO lo_accounts values (:index, :id, :name)
-        """, fixtures["lo_accounts"])
-        cur.executemany("""
-            INSERT INTO sf_accounts values (:index, :Id, :Name, :Type)
-        """, fixtures["sf_accounts"])
-        cur.executemany("""
-            INSERT INTO sf_aws values (
-                :index,
-                :Name,
-                :Acct_Number__c,
-                :Assoc_Project__c,
-                :Cloudcheckr_ID__c,
-                :Cloudcheckr_Name__c,
-                :Bitdefender_ID__c
+        for table in fixtures:
+            fixture = fixtures[table]
+            pd.DataFrame(
+                list(fixture["data"]),
+                columns=fixture["header"]
+            ).to_sql(
+                table,
+                cur.connection,
+                if_exists="append",
+                index=False,
             )
-        """, fixtures["sf_aws"])
-        cur.executemany("""
-            INSERT INTO sf_projects values (
-                :index,
-                :Id,
-                :Name,
-                :Account__c,
-                :Dynamics_ID__c,
-                :JIRAKey__c,
-                :LogicOps_ID__c,
-                :Main_Project_POC__c,
-                :MRR__c,
-                :Planned_Spend__c
-            )
-        """, fixtures["sf_projects"])
 
     @classmethod
     def setUpClass(cls):
         with sqlite3.connect(get_db_path()) as con:
+            try:
+                cls._delete_fixtures(con.cursor())
+            except sqlite3.OperationalError as e:
+                """
+                This error can be thrown if the database exists but has
+                no data. In this case there is nothing to delete.
+                """
+                pass
             cls._load_fixtures(con.cursor())
 
     @classmethod
     def tearDownClass(cls):
-        return
         with sqlite3.connect(get_db_path()) as con:
             cls._delete_fixtures(con.cursor())
 

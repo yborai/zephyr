@@ -6,6 +6,10 @@ import pandas as pd
 from cement.utils import test
 
 from ..__main__ import Zephyr
+from ..core.book import Book
+from ..core.cc.sheets import SheetEC2, SheetRDS
+from ..core.dy.sheets import SheetBilling
+from ..core.lo.sheets import SheetSRs
 from ..core.configure import CRED_ITEMS, DEFAULTS
 from ..core.fixtures import fixtures
 from ..core.utils import get_config_values, ZephyrException
@@ -45,6 +49,44 @@ class TestZephyr(Zephyr):
                 True,
                 msg="Expected an appropriate error message."
             )
+
+class TestZephyrBook(test.CementTestCase):
+    app_class = TestZephyr
+    book = None
+
+    def setUp(self):
+        with self.app_class() as app:
+            app.configure()
+            config = app.config
+            log = app.log
+        self.book = Book(
+            config,
+            "Test",
+            (SheetEC2, SheetRDS, SheetBilling, SheetSRs),
+            ".meta",
+            None,
+            None,
+            log=log
+        )
+
+    def tearDown(self):
+        """
+        Cement uses temp files in its default tests, and the references
+        will not exist if setUp is overridden and will break when
+        tearDown is called. A short-term fix is to override tearDown as
+        well. The long-term fix will be to use CementTestCase more like
+        the authors of Cement intended.
+        """
+        pass
+
+    def test_book_validators(self):
+        assert len(self.book.slug_validators()) == 3
+
+    def test_book_validators_fail(self):
+        assert (
+            self.book.cache_key("slug", "account", "2001-01-01") ==
+            "account/2001-01/slug.xlsx"
+        )
 
 class TestZephyrFixtures(test.CementTestCase):
     app_class = TestZephyr

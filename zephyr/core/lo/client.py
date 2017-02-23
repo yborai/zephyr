@@ -18,6 +18,9 @@ class Logicops(Client):
     def __init__(self, config, log=None):
         super().__init__(config, log=log)
         self._LO_API_BASE = None
+        self.LO_PASSWORD = None
+        self.LO_USER = None
+        self.cookies = None
 
     @property
     def LO_API_BASE(self):

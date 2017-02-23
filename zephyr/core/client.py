@@ -25,11 +25,15 @@ class Client(object):
         ]
         self._ddh = None
         self._s3 = None
+        self.AWS_ACCESS_KEY_ID = None
+        self.AWS_SECRET_ACCESS_KEY = None
         self.ZEPHYR_CACHE_ROOT = cache_root
+        self.ZEPHYR_DATABASE = db
+        self.ZEPHYR_S3_BUCKET = None
         self.config = config
         self.database = sqlite3.connect(os.path.join(cache_root, db))
         self.log = log
-        self.ZEPHYR_DATABASE = db
+        self.session = None
 
     @property
     def ddh(self):
@@ -43,8 +47,12 @@ class Client(object):
     def s3(self):
         if self._s3:
             return self._s3
-        aws_config_keys = ("ZEPHYR_S3_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
-        bucket, key_id, secret = get_config_values("lw-aws", aws_config_keys, self.config)
+        aws_config_keys = (
+            "ZEPHYR_S3_BUCKET", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"
+        )
+        bucket, key_id, secret = get_config_values(
+            "lw-aws", aws_config_keys, self.config
+        )
         self.AWS_ACCESS_KEY_ID = key_id
         self.AWS_SECRET_ACCESS_KEY = secret
         self.ZEPHYR_S3_BUCKET = bucket
@@ -93,14 +101,14 @@ class Client(object):
         return response
 
     def clear_cache_s3(self, account, month):
-        #Lists objects in the desired directory
+        # Lists objects in the desired directory
         cache_s3 = os.path.join(account, month)
         objects = self.s3.meta.client.list_objects(
             Bucket=self.ZEPHYR_S3_BUCKET,
             Prefix="{}".format(cache_s3)
         )
 
-        #Delete files from folder in S3 if they exist
+        # Delete files from folder in S3 if they exist
         if "Contents" not in objects:
             return
         count = 0
@@ -117,7 +125,7 @@ class Client(object):
         )
 
     def clear_cache_local(self, account, month):
-        #Delete directory locally
+        # Delete directory locally
         cache_local = os.path.join(self.ZEPHYR_CACHE_ROOT, account, month)
         if not os.path.exists(os.path.expanduser(cache_local)):
             return

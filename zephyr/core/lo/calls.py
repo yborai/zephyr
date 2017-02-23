@@ -37,7 +37,10 @@ class ServiceRequests(lo.Logicops):
             header_raw.index(key)
             for key in list(self.header_hash.keys())
         ]
-        self.data = [[row[index] for index in self.column_indexes] for row in data_raw]
+        self.data = [
+            [row[index] for index in self.column_indexes]
+            for row in data_raw
+        ]
         return self.response
 
     def request(self, slug, date):
@@ -45,13 +48,13 @@ class ServiceRequests(lo.Logicops):
         date_obj = datetime.strptime(date, "%Y-%m-%d")
         start_date = first_of_previous_month(date_obj).strftime("%Y-%m-%d")
         params = {
-            "account_options[]" : lo_acct,
-            "start_date" : start_date,
-            "end_date" : date,
-            "sort_option" : "-created_date",
-            "status_option" : "_all_",
-            "list_srs" : "1",
-            "limit" : "200",
+            "account_options[]": lo_acct,
+            "start_date": start_date,
+            "end_date": date,
+            "sort_option": "-created_date",
+            "status_option": "_all_",
+            "list_srs": "1",
+            "limit": "200",
         }
         url = "".join([
             self.LO_API_BASE,
@@ -63,10 +66,16 @@ class ServiceRequests(lo.Logicops):
         r = requests.get(url, cookies=self.cookies, verify=False)
         return r.content.decode("utf-8")
 
+
 class LogicopsAccounts(lo.Logicops):
+    uri = "accounts"
+
     def request(self):
-        url_accts = "https://logicops.logicworks.net/api/v1/accounts/"
-        r = requests.get(url_accts, cookies=self.cookies, verify=False)
+        url = "".join([
+            self.LO_API_BASE,
+            self.uri
+        ])
+        r = requests.get(url, cookies=self.cookies, verify=False)
         accts = r.json()
         accounts = accts["accounts"]
         header = ["id", "name"]
@@ -74,6 +83,7 @@ class LogicopsAccounts(lo.Logicops):
         df = pd.DataFrame(data, columns=header)
         df.to_sql("lo_accounts", self.database, if_exists="replace")
         return r.content.decode("utf-8")
+
 
 __ALL__ = [
     LogicopsAccounts,

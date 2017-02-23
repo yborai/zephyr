@@ -1,8 +1,9 @@
 import os
 
-from ...tests import TestZephyrParams
+from ....cli.tests import TestZephyr
+from ...tests import TestZephyrParse, TestZephyrParams
 
-class TestZephyrDataParams(TestZephyrParams):
+class TestZephyrDataParse(TestZephyrParse):
 
     def setUp(self, *args, **kwargs):
         super().setUp(*args, **kwargs)
@@ -35,3 +36,14 @@ class TestZephyrDataParams(TestZephyrParams):
     def test_storage_detached(self):
         self.assert_equal_out("storage_detached")
 
+class TestZephyrDataParams(TestZephyrParams):
+
+    def setUp(self, *args, **kwargs):
+        super().setUp(*args, **kwargs)
+
+    def test_compute_details_params(self):
+        TestZephyr.assert_successful_run(self, [
+            "data",
+            "compute-details",
+            "--account=.meta",
+        ])

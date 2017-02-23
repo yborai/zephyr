@@ -5,6 +5,7 @@ from cement.utils import test
 from ..cli.tests import TestZephyr
 from .ddh import DDH
 
+from .dy.calls import Billing
 from .lo.calls import ServiceRequests
 from .cc.calls import (
     ComputeDetailsWarp,
@@ -19,12 +20,13 @@ from .cc.calls import (
     StorageDetachedWarp,
 )
 
-class TestZephyrParams(test.CementTestCase):
+class TestZephyrParse(test.CementTestCase):
     app_class = TestZephyr
     assets = "."
 
     def assert_equal_out(self, module):
         modules = dict(
+            billing=Billing,
             compute_details=ComputeDetailsWarp,
             compute_migration=ComputeMigrationWarp,
             compute_ri=ComputeRIWarp,
@@ -38,9 +40,9 @@ class TestZephyrParams(test.CementTestCase):
             storage_detached=StorageDetachedWarp,
         )
 
-        infile = os.path.join(self.assets, "{}_single.json".format(module))
-        outfile = os.path.join(self.assets, "{}_gold.csv".format(module))
-
+        module_name = module.replace("_", "-")
+        infile = os.path.join(self.assets, "{}.json".format(module_name))
+        outfile = os.path.join(self.assets, "{}.csv".format(module_name))
 
         with open(infile, "r") as f:
             response = f.read()
@@ -53,3 +55,16 @@ class TestZephyrParams(test.CementTestCase):
             gold_result = f.read()
         trans_gold = gold_result.replace("\n", "")
         self.eq(trans_csv, trans_gold)
+
+
+    
+
+
+
+
+
+
+
+
+
+

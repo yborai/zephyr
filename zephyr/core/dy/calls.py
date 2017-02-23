@@ -9,6 +9,10 @@ from ..utils import ZephyrEncoder
 class Billing(dy.Dynamics):
     slug="billing"
 
+    def __init__(self, config=None, log=None, **kwargs):
+        if(config):
+            super().__init__(config, log=log)
+
     def request(self, account, date):
         query_line_items = ("""
             SELECT a.INVODATE, a.DUEDATE, ITEMNMBR, ITEMDESC, UNITPRCE, QUANTITY, UNITPRCE*QUANTITY

@@ -9,4 +9,4 @@ class TestZephyrDataParse(TestZephyrParse):
         self.assets = os.path.join(os.path.dirname(__file__), "assets")
 
     def test_service_requests(self):
-        self.assert_equal_out("service_requests")
+        self.assert_equal_out("billing")

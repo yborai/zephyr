@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import shutil
 
 import pandas as pd
 
@@ -11,7 +12,11 @@ from ..core.cc.sheets import SheetEC2, SheetRDS
 from ..core.dy.sheets import SheetBilling
 from ..core.lo.sheets import SheetSRs
 from ..core.fixtures import fixtures
-from ..core.utils import get_config_values, ZephyrException
+from ..core.utils import (
+    first_of_previous_month,
+    get_config_values,
+    ZephyrException
+)
 
 
 def get_db_path():
@@ -52,7 +57,6 @@ class TestZephyr(Zephyr):
                 msg="Expected an appropriate error message."
             )
 
-
 class TestZephyrSheet(test.CementTestCase):
     app_class = TestZephyr
     sheet = None
@@ -80,6 +84,15 @@ class TestZephyrSheet(test.CementTestCase):
             ]
         )
 
+    @classmethod
+    def assert_successful_run(cls, obj, args):
+        with cls(argv=args) as app:
+            app.configure()
+            with obj.assertRaises(SystemExit) as cm:
+                app.run()
+                obj.eq(cm.exception.code, 0, msg="Expected to return SystemExit: 0")
+            data, output = app.last_rendered
+            import pdb;pdb.set_trace()
 
 class TestZephyrBook(test.CementTestCase):
     app_class = TestZephyr
@@ -145,6 +158,20 @@ class TestZephyrFixtures(test.CementTestCase):
             )
 
     @classmethod
+    def copy_assets(cls):
+        core_path = os.path.join(os.path.dirname(__file__), "..", "core")
+        cc_assets = os.path.join(core_path, "cc", "tests", "assets")
+        lo_assets = os.path.join(core_path, "lo", "tests", "assets")
+        all_assets = [cc_assets, lo_assets]
+        cache_root = os.path.dirname(get_db_path())
+        date = first_of_previous_month().strftime("%Y-%m")
+        asset_cache = os.path.join(cache_root, date)
+        os.makedirs(asset_cache, exist_ok=True)
+        for assets in all_assets:
+            for asset in os.listdir(assets):
+                shutil.copy2(os.path.join(assets, asset), asset_cache)
+
+    @classmethod
     def setUpClass(cls):
         with sqlite3.connect(get_db_path()) as con:
             try:
@@ -156,6 +183,7 @@ class TestZephyrFixtures(test.CementTestCase):
                 """
                 pass
             cls._load_fixtures(con.cursor())
+        cls.copy_assets()
 
     @classmethod
     def tearDownClass(cls):

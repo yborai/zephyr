@@ -57,6 +57,22 @@ class TestZephyr(Zephyr):
                 msg="Expected an appropriate error message."
             )
 
+    @classmethod
+    def assert_successful_run(cls, obj, args, module):
+        with cls(argv=args) as app:
+            app.configure()
+            app.run()
+            data, output = app.last_rendered
+        trans_out = output.replace("\r\n", "")
+
+        cache_root = os.path.dirname(get_db_path())
+        date = first_of_previous_month().strftime("%Y-%m")
+        gold_csv = os.path.join(cache_root, date, "{}.csv".format(module))
+        with open(gold_csv, "r") as f:
+            gold_result = f.read()
+        trans_gold = gold_result.replace("\n", "")
+        obj.eq(trans_out, trans_gold)
+
 class TestZephyrSheet(test.CementTestCase):
     app_class = TestZephyr
     sheet = None
@@ -83,22 +99,6 @@ class TestZephyrSheet(test.CementTestCase):
                 {'header_format': 'fmt', 'header': 'col2'}
             ]
         )
-
-    @classmethod
-    def assert_successful_run(cls, obj, args, module):
-        with cls(argv=args) as app:
-            app.configure()
-            app.run()
-            data, output = app.last_rendered
-        trans_out = output.replace("\r\n", "")
-
-        cache_root = os.path.dirname(get_db_path())
-        date = first_of_previous_month().strftime("%Y-%m")
-        gold_csv = os.path.join(cache_root, date, "{}.csv".format(module))
-        with open(gold_csv, "r") as f:
-            gold_result = f.read()
-        trans_gold = gold_result.replace("\n", "")
-        obj.eq(trans_out, trans_gold)
 
 class TestZephyrBook(test.CementTestCase):
     app_class = TestZephyr
@@ -197,6 +197,8 @@ class TestZephyrFixtures(test.CementTestCase):
         with sqlite3.connect(get_db_path()) as con:
             cls._delete_fixtures(con.cursor())
 
+class TestZephyrFixturesCalls(TestZephyrFixtures):
+
     def test_account_unrecognized(self):
         TestZephyr.assert_zephyr_expected_failure(self, [
             "report",
@@ -217,7 +219,6 @@ class TestZephyrFixtures(test.CementTestCase):
             "billing",
             "--account=.no_dynamics",
         ])
-
 
 class TestZephyrBase(test.CementTestCase):
     app_class = TestZephyr

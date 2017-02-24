@@ -38,11 +38,78 @@ class TestZephyrDataParse(TestZephyrParse):
 
 class TestZephyrDataParams(TestZephyrFixtures):
 
-    def setUp(self, *args, **kwargs):
-        super().setUp(*args, **kwargs)
-
     def test_compute_details_params(self):
         module = "compute-details"
+        TestZephyr.assert_successful_run(self, [
+            "data",
+            module,
+            "--account=.meta",
+            "-o",
+            "csv",
+        ], module)
+
+    def test_compute_migration_params(self):
+        module = "compute-migration"
+        TestZephyr.assert_successful_run(self, [
+            "data",
+            module,
+            "--account=.meta",
+            "-o",
+            "csv",
+        ], module)
+
+    def test_compute_ri_params(self):
+        module = "compute-ri"
+        TestZephyr.assert_successful_run(self, [
+            "data",
+            module,
+            "--account=.meta",
+            "-o",
+            "csv",
+        ], module)
+
+    def test_db_details_params(self):
+        module = "db-details"
+        TestZephyr.assert_successful_run(self, [
+            "data",
+            module,
+            "--account=.meta",
+            "-o",
+            "csv",
+        ], module)
+
+    def test_db_idle_params(self):
+        module = "db-idle"
+        TestZephyr.assert_successful_run(self, [
+            "data",
+            module,
+            "--account=.meta",
+            "-o",
+            "csv",
+        ], module)
+
+    def test_iam_users_params(self):
+        module = "iam-users"
+        TestZephyr.assert_successful_run(self, [
+            "data",
+            module,
+            "--account=.meta",
+            "-o",
+            "csv",
+        ], module)
+
+    def test_lb_idle_params(self):
+        module = "lb-idle"
+        TestZephyr.assert_successful_run(self, [
+            "data",
+            module,
+            "--account=.meta",
+            "-o",
+            "csv",
+        ], module)
+
+    def test_storage_detached_params(self):
+        module = "storage-detached"
         TestZephyr.assert_successful_run(self, [
             "data",
             module,

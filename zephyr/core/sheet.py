@@ -2,45 +2,44 @@ import datetime
 import pandas as pd
 import sqlite3
 
-from decimal import Decimal
-
 from ..core.client import Client
 from .ddh import DDH
 
 FORMATTING = {
-    "cell_options" : {
-        "height" : 20,
-        "width" : 64,
+    "cell_options": {
+        "height": 20,
+        "width": 64,
     },
-    "chart_options" : {
-        "height" : 288,
-        "width" : 480,
+    "chart_options": {
+        "height": 288,
+        "width": 480,
     },
     "data_labels": {
         "category": True,
         "percentage": True,
         "position": "outside_end",
     },
-    "header_format" : {
-        "font_color" : "#000000",
-        "bg_color" : "#DCE6F1",
-        "bottom" : 2,
+    "header_format": {
+        "font_color": "#000000",
+        "bg_color": "#DCE6F1",
+        "bottom": 2,
     },
-    "label_format" : {
+    "label_format": {
         "bold": True,
         "font_size": 16,
         "font_color": "#000000",
     },
-    "legend_options" : {
-        "none" : True,
+    "legend_options": {
+        "none": True,
     },
-    "table_style" : {
-        "style" : "Table Style Light 1",
+    "table_style": {
+        "style": "Table Style Light 1",
     },
-    "book_options" : {
+    "book_options": {
         "strings_to_numbers": True,
     },
 }
+
 
 class Sheet(Client):
     formatting = FORMATTING
@@ -51,10 +50,8 @@ class Sheet(Client):
         self, config, account=None, date=None, expire_cache=None, log=None
     ):
         super().__init__(config, log=log)
-        con = sqlite3.connect(":memory:")
-
         self.account = account
-        self.con = con
+        self.con = sqlite3.connect(":memory:")
         self.date = date
         self.expire_cache = expire_cache
         self.get_formatting()
@@ -78,30 +75,6 @@ class Sheet(Client):
         header_format = self.book.add_format(self.formatting["header_format"])
         cell_format = self.book.add_format(self.formatting["label_format"])
         return table, header_format, cell_format
-
-    def call(self, cls):
-        client = cls(config=self.config)
-        response = client.cache_policy(
-            self.account, self.date, self.expire_cache
-        )
-        client.parse(response)
-        ddh = client.to_ddh()
-        data = [[str(cell) for cell in row] for row in ddh.data]
-        df = pd.DataFrame(data, columns=ddh.header)
-        df.to_sql(client.slug, self.con, if_exists='replace')
-        return client
-
-    def clean_data(self):
-        new_data = []
-        for row in self.ddh.data:
-            new_row = []
-            for cell in row:
-                if isinstance(cell, Decimal):
-                    new_row.append(float(cell))
-                    continue
-                new_row.append(cell)
-            new_data.append(new_row)
-        return new_data
 
     def count_by(self, column):
         """Count rows in data grouping by values in the column specified"""
@@ -127,7 +100,7 @@ class Sheet(Client):
     ):
         """Insert a pie chart with data specified."""
         table_left = int(self.chart_width) + self.cell_spacing
-        table_top = top + 1 # Account for label.
+        table_top = top + 1  # Account for label.
 
         # Aggregate the data, grouping by the given column_name.
         header, data = self.count_by(column_name)
@@ -145,7 +118,7 @@ class Sheet(Client):
 
         # Compute series location.
         table_loc = (
-            table_top + 1, # Start of data series, accounting for header
+            table_top + 1,  # Start of data series, accounting for header
             table_top + len(data),
             table_left,
             table_left + 1,
@@ -162,7 +135,10 @@ class Sheet(Client):
 
     def header_format_xlsx(self, headers, header_format, total_row):
         """Create the header format dict for Xlsxwriter."""
-        header = [{"header": col, "header_format": header_format} for col in headers]
+        header = [
+            {"header": col, "header_format": header_format}
+            for col in headers
+        ]
         [header[i].update(total_row[i]) for i in range(len(total_row))]
         return header
 
@@ -183,7 +159,7 @@ class Sheet(Client):
 
     def put_chart(
             self, title, top, left, data_loc, chart_type, formatting=None
-        ):
+    ):
         """Add a chart to an xlsx workbook located at data_loc."""
         if not formatting:
             formatting = self.formatting
@@ -214,9 +190,7 @@ class Sheet(Client):
         self.sheet.write(top, left, title, cell_format)
         return self.sheet
 
-    def put_table(
-        self, ddh=None, top=0, left=0, name=None
-    ):
+    def put_table(self, ddh=None, top=0, left=0, name=None):
         """Creates an Excel table in a workbook."""
         # Checks data
         if not ddh:
@@ -246,7 +220,9 @@ class Sheet(Client):
         n_cols = len(ddh.data[0])
 
         # Tell Excel this array is a table. Note: Xlsxwriter is 0 indexed.
-        self.sheet.add_table(top, left, top + n_rows, left + n_cols - 1, table_format)
+        self.sheet.add_table(
+            top, left, top + n_rows, left + n_cols - 1, table_format
+        )
         return self.sheet
 
     def rows_to_excel(self, rows, top=1, left=0):
@@ -267,12 +243,12 @@ class Sheet(Client):
             return self._ddh
         if(len(self.calls) != 1):
             raise NotImplementedError
-        cls = self.calls[0]
         client = self.clients[0]
         if(not client.ddh or not client.ddh.data):
             return False
         self._ddh = client.ddh
         return self._ddh
+
 
 class CoverPage(Client):
     name = "coverpage"

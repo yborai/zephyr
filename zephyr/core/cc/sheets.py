@@ -1,12 +1,12 @@
 import pandas as pd
 import sqlite3
 
+from decimal import Decimal
 from operator import itemgetter
 from datetime import datetime
 
 from ..ddh import DDH
 from ..sheet import Sheet
-from ..utils import ZephyrException
 from .calls import (
     ComputeDetailsWarp,
     ComputeMigrationWarp,
@@ -15,11 +15,11 @@ from .calls import (
     DBDetailsWarp,
 )
 
+
 class SheetEC2(Sheet):
     name = "EC2s"
     title = "EC2 Details"
     calls = (ComputeDetailsWarp,)
-    cls = ComputeDetailsWarp
 
     def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the EC2 sheet."""
@@ -92,7 +92,7 @@ class SheetEC2(Sheet):
         self, column_name, top, left, name
     ):
         """Insert a column chart with data specified."""
-        table_top = top + 1 # Account for label.
+        table_top = top + 1  # Account for label.
 
         # Get first 4 data rows
         header, data_ = self.count_by(column_name)
@@ -135,7 +135,7 @@ class SheetEC2(Sheet):
 
     def days_since_launch_pie_chart(self, top, left, name):
         """Insert a column chart with data specified."""
-        table_top = top + 1 # Account for label.
+        table_top = top + 1  # Account for label.
 
         launch_times, days_90, days_180, days_270 = self.get_launch_times()
 
@@ -170,7 +170,7 @@ class SheetEC2(Sheet):
         status_index = self.ddh.header.index("Status")
         lt_index = self.ddh.header.index("LaunchTime")
         for row in self.ddh.data:
-            if row[status_index] != "running": # Only include running instances
+            if row[status_index] != "running":  # Only include running instances
                 continue
             launch_times.append(row[lt_index])
 
@@ -190,11 +190,11 @@ class SheetEC2(Sheet):
 
         return launch_times, days_90, days_180, days_270
 
+
 class SheetMigration(Sheet):
     name = "Migration"
     title = "EC2 Migration Recommendations"
     calls = (ComputeMigrationWarp,)
-    cls = ComputeMigrationWarp
 
     def to_xlsx(self, book, **kwargs):
         """Format the Migration sheet."""
@@ -212,11 +212,11 @@ class SheetMigration(Sheet):
 
         return self.sheet
 
+
 class SheetRDS(Sheet):
     name = "RDS"
     title = "RDS Details"
     calls = (DBDetailsWarp,)
-    cls = DBDetailsWarp
 
     def to_xlsx(self, book, **kwargs):
         """Format the RDS sheet."""
@@ -247,7 +247,7 @@ class SheetRDS(Sheet):
         return self.sheet
 
     def sum_and_count_by(self, column_name, cost_column):
-        """Count and sum rows in data grouping by values in the column specified"""
+        """Count and sum rows in data grouping by values in the given column."""
         con = sqlite3.connect(":memory:")
         df = pd.DataFrame(self.ddh.data, columns=self.ddh.header)
         df.to_sql("df", con, if_exists="replace")
@@ -271,7 +271,7 @@ class SheetRDS(Sheet):
         self, column_name, cost_column, top, left, name
     ):
         """Insert a column chart with data specified."""
-        table_top = top + 1 # Account for label.
+        table_top = top + 1  # Account for label.
 
         header, data = self.sum_and_count_by(column_name, cost_column)
 
@@ -288,7 +288,7 @@ class SheetRDS(Sheet):
             table_top + 1,
             table_top + len(data),
             self.table_left,
-            self.table_left + 2, # Sum is the third column and is the data we are graphing.
+            self.table_left + 2,  # The sum to be graphed is the third column.
         )
         # Create chart formatting
         dlf = dict()
@@ -302,35 +302,23 @@ class SheetRDS(Sheet):
         self.put_chart(column_name, top, left, table_loc, "column", ccf)
         return self.book
 
+
 class SheetRIs(Sheet):
     name = "RIs"
     title = "EC2 RI Recommendations"
     calls = (ComputeRIWarp,)
-    cls = ComputeRIWarp
 
-    def to_xlsx(self, book, **kwargs):
-        """Format the Reserved Instance sheet."""
-        # Load the data.
-        if not self.ddh:
-            return
-
-        self.book = book
-
-        # Insert raw data.
-        self.sheet = self.book.add_worksheet(self.title)
-        self.put_label(self.title)
-
-        self.put_table(top=1, name=self.name)
-
-        # Where charts and other tables go
-        n_rows = len(self.ddh.data)
-        table_height = n_rows + 1
-        chart_start_row = 1 + table_height + self.cell_spacing
-
-        self.sum_by_column_chart(
-            "Annual Savings", chart_start_row, 0, "ri_savings"
-        )
-        return self.sheet
+    def clean_data(self):
+        new_data = []
+        for row in self.ddh.data:
+            new_row = []
+            for cell in row:
+                if isinstance(cell, Decimal):
+                    new_row.append(float(cell))
+                    continue
+                new_row.append(cell)
+            new_data.append(new_row)
+        return new_data
 
     def put_two_series_chart(
         self, title, top, left, data_loc, chart_type, formatting
@@ -396,7 +384,7 @@ class SheetRIs(Sheet):
         self, column_name, top, left, name
     ):
         """Insert a column chart with data specified."""
-        table_top = top + 1 # Account for label.
+        table_top = top + 1  # Account for label.
 
         # Get first 4 data rows
         header, data_ = self.sum_by()
@@ -423,7 +411,7 @@ class SheetRIs(Sheet):
             table_top + 1,
             table_top + len(data),
             self.table_left,
-            self.table_left + 2, # Sum is the third column and is the data we are graphing.
+            self.table_left + 2,  # The sum to be graphed is the third column.
         )
         # Create chart formatting
         dlf = dict()
@@ -433,8 +421,35 @@ class SheetRIs(Sheet):
             legend_options=self.formatting["legend_options"],
             data_labels=dlf
         )
-        self.put_two_series_chart(column_name, top, left, table_loc, "column", ccf)
+        self.put_two_series_chart(
+            column_name, top, left, table_loc, "column", ccf
+        )
         return self.book
+
+    def to_xlsx(self, book, **kwargs):
+        """Format the Reserved Instance sheet."""
+        # Load the data.
+        if not self.ddh:
+            return
+
+        self.book = book
+
+        # Insert raw data.
+        self.sheet = self.book.add_worksheet(self.title)
+        self.put_label(self.title)
+
+        self.put_table(top=1, name=self.name)
+
+        # Where charts and other tables go
+        n_rows = len(self.ddh.data)
+        table_height = n_rows + 1
+        chart_start_row = 1 + table_height + self.cell_spacing
+
+        self.sum_by_column_chart(
+            "Annual Savings", chart_start_row, 0, "ri_savings"
+        )
+        return self.sheet
+
 
 class SheetUnderutilized(Sheet):
     name = "Underutil"
@@ -473,7 +488,7 @@ class SheetUnderutilized(Sheet):
 
         # Compute series location.
         table_loc = (
-            table_top + 1, # Start of data series, accounting for header
+            table_top + 1,  # Start of data series, accounting for header
             table_top + len(data),
             table_left,
             table_left + 1,
@@ -497,7 +512,7 @@ class SheetUnderutilized(Sheet):
         CD, UU = self.calls
         con = self.con
 
-        # cu for compute-details and underutilized joined 
+        # cu for compute-details and underutilized joined
         cu_df = pd.read_sql("""
             SELECT
                 cd."InstanceId",
@@ -552,7 +567,7 @@ class SheetUnderutilized(Sheet):
 
         self.put_table(ddh=ddh, top=1)
 
-        top = len(out) + 2 # Account for label and table columns
+        top = len(out) + 2  # Account for label and table columns
         self.predicted_cost_by_environment(top=top, left=0)
 
         return self.sheet

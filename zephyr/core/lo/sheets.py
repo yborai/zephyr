@@ -1,11 +1,11 @@
 from ..sheet import Sheet
 from .calls import ServiceRequests
 
+
 class SheetSRs(Sheet):
     name = "SRs"
     title = "Service Requests"
     calls = (ServiceRequests,)
-    cls = ServiceRequests
 
     def to_xlsx(self, book, **kwargs):
         """Format the SR sheet."""
@@ -24,7 +24,8 @@ class SheetSRs(Sheet):
         # Where do charts and other tables go?
         n_rows = len(self.ddh.data)
         table_height = n_rows + 1
-        chart_start_row = 1 + table_height + self.cell_spacing # Label, table, spacing
+        # Label, table, spacing
+        chart_start_row = 1 + table_height + self.cell_spacing
         chart_ceil = self.chart_height + 1
 
         # Insert SRs by Area pie chart.

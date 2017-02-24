@@ -5,10 +5,10 @@ from ..ddh import DDH
 from ..sheet import Sheet
 from .calls import Billing
 
+
 class SheetBilling(Sheet):
     name = "Billing"
     title = "Billing Line Items"
-    cls = Billing
     calls = (Billing,)
 
     def group_by_lineitem(self):
@@ -90,7 +90,8 @@ class SheetBilling(Sheet):
         aggs_n_rows = len(aggs_ddh.data)
         aggs_table_height = aggs_n_rows + self.cell_spacing
         monthly_ddh = self.group_by_month()
-        monthly_top = 1 + aggs_table_height + self.cell_spacing # Account for label
+        # Account for label
+        monthly_top = 1 + aggs_table_height + self.cell_spacing
 
         self.put_label(monthly_title, top=monthly_top, left=table_width)
 

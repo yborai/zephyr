@@ -10,9 +10,9 @@ from ..core.book import Book
 from ..core.cc.sheets import SheetEC2, SheetRDS
 from ..core.dy.sheets import SheetBilling
 from ..core.lo.sheets import SheetSRs
-from ..core.configure import CRED_ITEMS, DEFAULTS
 from ..core.fixtures import fixtures
 from ..core.utils import get_config_values, ZephyrException
+
 
 def get_db_path():
     with Zephyr() as app:
@@ -24,6 +24,7 @@ def get_db_path():
         for path in get_config_values("zephyr", zephyr_config_keys, config)
     ]
     return os.path.join(cache_root, db)
+
 
 class TestZephyr(Zephyr):
     class Meta:
@@ -43,12 +44,42 @@ class TestZephyr(Zephyr):
             app.configure()
             with obj.assertRaises(ZephyrException) as exc:
                 app.run()
-            obj.eq(True
-                and len(exc.exception.args)>0
+            obj.eq(
+                True
+                and len(exc.exception.args) > 0
                 and bool(exc.exception.args[0]),
                 True,
                 msg="Expected an appropriate error message."
             )
+
+
+class TestZephyrSheet(test.CementTestCase):
+    app_class = TestZephyr
+    sheet = None
+
+    def setUp(self):
+        with self.app_class() as app:
+            app.configure()
+            config = app.config
+            log = app.log
+        self.sheet = SheetEC2(config, ".meta", "2001-01-01", None, log=log)
+
+    def tearDown(self):
+        # See comment in TestZephyrBook
+        pass
+
+    def test_sheet_clients(self):
+        assert len(self.sheet.clients) == len(self.sheet.calls)
+
+    def test_sheet_header_format(self):
+        assert (
+            self.sheet.header_format_xlsx(["col1", "col2"], "fmt", []) ==
+            [
+                {'header_format': 'fmt', 'header': 'col1'},
+                {'header_format': 'fmt', 'header': 'col2'}
+            ]
+        )
+
 
 class TestZephyrBook(test.CementTestCase):
     app_class = TestZephyr
@@ -87,6 +118,7 @@ class TestZephyrBook(test.CementTestCase):
             self.book.cache_key("slug", "account", "2001-01-01") ==
             "account/2001-01/slug.xlsx"
         )
+
 
 class TestZephyrFixtures(test.CementTestCase):
     app_class = TestZephyr
@@ -151,6 +183,7 @@ class TestZephyrFixtures(test.CementTestCase):
             "--account=.no_dynamics",
         ])
 
+
 class TestZephyrBase(test.CementTestCase):
     app_class = TestZephyr
 
@@ -158,6 +191,7 @@ class TestZephyrBase(test.CementTestCase):
         with self.app as app:
             app.configure()
             app.run()
+
 
 class TestZephyrData(test.CementTestCase):
     app_class = TestZephyr
@@ -286,6 +320,7 @@ class TestZephyrData(test.CementTestCase):
             "--help",
         ])
 
+
 class TestZephyrETL(test.CementTestCase):
     app_class = TestZephyr
 
@@ -300,6 +335,7 @@ class TestZephyrETL(test.CementTestCase):
             "dbr-ri",
             "--help",
         ])
+
 
 class TestZephyrReport(test.CementTestCase):
     app_class = TestZephyr

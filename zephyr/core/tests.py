@@ -55,16 +55,3 @@ class TestZephyrParse(test.CementTestCase):
             gold_result = f.read()
         trans_gold = gold_result.replace("\n", "")
         self.eq(trans_csv, trans_gold)
-
-
-    
-
-
-
-
-
-
-
-
-
-

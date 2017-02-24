@@ -85,14 +85,20 @@ class TestZephyrSheet(test.CementTestCase):
         )
 
     @classmethod
-    def assert_successful_run(cls, obj, args):
+    def assert_successful_run(cls, obj, args, module):
         with cls(argv=args) as app:
             app.configure()
-            with obj.assertRaises(SystemExit) as cm:
-                app.run()
-                obj.eq(cm.exception.code, 0, msg="Expected to return SystemExit: 0")
+            app.run()
             data, output = app.last_rendered
-            import pdb;pdb.set_trace()
+        trans_out = output.replace("\r\n", "")
+
+        cache_root = os.path.dirname(get_db_path())
+        date = first_of_previous_month().strftime("%Y-%m")
+        gold_csv = os.path.join(cache_root, date, "{}.csv".format(module))
+        with open(gold_csv, "r") as f:
+            gold_result = f.read()
+        trans_gold = gold_result.replace("\n", "")
+        obj.eq(trans_out, trans_gold)
 
 class TestZephyrBook(test.CementTestCase):
     app_class = TestZephyr
@@ -161,8 +167,9 @@ class TestZephyrFixtures(test.CementTestCase):
     def copy_assets(cls):
         core_path = os.path.join(os.path.dirname(__file__), "..", "core")
         cc_assets = os.path.join(core_path, "cc", "tests", "assets")
+        dy_assets = os.path.join(core_path, "dy", "tests", "assets")
         lo_assets = os.path.join(core_path, "lo", "tests", "assets")
-        all_assets = [cc_assets, lo_assets]
+        all_assets = [cc_assets, dy_assets, lo_assets]
         cache_root = os.path.dirname(get_db_path())
         date = first_of_previous_month().strftime("%Y-%m")
         asset_cache = os.path.join(cache_root, date)

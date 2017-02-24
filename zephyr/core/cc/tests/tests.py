@@ -1,7 +1,7 @@
 import os
 
-from ....cli.tests import TestZephyr
-from ...tests import TestZephyrParse, TestZephyrParams
+from ....cli.tests import TestZephyr, TestZephyrFixtures
+from ...tests import TestZephyrParse
 
 class TestZephyrDataParse(TestZephyrParse):
 
@@ -36,14 +36,17 @@ class TestZephyrDataParse(TestZephyrParse):
     def test_storage_detached(self):
         self.assert_equal_out("storage_detached")
 
-class TestZephyrDataParams(TestZephyrParams):
+class TestZephyrDataParams(TestZephyrFixtures):
 
     def setUp(self, *args, **kwargs):
         super().setUp(*args, **kwargs)
 
     def test_compute_details_params(self):
+        module = "compute-details"
         TestZephyr.assert_successful_run(self, [
             "data",
-            "compute-details",
+            module,
             "--account=.meta",
-        ])
+            "-o",
+            "csv",
+        ], module)

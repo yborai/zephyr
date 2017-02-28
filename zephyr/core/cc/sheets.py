@@ -476,11 +476,12 @@ class SheetUnderutilized(Sheet):
 
         # Account for hidden column
         table_left = left + self.chart_width + self.cell_spacing + 1
-        table_top = top + self.cell_spacing
+        table_top = top + self.cell_spacing + 1
 
         data = [list(row) for row in df.values]
         ddh = DDH(data=data, header=list(df.columns))
 
+        self.put_label("Predicted Monthly Cost", table_top-1, table_left)
         # Write the data table to the sheet.
         self.sheet = self.put_table(
             ddh=ddh, top=table_top, left=table_left, name="PredPrice_by_Env"

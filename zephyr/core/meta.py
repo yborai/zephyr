@@ -1,19 +1,15 @@
 import os
 import sqlite3
 
-from . import aws, sf
+from . import aws
 from .cc import calls as cc
 from .lo import calls as lo
+from .sf import calls as sf
 from .client import Client
 from .ddh import DDH
 from .utils import get_config_values
 
 class LWProjects(Client):
-    def __init__(self, config, log=None):
-        super().__init__(config, log=log)
-        sf_config_keys = ("SF_USER", "SF_PASSWORD", "SF_TOKEN")
-        sf_config = get_config_values("lw-sf", sf_config_keys, config)
-        self.sf_config = sf_config
 
     def cache_policy(self, expired=False):
         """
@@ -48,7 +44,9 @@ class LWProjects(Client):
         then get metadata from Logicops and Salesforce.
         """
         self.log.info("Loading account metadata from Salesforce.")
-        sf.cache(db, config=self.sf_config)
+        sf.SalesForceAccounts(config=self.config, log=self.log).request()
+        sf.SalesForceAWSAccounts(config=self.config, log=self.log).request()
+        sf.SalesForceProjects(config=self.config, log=self.log).request()
         self.log.info("Loading account metadata from Cloudcheckr.")
         cc.CloudCheckrAccounts(self.config, log=self.log).request()
         self.log.info("Loading account metadata from Logicops.")

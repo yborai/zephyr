@@ -3,6 +3,7 @@ import pandas as pd
 import sqlite3
 
 from ..core.client import Client
+from ..core.sf import client as sf
 from .ddh import DDH
 
 FORMATTING = {
@@ -263,27 +264,13 @@ class CoverPage(Client):
         date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
         self.date = date_obj.strftime("%B %d, %Y")
 
-    def get_account_by_slug(self, slug):
-        matches = pd.read_sql("""
-            SELECT a.name AS client
-            FROM
-                sf_accounts AS a LEFT OUTER JOIN
-                sf_projects AS p ON (a.Id=p.Account__c) LEFT OUTER JOIN
-                sf_aws AS aws ON (p.Id=aws.Assoc_Project__c)
-            WHERE aws.name = '{slug}'
-            """.format(slug=slug),
-            self.database
-        )
-        if not len(matches):
-            self.log.error("There are no projects associated with this slug.")
-            return slug
-        return matches["client"][0]
-
     def to_xlsx(self, book):
         self.book = book
         self.sheet = self.book.add_worksheet(self.title)
         cell_format = self.book.add_format(Sheet.formatting["label_format"])
-        acct = self.get_account_by_slug(self.account)
+        acct = sf.SalesForce(
+            config=self.config, log=self.log
+        ).get_account_by_slug(self.account)
         self.sheet.write(0, 0, "Account Review", cell_format)
         self.sheet.write(1, 0, acct, cell_format)
         self.sheet.write(2, 0, self.date, cell_format)

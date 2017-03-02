@@ -13,7 +13,17 @@ from .calls import (
     ComputeRIWarp,
     ComputeUnderutilizedWarp,
     DBDetailsWarp,
+    DBIdleWarp,
+    LBIdleWarp,
+    IAMUsersData,
+    StorageDetachedWarp,
 )
+
+
+class SheetDBIdle(Sheet):
+    name = "DB Idle"
+    title = "Idle DB Instances"
+    calls = (DBIdleWarp,)
 
 
 class SheetEC2(Sheet):
@@ -191,26 +201,22 @@ class SheetEC2(Sheet):
         return launch_times, days_90, days_180, days_270
 
 
+class SheetIAMUsers(Sheet):
+    name = "IAMUsers"
+    title = "IAM Users"
+    calls = (IAMUsersData,)
+
+
+class SheetLBIdle(Sheet):
+    name = "LB Idle"
+    title = "Idle LBs"
+    calls = (LBIdleWarp,)
+
+
 class SheetMigration(Sheet):
     name = "Migration"
     title = "EC2 Migration Recommendations"
     calls = (ComputeMigrationWarp,)
-
-    def to_xlsx(self, book, **kwargs):
-        """Format the Migration sheet."""
-        # Load the data.
-        if not self.ddh:
-            return
-
-        self.book = book
-
-        # Insert raw data.
-        self.sheet = self.book.add_worksheet(self.title)
-        self.put_label(self.title)
-
-        self.put_table(top=1, name=self.name)
-
-        return self.sheet
 
 
 class SheetRDS(Sheet):
@@ -572,3 +578,10 @@ class SheetUnderutilized(Sheet):
         self.predicted_cost_by_environment(top=top, left=0)
 
         return self.sheet
+
+class SheetStorageDetached(Sheet):
+    name = "DetachedStorage"
+    title = "Detached Storage"
+    calls = (StorageDetachedWarp,)
+
+

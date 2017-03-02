@@ -5,9 +5,38 @@ import sqlite3
 import boto3
 import pandas as pd
 
+from warnings import warn
+
 from botocore.exceptions import ClientError
+from timeout_decorator import timeout, TimeoutError as TimeoutDecoratorError
 
 from .ddh import DDH
+
+
+TIMEOUT = 30
+
+class SilenceExplicitly(object):
+    """ Adapted from http://stackoverflow.com/a/5507784 """
+    def __init__(self, errors, retval=None, handler=None):
+        self.errors = errors
+        self.retval = retval
+        self.handler = handler
+     
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if type(e) not in self.errors:
+                    raise e
+                if self.handler is not None:
+                    self.handler(e, *args, **kwargs)
+                return self.retval
+        return wrapper
+
+
+def aws_timeout_warning(exception, *args, **kwargs):
+    warn("The call to AWS timed out.")
 
 def get_accounts_aws(key_id, secret):
     sdb = boto3.client(
@@ -35,13 +64,15 @@ def get_accounts_aws(key_id, secret):
     data = [row(item) for item in items]
     return DDH(header=header, data=data)
 
-def get_object_from_s3(bucket, key, s3_client):
+@SilenceExplicitly((TimeoutDecoratorError,), handler=aws_timeout_warning)
+@timeout(TIMEOUT, use_signals=False)
+def get_s3(s3, bucket, key):
     temp = io.BytesIO()
     try:
-        s3_client.meta.client.download_fileobj(
+        s3.meta.client.download_fileobj(
             bucket,
             key,
-            temp
+            temp,
         )
     except ClientError as e:
         pass
@@ -53,14 +84,14 @@ def get_session(key_id, secret):
         aws_secret_access_key=secret,
     )
 
+@SilenceExplicitly((TimeoutDecoratorError,), handler=aws_timeout_warning)
+@timeout(TIMEOUT, use_signals=False)
+def put_s3(s3, filename, bucket, key):
+    s3.meta.client.upload_file(filename, bucket, key)
+
 def sdb_flatten(item):
     cells = item['Attributes']
     out = dict()
     for cell in cells:
         out[cell['Name']] = cell['Value']
     return out
-
-def upload_file(file_path, bucket, key, session):
-    s3 = session.resource('s3')
-    s3.meta.client.upload_file(file_path, bucket, key)
-

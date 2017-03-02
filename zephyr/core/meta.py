@@ -32,7 +32,7 @@ class LWProjects(Client):
         """
         if(not db_exists and not expired):
             self.log.info("Checking S3 for cached copy of database.")
-            cache_s3 = aws.get_object_from_s3(self.ZEPHYR_S3_BUCKET, zdb, s3)
+            cache_s3 = aws.get_s3(s3, self.ZEPHYR_S3_BUCKET, zdb)
             if(cache_s3):
                 self.log.info("Downloaded cached database from S3.")
                 with open(db, "wb") as cache_fd:
@@ -52,7 +52,7 @@ class LWProjects(Client):
         self.log.info("Loading account metadata from Logicops.")
         lo.LogicopsAccounts(self.config).request()
         self.log.info("Caching account metadata in S3.")
-        s3.meta.client.upload_file(db, self.ZEPHYR_S3_BUCKET, zdb)
+        aws.put_s3(s3, db, self.ZEPHYR_S3_BUCKET, zdb)
         return self.database
 
     def get_all_projects(self):

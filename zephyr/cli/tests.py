@@ -61,6 +61,7 @@ class TestZephyr(Zephyr):
     def assert_successful_run(cls, obj, args, module):
         with cls(argv=args) as app:
             app.configure()
+            app.log.set_level("ERROR")
             app.run()
             data, output = app.last_rendered
         trans_out = output.replace("\r\n", "")
@@ -165,18 +166,13 @@ class TestZephyrFixtures(test.CementTestCase):
 
     @classmethod
     def copy_assets(cls):
-        core_path = os.path.join(os.path.dirname(__file__), "..", "core")
-        cc_assets = os.path.join(core_path, "cc", "tests", "assets")
-        dy_assets = os.path.join(core_path, "dy", "tests", "assets")
-        lo_assets = os.path.join(core_path, "lo", "tests", "assets")
-        all_assets = [cc_assets, dy_assets, lo_assets]
+        assets = os.path.join(os.path.dirname(__file__), "../core/assets/")
         cache_root = os.path.dirname(get_db_path())
         date = first_of_previous_month().strftime("%Y-%m")
         asset_cache = os.path.join(cache_root, date)
         os.makedirs(asset_cache, exist_ok=True)
-        for assets in all_assets:
-            for asset in os.listdir(assets):
-                shutil.copy2(os.path.join(assets, asset), asset_cache)
+        for asset in os.listdir(assets):
+            shutil.copy2(os.path.join(assets, asset), asset_cache)
 
     @classmethod
     def setUpClass(cls):
@@ -194,10 +190,50 @@ class TestZephyrFixtures(test.CementTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        return
         with sqlite3.connect(get_db_path()) as con:
             cls._delete_fixtures(con.cursor())
 
-class TestZephyrFixturesCalls(TestZephyrFixtures):
+class TestZephyrCSVOutput(TestZephyrFixtures):
+
+    def _test(self, call):
+        TestZephyr.assert_successful_run(
+            self,
+            ["report", call, "--account=.meta", "-o", "csv"],
+            call 
+        )
+
+    def test_compute_details_params(self):
+        self._test("billing")
+
+    def test_compute_details_params(self):
+        self._test("compute-details")
+
+    def test_compute_migration_params(self):
+        self._test("compute-migration")
+
+    def test_compute_ri_params(self):
+        self._test("compute-ri")
+
+    def test_db_details_params(self):
+        self._test("db-details")
+
+    def test_db_idle_params(self):
+        self._test("db-idle")
+
+    def test_iam_users_params(self):
+        self._test("iam-users")
+
+    def test_lb_idle_params(self):
+        self._test("lb-idle")
+
+    def test_service_requests_params(self):
+        self._test("service-requests")
+
+    def test_storage_detached_params(self):
+        self._test("storage-detached")
+
+class TestZephyrErrors(TestZephyrFixtures):
 
     def test_account_unrecognized(self):
         TestZephyr.assert_zephyr_expected_failure(self, [
@@ -224,152 +260,34 @@ class TestZephyrBase(test.CementTestCase):
     app_class = TestZephyr
 
     def test_zephyr(self):
-        with self.app as app:
-            app.configure()
-            app.run()
+        TestZephyr.assert_zephyr_success(self, [])
 
 
 class TestZephyrData(test.CementTestCase):
     app_class = TestZephyr
 
     def test_zephyr_data(self):
-        with TestZephyr(argv=["data"]) as app:
-            app.configure()
-            app.run()
-
-    def test_billing_monthly(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "billing-monthly",
-            "--help",
-        ])
-
-    def test_billing_line_items(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "billing-line-items",
-            "--help",
-        ])
-
-    def test_billing_line_item_aggregates(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "billing-line-item-aggregates",
-            "--help",
-        ])
+        TestZephyr.assert_zephyr_success(self, ["data"])
 
     def test_compute_av(self):
         TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "compute-av",
-            "--help",
-        ])
-
-    def test_compute_details(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "compute-details",
-            "--help",
-        ])
-
-    def test_compute_migration(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "compute-migration",
-            "--help",
-        ])
-
-    def test_compute_ri(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "compute-ri",
-            "--help",
-        ])
-
-    def test_compute_underutilized(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "compute-underutilized",
-            "--help",
-        ])
-
-    def test_compute_underutilized_breakdown(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "compute_underutilized_breakdown",
-            "--help",
-        ])
-
-    def test_db_details(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "db-details",
-            "--help",
-        ])
-
-    def test_db_idle(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "db-idle",
-            "--help",
+            "data", "compute-av", "--help",
         ])
 
     def test_domains(self):
         TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "domains",
-            "--help",
+            "data", "domains", "--help",
         ])
-
-    def test_iam_users(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "iam-users",
-            "--help",
-        ])
-
-    def test_lb_idle(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "lb-idle",
-            "--help",
-        ])
-
-    def test_ri_pricings(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "ri-pricings",
-            "--help",
-        ])
-
-    def test_service_requests(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "service-requests",
-            "--help",
-        ])
-
-    def test_storage_detached(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data",
-            "storage-detached",
-            "--help",
-        ])
-
 
 class TestZephyrETL(test.CementTestCase):
     app_class = TestZephyr
 
     def test_zephyr_etl(self):
-        with TestZephyr(argv=["etl"]) as app:
-            app.configure()
-            app.run()
+        TestZephyr.assert_zephyr_success(self, ["etl"])
 
     def test_dbr_ri(self):
         TestZephyr.assert_zephyr_success(self, [
-            "etl",
-            "dbr-ri",
-            "--help",
+            "etl", "dbr-ri", "--help",
         ])
 
 
@@ -377,41 +295,54 @@ class TestZephyrReport(test.CementTestCase):
     app_class = TestZephyr
 
     def test_zephyr_report(self):
-        with TestZephyr(argv=["report"]) as app:
-            app.configure()
-            app.run()
+        TestZephyr.assert_zephyr_success(self, ["report"])
 
     def test_account_review(self):
         TestZephyr.assert_zephyr_success(self, [
-            "report",
-            "account-review",
-            "--help",
+            "report", "account-review",
         ])
 
-    def test_ec2(self):
+    def test_billing(self):
         TestZephyr.assert_zephyr_success(self, [
-            "report",
-            "ec2",
-            "--help",
+            "report", "billing",
         ])
 
-    def test_rds(self):
+    def test_compute_details(self):
         TestZephyr.assert_zephyr_success(self, [
-            "report",
-            "rds",
-            "--help",
+            "report", "compute-details",
         ])
 
-    def test_ri_recs(self):
+    def test_compute_ri(self):
         TestZephyr.assert_zephyr_success(self, [
-            "report",
-            "ri-recs",
-            "--help",
+            "report", "compute-ri",
+        ])
+
+    def test_db_details(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report", "db-details",
+        ])
+
+    def test_db_idle(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report", "db-idle",
+        ])
+
+    def test_iam_users(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report", "iam-users",
+        ])
+
+    def test_lb_idle(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report", "lb-idle",
+        ])
+
+    def test_storage_detached(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report", "storage-detached",
         ])
 
     def test_sr(self):
         TestZephyr.assert_zephyr_success(self, [
-            "report",
-            "sr",
-            "--help",
+            "report", "service-requests",
         ])

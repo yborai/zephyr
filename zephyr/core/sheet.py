@@ -250,6 +250,24 @@ class Sheet(Client):
         self._ddh = client.ddh
         return self._ddh
 
+    def to_xlsx(self, book, **kwargs):
+        """Put a DDH in a worksheet."""
+        # Load the data.
+        if not self.ddh:
+            return
+
+        self.book = book
+
+        # Insert raw data.
+        self.sheet = self.book.add_worksheet(self.title)
+        self.put_label(self.title)
+
+        self.put_table(top=1, name=self.name)
+
+        return self.sheet
+
+
+
 
 class CoverPage(Client):
     name = "coverpage"

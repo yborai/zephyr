@@ -12,28 +12,18 @@ from ..core.sheet import CoverPage
 from ..core.utils import first_of_previous_month, ZephyrException
 from ..core.bd.calls import compute_av
 from ..core.boto.calls import domains
-from ..core.cc.calls import (
-    BestPracticeChecksSummary,
-    ComputeDetailsWarp,
-    ComputeMigrationWarp,
-    ComputeRIWarp,
-    DBDetailsWarp,
-    DBIdleWarp,
-    IAMUsersData,
-    LBIdleWarp,
-    RIPricingWarp,
-    StorageDetachedWarp,
-)
 from ..core.cc.sheets import (
+    SheetDBIdle,
     SheetEC2,
+    SheetIAMUsers,
+    SheetLBIdle,
     SheetMigration,
     SheetRDS,
     SheetRIs,
+    SheetStorageDetached,
     SheetUnderutilized,
 )
-from ..core.dy.calls import Billing
 from ..core.dy.sheets import SheetBilling
-from ..core.lo.calls import ServiceRequests
 from ..core.lo.sheets import SheetSRs
 
 class ZephyrCLI(CementBaseController):
@@ -45,6 +35,7 @@ class ZephyrCLI(CementBaseController):
     @expose(hide=True)
     def default(self):
         self.app.args.print_help()
+        sys.exit(0)
 
 class ZephyrCall(ZephyrCLI):
     class Meta:
@@ -52,6 +43,12 @@ class ZephyrCall(ZephyrCLI):
             ["--account"], dict(
                  type=str,
                  help="The desired account slug."
+            )
+        ),
+        (
+            ["--all"], dict(
+                action="store_true",
+                help="Run for all accounts."
             )
         ),
         (
@@ -64,12 +61,6 @@ class ZephyrCall(ZephyrCLI):
             ["--expire-cache"], dict(
                 action="store_true",
                 help="Forces the cached data to be refreshed."
-            )
-        ),
-        (
-            ["--all"], dict(
-                action="store_true",
-                help="Run for all accounts."
             )
         )]
 
@@ -86,16 +77,16 @@ class ZephyrClearCache(ZephyrCLI):
             ),
         ),
         (
-            ["--date"], dict(
-                type=str,
-                help="The report date to request."
-            ),
-        ),
-        (
             ["--all"], dict(
                 action="store_true",
                 help="Run for all accounts."
             )
+        ),
+        (
+            ["--date"], dict(
+                type=str,
+                help="The report date to request."
+            ),
         )]
 
     @expose(hide=True)
@@ -110,7 +101,7 @@ class ZephyrClearCache(ZephyrCLI):
         date = self.app.pargs.date
         if not any((account, date, all_)):
             self.app.args.print_help()
-            sys.exit()
+            sys.exit(0)
         if not (date and any((account, all_))):
             raise ZephyrException("Account and date are required parameters.")
 
@@ -289,106 +280,6 @@ class DataRun(ZephyrData):
     def default(self):
         self.run(**vars(self.app.pargs))
 
-    def run_call(self, cls, **kwargs):
-        log = self.app.log
-        account = self.app.pargs.account
-        all_ = self.app.pargs.all
-        date = self.app.pargs.date
-        expire_cache = self.app.pargs.expire_cache
-        if not any((account, date, expire_cache, all_)):
-            self.app.args.print_help()
-            sys.exit()
-        if not any((account, all_)):
-            raise ZephyrException("Account is a required parameter.")
-        # If no date is given then default to the first of last month.
-        if(not date):
-            date = first_of_previous_month().strftime("%Y-%m-%d")
-        client = cls(config=self.app.config, log=log, **kwargs)
-        accts = [account]
-        if(all_):
-            accts = client.get_slugs()
-        for acct in accts:
-            if(not client.get_account_by_slug(acct)):
-                log.info("Skipping {}".format(acct))
-                continue
-            log.info("Retrieving {call} data for {account}".format(
-                call=self.Meta.label,
-                account=acct,
-            ))
-            try:
-                response = client.cache_policy(
-                    acct,
-                    date,
-                    expire_cache
-                )
-            except ZephyrException as e:
-                message = e.args[0]
-                log.error(message)
-            client.parse(response)
-            self.app.render(client.to_ddh())
-
-class BillingLineItems(DataRun):
-    class Meta:
-        label = "billing-line-items"
-        description = "Get the line items billing meta information."
-
-    def run(self, **kwargs):
-        self.run_call(Billing, **kwargs)
-
-class BestPracticeChecksSummaryData(DataRun):
-    class Meta:
-        label = "bpc-summary"
-        description = "Get a summary of the CloudCheckr best practice checks."
-
-    def run(self, **kwargs):
-        self.run_call(BestPracticeChecksSummary, **kwargs)
-
-class ComputeDetails(DataRun):
-    class Meta:
-        label = "compute-details"
-        description = "Get the detailed instance meta information."
-        arguments = DataRun.Meta.arguments + [(
-            ["--all-tags"], dict(
-                 action="store_true",
-                 help="Stores resource tag meta information in cell"
-            )
-        )]
-
-    def run(self, **kwargs):
-        kwargs["all_tags"] = self.app.pargs.all_tags
-        self.run_call(ComputeDetailsWarp, **kwargs)
-
-class ComputeMigration(DataRun):
-    class Meta:
-        label = "compute-migration"
-        description = "Get the migration recommendations meta information"
-
-    def run(self, **kwargs):
-        self.run_call(ComputeMigrationWarp, **kwargs)
-
-class ComputeRI(DataRun):
-    class Meta:
-        label = "compute-ri"
-        description = "Get the ri recommendations meta information."
-
-    def run(self, **kwargs):
-        self.run_call(ComputeRIWarp, **kwargs)
-
-class DBDetails(DataRun):
-    class Meta:
-        label = "db-details"
-        description = "Get the detailed rds meta information"
-
-    def run(self, **kwargs):
-        self.run_call(DBDetailsWarp, **kwargs)
-
-class DBIdle(DataRun):
-    class Meta:
-        label = "db-idle"
-        description = "List idle database instances."
-
-    def run(self, **kwargs):
-        self.run_call(DBIdleWarp, **kwargs)
 
 class Domains(DataRun):
     class Meta:
@@ -420,46 +311,6 @@ class Domains(DataRun):
         out = domains(access_key_id, secret_key, session_token)
         self.app.render(out)
         return out
-
-class IAMUsers(DataRun):
-    class Meta:
-        label = "iam-users"
-        description = "Get the IAM Users meta information"
-
-    def run(self, **kwargs):
-        self.run_call(IAMUsersData, **kwargs)
-
-class LBIdle(DataRun):
-    class Meta:
-        label = "lb-idle"
-        description = "List idle load balancers."
-
-    def run(self, **kwargs):
-        self.run_call(LBIdleWarp, **kwargs)
-
-class RIPricings(DataRun):
-    class Meta:
-        label = "ri-pricings"
-        description = "Get the detailed ri pricings meta information."
-
-    def run(self, **kwargs):
-        self.run_call(RIPricingWarp, **kwargs)
-
-class ServiceRequestsRun(DataRun):
-    class Meta:
-        label = "service-requests"
-        description = "get the detailed service requests meta information."
-
-    def run(self, **kwargs):
-        self.run_call(ServiceRequests, **kwargs)
-
-class StorageDetached(DataRun):
-    class Meta:
-        label = "storage-detached"
-        description = "List detached storage volumes."
-
-    def run(self, **kwargs):
-        self.run_call(StorageDetachedWarp, **kwargs)
 
 class ComputeAV(DataRun):
     class Meta:
@@ -498,14 +349,14 @@ class ComputeAV(DataRun):
         self.app.render(out)
         return out
 
-class ZephyrSheet(ZephyrCall):
+class ZephyrReport(ZephyrCall):
     class Meta:
         label = "report"
         stacked_on = "base"
         stacked_type = "nested"
         description = "Generate advanced reports."
 
-class SheetRun(ZephyrSheet):
+class SheetRun(ZephyrReport):
     class Meta:
         stacked_on = "report"
 
@@ -534,7 +385,7 @@ class SheetRun(ZephyrSheet):
         expire_cache = self.app.pargs.expire_cache
         if not any((account, date, expire_cache, all_)):
             self.app.args.print_help()
-            sys.exit()
+            sys.exit(0)
         if not any((account, all_)):
             raise ZephyrException("Account is a required parameter.")
         # If no date is given then default to the first of last month.
@@ -565,6 +416,10 @@ class SheetRun(ZephyrSheet):
             sheet_set = {bool(value) for value in out.values()}
             if not any(sheet_set):
                 self.app.log.info("No data to report for {}!".format(acct))
+        if self.app.pargs.output_handler_override:
+            ddh = book.sheets[0].ddh
+            if ddh:
+                self.app.render(book.sheets[0].ddh)
         return book
 
 class AccountReview(SheetRun):
@@ -594,7 +449,7 @@ class BillingSheet(SheetRun):
 
 class ComputeDetailsSheet(SheetRun):
     class Meta:
-        label = "ec2"
+        label = "compute-details"
         description = "Generate the compute-details worksheet."
 
     def run(self, **kwargs):
@@ -602,7 +457,7 @@ class ComputeDetailsSheet(SheetRun):
 
 class ComputeMigrationSheet(SheetRun):
     class Meta:
-        label = "migration"
+        label = "compute-migration"
         description = "Generate the compute-migration worksheet."
 
     def run(self, **kwargs):
@@ -610,7 +465,7 @@ class ComputeMigrationSheet(SheetRun):
 
 class ComputeRISheet(SheetRun):
     class Meta:
-        label = "ri-recs"
+        label = "compute-ri"
         description = "Generate the compute-ri worksheet."
 
     def run(self, **kwargs):
@@ -618,63 +473,67 @@ class ComputeRISheet(SheetRun):
 
 class DBDetailsSheet(SheetRun):
     class Meta:
-        label = "rds"
+        label = "db-details"
         description = "Generate the db-details worksheet."
 
     def run(self, **kwargs):
         self._run(SheetRDS)
 
-class ComputeUnderutilized(SheetRun):
+class DBIdleSheet(SheetRun):
     class Meta:
-        description = "Get the underutilized instances"
-        label = "compute-underutilized"
-        stacked_on = "data"
+        label = "db-idle"
+        description = "Generate the db-idle worksheet."
 
     def run(self, **kwargs):
-        book = self._run(SheetUnderutilized)
-        self.app.render(book.sheets[0].ddh)
+        self._run(SheetDBIdle)
 
-class ComputeUnderutilizedSheet(SheetRun):
+class IAMUsersSheet(SheetRun):
     class Meta:
-        label = "underutilized"
-        description = "Generate the compute-underutilized worksheet."
+        label = "iam-users"
+        description = "Generate the iam-users worksheet."
 
     def run(self, **kwargs):
-        self._run(SheetUnderutilized)
+        self._run(SheetIAMUsers)
+
+class LBIdleSheet(SheetRun):
+    class Meta:
+        label = "lb-idle"
+        description = "Generate the db-idle worksheet."
+
+    def run(self, **kwargs):
+        self._run(SheetLBIdle)
 
 class ServiceRequestSheet(SheetRun):
     class Meta:
-        label = "sr"
+        label = "service-requests"
         description = "Generate the service-requests worksheet."
 
     def run(self, **kwargs):
         self._run(SheetSRs)
 
+class StorageDetachedSheet(SheetRun):
+    class Meta:
+        label = "storage-detached"
+        description = "List detached storage volumes."
+
+    def run(self, **kwargs):
+        self._run(SheetStorageDetached)
+
 
 __ALL__ = [
     AccountReview,
-    BestPracticeChecksSummaryData,
-    BillingLineItems,
     BillingSheet,
     ComputeAV,
-    ComputeDetails,
     ComputeDetailsSheet,
-    ComputeMigration,
     ComputeMigrationSheet,
-    ComputeRI,
     ComputeRISheet,
-    ComputeUnderutilized,
-    ComputeUnderutilizedSheet,
-    DBDetails,
     DBDetailsSheet,
-    DBIdle,
+    DBIdleSheet,
+    IAMUsersSheet,
+    LBIdleSheet,
+    StorageDetachedSheet,
     Domains,
-    IAMUsers,
-    LBIdle,
-    RIPricings,
     ServiceRequestSheet,
-    ServiceRequestsRun,
-    StorageDetached,
     ZephyrCLI,
     ZephyrClearCache,
     ZephyrConfigure,
@@ -682,5 +541,5 @@ __ALL__ = [
     ZephyrData,
     ZephyrETL,
     ZephyrMeta,
-    ZephyrSheet,
+    ZephyrReport,
 ]

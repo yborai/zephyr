@@ -6,6 +6,8 @@ import pandas as pd
 from datetime import datetime
 from shutil import rmtree
 
+from timeout_decorator import timeout
+
 from . import aws
 from .ddh import DDH
 from .utils import get_config_values
@@ -72,7 +74,7 @@ class Client(object):
             api=self.name,
             call=self.slug,
         ))
-        self.s3.meta.client.upload_file(cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
+        aws.put_s3(self.s3, cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
 
     def cache_policy(self, account, date, expired):
         # If local exists and expired is false then use the local cache
@@ -85,7 +87,7 @@ class Client(object):
             with open(cache_local, "r") as f:
                 return f.read()
         # If local does not exist and expired is false then check s3
-        cache_s3 = self.get_object_from_s3(cache_key)
+        cache_s3 = self.get_s3(cache_key)
         if(cache_s3 and not expired):
             self.log.info("Using cached response for {} from S3.".format(self.slug))
             with open(cache_local, "wb") as cache_fd:
@@ -139,9 +141,9 @@ class Client(object):
     def get_account_by_slug(self, slug):
         raise NotImplementedError
 
-    def get_object_from_s3(self, cache_key):
-        s3 = self.s3  # This is a bit kludgy. TODO: Fix this.
-        return aws.get_object_from_s3(self.ZEPHYR_S3_BUCKET, cache_key, self.s3)
+    def get_s3(self, cache_key):
+        #s3 = self.s3  # This is a bit kludgy. TODO: Fix this.
+        return aws.get_s3(self.s3, self.ZEPHYR_S3_BUCKET, cache_key)
 
     def get_slugs(self):
         query = ("""

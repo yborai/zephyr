@@ -471,6 +471,14 @@ class ComputeRISheet(SheetRun):
     def run(self, **kwargs):
         self._run(SheetRIs)
 
+class ComputeUnderutilizedSheet(SheetRun):
+    class Meta:
+        label = "compute-underutilized"
+        description = "Generate the compute-underutilized worksheet"
+
+    def run(self, **kwargs):
+        self._run(SheetUnderutilized)
+
 class DBDetailsSheet(SheetRun):
     class Meta:
         label = "db-details"
@@ -527,6 +535,7 @@ __ALL__ = [
     ComputeDetailsSheet,
     ComputeMigrationSheet,
     ComputeRISheet,
+    ComputeUnderutilizedSheet,
     DBDetailsSheet,
     DBIdleSheet,
     IAMUsersSheet,

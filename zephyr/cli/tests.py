@@ -317,6 +317,11 @@ class TestZephyrReport(test.CementTestCase):
             "report", "compute-ri",
         ])
 
+    def test_compute_underutilized(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report", "compute-underutilized",
+        ])
+
     def test_db_details(self):
         TestZephyr.assert_zephyr_success(self, [
             "report", "db-details",

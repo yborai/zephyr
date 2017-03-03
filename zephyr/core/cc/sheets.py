@@ -191,9 +191,9 @@ class SheetEC2(Sheet):
         for date in launch_times:
             day = datetime.strptime(date, "%m/%d/%y %H:%M").date()
             delta = now - day
-            if delta.days > 90 and delta.days < 181:
+            if 90 < delta.days <= 180:
                 days_90 += 1
-            if delta.days > 180 and delta.days < 271:
+            if 180 < delta.days <= 270:
                 days_180 += 1
             if delta.days > 270:
                 days_270 += 1

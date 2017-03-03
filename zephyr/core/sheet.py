@@ -266,31 +266,22 @@ class Sheet(Client):
 
         return self.sheet
 
-
-
-
-class CoverPage(Client):
+class CoverPage(Sheet):
     name = "coverpage"
     title = "Cover Page"
     calls = ()
-
-    def __init__(
-        self, config, account=None, date=None, expire_cache=None, log=None
-    ):
-        super().__init__(config, log=log)
-        self.account = account
-        date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
-        self.date = date_obj.strftime("%B %d, %Y")
 
     def to_xlsx(self, book):
         self.book = book
         self.sheet = self.book.add_worksheet(self.title)
         cell_format = self.book.add_format(Sheet.formatting["label_format"])
+        date_obj = datetime.datetime.strptime(self.date, "%Y-%m-%d")
+        date_ = date_obj.strftime("%B %d, %Y")
         acct = sf.SalesForce(
             config=self.config, log=self.log
         ).get_account_by_slug(self.account)
         self.sheet.write(0, 0, "Account Review", cell_format)
         self.sheet.write(1, 0, acct, cell_format)
-        self.sheet.write(2, 0, self.date, cell_format)
+        self.sheet.write(2, 0, date_, cell_format)
 
         return self.sheet

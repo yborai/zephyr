@@ -18,6 +18,7 @@ from .cc.calls import (
     LBIdleWarp,
     StorageDetachedWarp,
 )
+from .cc.sheets import SheetEC2
 
 class TestZephyrParse(test.CementTestCase):
     app_class = TestZephyr
@@ -92,3 +93,36 @@ class TestZephyrParseCache(TestZephyrParse):
 
     def test_service_requests(self):
         self.assert_equal_out("service_requests")
+
+class TestZephyrReportParse(TestZephyrParse):
+
+    def test_get_launch_times(self):
+        with self.app_class() as app:
+            app.configure()
+            config = app.config
+        header = ["Status", "LaunchTime"]
+        data = [
+            ["running", "02/06/17 02:50"],
+            ["stopped", "02/06/17 02:50"],
+            ["running", "10/06/16 02:50"],
+            ["stopped", "10/06/16 02:50"],
+            ["running", "07/06/16 02:50"],
+            ["stopped", "07/06/16 02:50"],
+            ["running", "01/06/16 02:50"],
+            ["stopped", "01/06/16 02:50"]
+        ]
+        launch_times_ = [
+            "02/06/17 02:50",
+            "10/06/16 02:50",
+            "07/06/16 02:50",
+            "01/06/16 02:50"
+        ]
+        less_90_ = 1
+        days_90_ = 1
+        days_180_ = 1
+        days_270_ = 1
+        test_result = launch_times_, days_90_, days_180_, days_270_
+        ec2 = SheetEC2(config, date="2017-03-01")
+        ec2._ddh = DDH(header=header, data=data)
+        sheet_result = ec2.get_launch_times()
+        self.eq(sheet_result, test_result)

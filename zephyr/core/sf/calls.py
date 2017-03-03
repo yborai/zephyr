@@ -1,7 +1,5 @@
 import sqlite3
 
-import pandas as pd
-
 from . import client as sf
 
 class SalesForceAccounts(sf.SalesForce):

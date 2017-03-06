@@ -190,7 +190,6 @@ class TestZephyrFixtures(test.CementTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        return
         with sqlite3.connect(get_db_path()) as con:
             cls._delete_fixtures(con.cursor())
 
@@ -215,6 +214,9 @@ class TestZephyrCSVOutput(TestZephyrFixtures):
     def test_compute_ri_params(self):
         self._test("compute-ri")
 
+    def test_compute_underutilized(self):
+        self._test("compute-underutilized")
+
     def test_db_details_params(self):
         self._test("db-details")
 
@@ -237,23 +239,17 @@ class TestZephyrErrors(TestZephyrFixtures):
 
     def test_account_unrecognized(self):
         TestZephyr.assert_zephyr_expected_failure(self, [
-            "report",
-            "account-review",
-            "--account=..",
+            "report", "account-review", "--account=..",
         ])
 
     def test_account_account_review_no_dynamics(self):
         TestZephyr.assert_zephyr_expected_failure(self, [
-            "report",
-            "account-review",
-            "--account=.no_dynamics",
+            "report", "account-review", "--account=.no_dynamics",
         ])
 
     def test_account_billing_no_dynamics(self):
         TestZephyr.assert_zephyr_expected_failure(self, [
-            "report",
-            "billing",
-            "--account=.no_dynamics",
+            "report", "billing", "--account=.no_dynamics",
         ])
 
 class TestZephyrBase(test.CementTestCase):

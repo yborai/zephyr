@@ -73,9 +73,6 @@ class TestZephyrParseCache(TestZephyrParse):
     def test_compute_ri(self):
         self.assert_equal_out("compute_ri")
 
-    def test_compute_underutilized(self):
-        self.assert_equal_out("compute_underutilized")
-
     def test_db_details(self):
         self.assert_equal_out("db_details")
 

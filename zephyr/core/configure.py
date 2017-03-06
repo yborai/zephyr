@@ -43,12 +43,14 @@ CRED_ITEMS = [
             "ZEPHYR_CACHE_ROOT",
             "ZEPHYR_DATABASE",
             "ZEPHYR_LINE_WIDTH",
+            "ZEPHYR_TEST_DATABASE",
         ],
     ),
 ]
 DEFAULTS = {
     "ZEPHYR_CACHE_ROOT": os.path.expanduser("~/.zephyr/cache/"),
     "ZEPHYR_DATABASE": ".meta/local.db",
+    "ZEPHYR_TEST_DATABASE": ".meta/test.db",
 }
 
 def create_config(config, prompt=None, write=None, ini=None):

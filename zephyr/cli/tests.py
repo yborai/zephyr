@@ -23,7 +23,7 @@ def get_db_path():
     with Zephyr() as app:
         app.configure()
         config = app.config
-    zephyr_config_keys = ("ZEPHYR_CACHE_ROOT", "ZEPHYR_DATABASE")
+    zephyr_config_keys = ("ZEPHYR_CACHE_ROOT", "ZEPHYR_TEST_DATABASE")
     cache_root, db = [
         os.path.expanduser(path)
         for path in get_config_values("zephyr", zephyr_config_keys, config)
@@ -73,6 +73,13 @@ class TestZephyr(Zephyr):
             gold_result = f.read()
         trans_gold = gold_result.replace("\n", "")
         obj.eq(trans_out, trans_gold)
+
+    def configure(self):
+        super().configure()
+        test_db = os.path.expanduser(self.config.get(
+            "zephyr", "ZEPHYR_TEST_DATABASE"
+        ))
+        self.config.set("zephyr", "ZEPHYR_DATABASE", test_db)
 
 class TestZephyrSheet(test.CementTestCase):
     app_class = TestZephyr
@@ -176,7 +183,10 @@ class TestZephyrFixtures(test.CementTestCase):
 
     @classmethod
     def setUpClass(cls):
-        with sqlite3.connect(get_db_path()) as con:
+        db_path = get_db_path()
+        db_dir = os.path.dirname(db_path)
+        os.makedirs(db_dir, exist_ok=True)
+        with sqlite3.connect(db_path) as con:
             try:
                 cls._delete_fixtures(con.cursor())
             except sqlite3.OperationalError as e:

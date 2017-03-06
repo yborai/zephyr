@@ -25,6 +25,7 @@ class Client(object):
             os.path.expanduser(path)
             for path in get_config_values("zephyr", zephyr_config_keys, config)
         ]
+        self._database = None
         self._ddh = None
         self._s3 = None
         self.AWS_ACCESS_KEY_ID = None
@@ -33,9 +34,20 @@ class Client(object):
         self.ZEPHYR_DATABASE = db
         self.ZEPHYR_S3_BUCKET = None
         self.config = config
-        self.database = sqlite3.connect(os.path.join(cache_root, db))
         self.log = log
         self.session = None
+
+    @property
+    def database(self):
+        if(self._database):
+            return self._database
+        db_path = os.path.join(
+            self.ZEPHYR_CACHE_ROOT,
+            self.ZEPHYR_DATABASE
+        )
+        db_exists = os.path.isfile(db_path)
+        self._database = sqlite3.connect(db_path)
+        return self._database
 
     @property
     def ddh(self):

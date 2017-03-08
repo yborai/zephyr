@@ -383,6 +383,7 @@ class SheetRun(ZephyrReport):
         all_ = self.app.pargs.all
         date = self.app.pargs.date
         expire_cache = self.app.pargs.expire_cache
+        in_memory = self.app.pargs.output_handler_override
         if not any((account, date, expire_cache, all_)):
             self.app.args.print_help()
             sys.exit(0)
@@ -397,7 +398,14 @@ class SheetRun(ZephyrReport):
             accts = client.get_slugs()
         for acct in accts:
             book = Book(
-                config, label, sheets, acct, date, expire_cache, log=log
+                config,
+                label,
+                sheets,
+                acct,
+                date,
+                expire_cache,
+                log=log,
+                in_memory=in_memory,
             )
             if not book.slug_valid(acct):
                 missing = ", ".join({

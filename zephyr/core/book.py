@@ -1,5 +1,7 @@
 import datetime
+import io
 import os
+
 import xlsxwriter
 
 from shutil import copyfile
@@ -15,7 +17,15 @@ FORMATTING = {
 
 class Book(Client):
     def __init__(
-        self, config, label, sheets, account, date, expire_cache, log=None
+        self,
+        config,
+        label,
+        sheets,
+        account,
+        date,
+        expire_cache,
+        log=None,
+        in_memory=None,
     ):
         super().__init__(config, log=log)
         self.account = account
@@ -23,6 +33,7 @@ class Book(Client):
         self.date = date
         self.expire_cache = expire_cache
         self.has_data = False
+        self.in_memory = in_memory
         self.label = label
         self.sheets = tuple([Sheet(
             config,
@@ -34,6 +45,8 @@ class Book(Client):
         self.filename = "{slug}.{label}.xlsx".format(
             label=self.label, slug=self.account
         )
+        if self.in_memory:
+            self.filename = io.BytesIO()
 
     def cache(self):
         cache_key = self.cache_key(self.label, self.account, self.date)
@@ -85,8 +98,10 @@ class Book(Client):
 
     def to_xlsx(self):
         options = FORMATTING["book_options"]
+        if self.in_memory:
+            options.update(dict(in_memory=True))
         with xlsxwriter.Workbook(self.filename, options) as self.book:
             report = self.collate()
-        if(report):
+        if(report and not self.in_memory):
             self.cache()
         return report

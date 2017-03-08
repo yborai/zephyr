@@ -42,6 +42,7 @@ class TestZephyrParse(test.CementTestCase):
         )
 
         module_name = module.replace("_", "-")
+        print(self.assets)
         infile = os.path.join(self.assets, "{}.json".format(module_name))
         outfile = os.path.join(self.assets, "{}.csv".format(module_name))
 
@@ -129,6 +130,7 @@ class TestZephyrReportParse(TestZephyrParse):
 
 
 class TestZephyrParseFixtures(TestZephyrFixtures):
+    assets = os.path.join(os.path.dirname(__file__), "assets")
 
     def test_underutilized_join(self):
         with self.app_class() as app:
@@ -136,17 +138,11 @@ class TestZephyrParseFixtures(TestZephyrFixtures):
             config = app.config
             log = app.log
         date = first_of_previous_month().strftime("%Y-%m-%d")
-        header = [
-            'InstanceId',
-            'InstanceName',
-            'Environment',
-            'Average CPU Util',
-            'Predicted Monthly Cost'
-        ]
-        data = [
-            ['i-0272f78b', 'AVID-TESTING-SSO-HAP01', '', '0.15%', '84.48']
-        ]
+        path = os.path.join(self.assets, "compute-underutilized.csv")
+        with open(path, "r") as f:
+            gold_csv = f.read()
+        trans_csv = gold_csv.replace("\n", "")
         uu = SheetUnderutilized(config, account=".meta", date=date, log=log)
-        sheet_ddh = uu.ddh
-        self.eq(sheet_ddh.data, data)
-        self.eq(sheet_ddh.header, header)
+        sheet_ddh = uu.ddh.to_csv()
+        sheet_csv = sheet_ddh.replace("\r\n", "")
+        self.eq(sheet_csv, trans_csv)

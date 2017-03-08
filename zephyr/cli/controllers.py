@@ -37,33 +37,6 @@ class ZephyrCLI(CementBaseController):
         self.app.args.print_help()
         sys.exit(0)
 
-class ZephyrCall(ZephyrCLI):
-    class Meta:
-        arguments = ZephyrCLI.Meta.arguments + [(
-            ["--account"], dict(
-                 type=str,
-                 help="The desired account slug."
-            )
-        ),
-        (
-            ["--all"], dict(
-                action="store_true",
-                help="Run for all accounts."
-            )
-        ),
-        (
-            ["--date"], dict(
-                type=str,
-                help="The report date to request."
-            )
-        ),
-        (
-            ["--expire-cache"], dict(
-                action="store_true",
-                help="Forces the cached data to be refreshed."
-            )
-        )]
-
 class ZephyrClearCache(ZephyrCLI):
     class Meta:
         label = "clear-cache"
@@ -171,7 +144,7 @@ class ZephyrETL(ZephyrCLI):
         stacked_on = "base"
         stacked_type = "nested"
         description = "Perform Extract-Transform-Load operations on data."
-        arguments = ZephyrCall.Meta.arguments
+        arguments = ZephyrCLI.Meta.arguments
 
 class ZephyrMeta(ZephyrCLI):
     class Meta:
@@ -253,7 +226,6 @@ class ZephyrDBRRI(ZephyrETL):
                 out = {col: row[col] for col in header}
                 writer.writerow(out)
 
-
     def run(self, **kwargs):
         infile = self.app.pargs.infile
         outfile = self.app.pargs.outfile
@@ -262,99 +234,42 @@ class ZephyrDBRRI(ZephyrETL):
         self.app.log.info("Using output file: {outfile}".format(outfile=outfile))
         self.filter_ri_dbr(infile, outfile, no_tags)
 
-class ZephyrData(ZephyrCall):
-    class Meta:
-        label = "data"
-        stacked_on = "base"
-        stacked_type = "nested"
-        description = "Generate single table reports for an account."
-        arguments = ZephyrCall.Meta.arguments
-
-class DataRun(ZephyrData):
-    class Meta:
-        stacked_on = "data"
-        stacked_type = "nested"
-        arguments = ZephyrData.Meta.arguments
-
     @expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))
 
 
-class Domains(DataRun):
-    class Meta:
-        label = "domains"
-        description = "List route-53 domains"
-
-        arguments = DataRun.Meta.arguments + [(
-            ["--access-key"], dict(
-                type=str,
-                help="The AWS Access Key ID for the desired client"
-            )
-        ), (
-            ["--secret-key"], dict(
-                type=str,
-                help="The AWS Secret Access Key for the desired client"
-            )
-        ), (
-            ["--session-token"], dict(
-                type=str,
-                help="The AWS Session Token for the desired client"
-            )
-        )]
-
-    def run(self, **kwargs):
-        access_key_id = self.app.pargs.access_key
-        secret_key = self.app.pargs.secret_key
-        session_token = self.app.pargs.session_token
-        self.app.log.info("Checking for domains.")
-        out = domains(access_key_id, secret_key, session_token)
-        self.app.render(out)
-        return out
-
-class ComputeAV(DataRun):
-    class Meta:
-        label = "compute-av"
-        description = "Get the AV of instance meta information"
-
-        arguments = DataRun.Meta.arguments + [(
-            ["--cache-file"], dict(
-                 type=str,
-                 help="The path to the cached response to use."
-            )
-        ),
-        (
-            ["--compute-details"], dict(
-                type=str,
-                help="The path to the cached compute-details response to use."
-            )
-        )]
-
-    def run(self, **kwargs):
-        cache_file = self.app.pargs.cache_file
-        compute_details = self.app.pargs.compute_details
-        if(not cache_file):
-            raise NotImplementedError # We will add fetching later.
-        self.app.log.info(
-            "Using cached response: {cache}"
-            .format(cache=cache_file)
-        )
-        if(not compute_details):
-            raise NotImplementedError
-        self.app.log.info(
-            "Using compute_details response: {compute_details}"
-            .format(compute_details=compute_details)
-        )
-        out = compute_av(cache_file, compute_details)
-        self.app.render(out)
-        return out
-
-class ZephyrReport(ZephyrCall):
+class ZephyrReport(ZephyrCLI):
     class Meta:
         label = "report"
         stacked_on = "base"
         stacked_type = "nested"
         description = "Generate advanced reports."
+
+        arguments = ZephyrCLI.Meta.arguments + [(
+            ["--account"], dict(
+                 type=str,
+                 help="The desired account slug."
+            )
+        ),
+        (
+            ["--all"], dict(
+                action="store_true",
+                help="Run for all accounts."
+            )
+        ),
+        (
+            ["--date"], dict(
+                type=str,
+                help="The report date to request."
+            )
+        ),
+        (
+            ["--expire-cache"], dict(
+                action="store_true",
+                help="Forces the cached data to be refreshed."
+            )
+        )]
 
 class SheetRun(ZephyrReport):
     class Meta:
@@ -446,6 +361,75 @@ class AccountReview(SheetRun):
             SheetSRs,
             SheetUnderutilized,
         )
+
+class ComputeAV(SheetRun):
+    class Meta:
+        label = "compute-av"
+        description = "Get the AV of instance meta information"
+
+        arguments = ZephyrCLI.Meta.arguments + [(
+            ["--cache-file"], dict(
+                 type=str,
+                 help="The path to the cached response to use."
+            )
+        ),
+        (
+            ["--compute-details"], dict(
+                type=str,
+                help="The path to the cached compute-details response to use."
+            )
+        )]
+
+    def run(self, **kwargs):
+        cache_file = self.app.pargs.cache_file
+        compute_details = self.app.pargs.compute_details
+        if(not cache_file):
+            raise NotImplementedError # We will add fetching later.
+        self.app.log.info(
+            "Using cached response: {cache}"
+            .format(cache=cache_file)
+        )
+        if(not compute_details):
+            raise NotImplementedError
+        self.app.log.info(
+            "Using compute_details response: {compute_details}"
+            .format(compute_details=compute_details)
+        )
+        out = compute_av(cache_file, compute_details)
+        self.app.render(out)
+        return out
+
+class Domains(SheetRun):
+    class Meta:
+        label = "domains"
+        description = "List route-53 domains"
+
+        arguments = ZephyrCLI.Meta.arguments + [(
+            ["--access-key"], dict(
+                type=str,
+                help="The AWS Access Key ID for the desired client"
+            )
+        ), (
+            ["--secret-key"], dict(
+                type=str,
+                help="The AWS Secret Access Key for the desired client"
+            )
+        ), (
+            ["--session-token"], dict(
+                type=str,
+                help="The AWS Session Token for the desired client"
+            )
+        )]
+
+    def run(self, **kwargs):
+        access_key_id = self.app.pargs.access_key
+        secret_key = self.app.pargs.secret_key
+        session_token = self.app.pargs.session_token
+        self.app.log.info("Checking for domains.")
+        # import pdb;pdb.set_trace()
+        out = domains(access_key_id, secret_key, session_token)
+        self.app.render(out)
+        return out
 
 class BillingSheet(SheetRun):
     class Meta:
@@ -555,7 +539,6 @@ __ALL__ = [
     ZephyrClearCache,
     ZephyrConfigure,
     ZephyrDBRRI,
-    ZephyrData,
     ZephyrETL,
     ZephyrMeta,
     ZephyrReport,

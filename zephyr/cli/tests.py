@@ -269,22 +269,6 @@ class TestZephyrBase(test.CementTestCase):
         TestZephyr.assert_zephyr_success(self, [])
 
 
-class TestZephyrData(test.CementTestCase):
-    app_class = TestZephyr
-
-    def test_zephyr_data(self):
-        TestZephyr.assert_zephyr_success(self, ["data"])
-
-    def test_compute_av(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data", "compute-av", "--help",
-        ])
-
-    def test_domains(self):
-        TestZephyr.assert_zephyr_success(self, [
-            "data", "domains", "--help",
-        ])
-
 class TestZephyrETL(test.CementTestCase):
     app_class = TestZephyr
 
@@ -312,6 +296,17 @@ class TestZephyrReport(test.CementTestCase):
         TestZephyr.assert_zephyr_success(self, [
             "report", "billing",
         ])
+
+    def test_compute_av(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report", "compute-av", "--help",
+        ])
+
+    def test_domains(self):
+        TestZephyr.assert_zephyr_success(self, [
+            "report", "domains", "--help",
+        ])
+
 
     def test_compute_details(self):
         TestZephyr.assert_zephyr_success(self, [

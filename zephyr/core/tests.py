@@ -2,7 +2,7 @@ import os
 
 from cement.utils import test
 
-from ..cli.tests import TestZephyr
+from ..cli.tests import TestZephyr, TestZephyrFixtures
 from .ddh import DDH
 
 from .dy.calls import Billing
@@ -18,7 +18,9 @@ from .cc.calls import (
     LBIdleWarp,
     StorageDetachedWarp,
 )
-from .cc.sheets import SheetEC2
+from .cc.sheets import SheetEC2, SheetUnderutilized
+from .utils import first_of_previous_month
+
 
 class TestZephyrParse(test.CementTestCase):
     app_class = TestZephyr
@@ -54,6 +56,7 @@ class TestZephyrParse(test.CementTestCase):
             gold_result = f.read()
         trans_gold = gold_result.replace("\n", "")
         self.eq(trans_csv, trans_gold)
+
 
 class TestZephyrParseCache(TestZephyrParse):
 
@@ -91,6 +94,7 @@ class TestZephyrParseCache(TestZephyrParse):
     def test_service_requests(self):
         self.assert_equal_out("service_requests")
 
+
 class TestZephyrReportParse(TestZephyrParse):
 
     def test_get_launch_times(self):
@@ -114,7 +118,6 @@ class TestZephyrReportParse(TestZephyrParse):
             "07/06/16 02:50",
             "01/06/16 02:50"
         ]
-        less_90_ = 1
         days_90_ = 1
         days_180_ = 1
         days_270_ = 1
@@ -123,3 +126,27 @@ class TestZephyrReportParse(TestZephyrParse):
         ec2._ddh = DDH(header=header, data=data)
         sheet_result = ec2.get_launch_times()
         self.eq(sheet_result, test_result)
+
+
+class TestZephyrParseFixtures(TestZephyrFixtures):
+
+    def test_underutilized_join(self):
+        with self.app_class() as app:
+            app.configure()
+            config = app.config
+            log = app.log
+        date = first_of_previous_month().strftime("%Y-%m-%d")
+        header = [
+            'InstanceId',
+            'InstanceName',
+            'Environment',
+            'Average CPU Util',
+            'Predicted Monthly Cost'
+        ]
+        data = [
+            ['i-0272f78b', 'AVID-TESTING-SSO-HAP01', '', '0.15%', '84.48']
+        ]
+        uu = SheetUnderutilized(config, account=".meta", date=date, log=log)
+        sheet_ddh = uu.ddh
+        self.eq(sheet_ddh.data, data)
+        self.eq(sheet_ddh.header, header)

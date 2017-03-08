@@ -136,6 +136,7 @@ class TestZephyrParseFixtures(TestZephyrFixtures):
         with self.app_class() as app:
             app.configure()
             config = app.config
+            app.log.set_level("ERROR")
             log = app.log
         date = first_of_previous_month().strftime("%Y-%m-%d")
         path = os.path.join(self.assets, "compute-underutilized.csv")

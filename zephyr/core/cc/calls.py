@@ -38,45 +38,11 @@ class CloudCheckrAccounts(cc.CloudCheckr):
         df = pd.DataFrame(data, columns=header)
         df.to_sql("cc_accounts", self.database, if_exists="replace")
 
-class ComputeDetailsWarp(Warp):
+class ComputeDetailsWarp(cc.CloudCheckr):
+    key = "Ec2Instances"
     slug = "compute-details"
-    uri = "inventory.json/get_resources_ec2_details"
-
-    def __init__(self, config=None, log=None, **kwargs):
-        if(config):
-            super().__init__(config=config, log=log, **kwargs)
-        self.data = {}
-        self.all_tags = kwargs.get("all_tags")
-
-    def _key(self):
-        return "Ec2Instances"
-
-    def _filter_row(self, details_row):
-        filtered_row = {
-            key: str(details_row[key]) for key in self._fieldnames() if key in details_row.keys()
-        }
-
-        if "ResourceTags" not in details_row:
-            return self._format_datefields(filtered_row)
-        for tag in details_row["ResourceTags"]:
-            if tag["Key"] != "lw:environment":
-                continue
-            filtered_row["Environment"] = tag["Value"]
-
-        return self._format_datefields(filtered_row)
-
-    def _format_datefields(self, row):
-        for field in self._datetime_fields():
-            if(row[field] is None):
-                continue
-            row[field] = datetime.strptime(
-                row[field], "%Y-%m-%dT%H:%M:%S"
-            ).strftime("%m/%d/%y %H:%M")
-
-        return row
-
-    def _fieldnames(self):
-        left_cols =  (
+    uri = "inventory.json/get_resources_ec2_details_V3"
+    header = (
             "InstanceId",
             "InstanceName",
             "Region",
@@ -84,32 +50,41 @@ class ComputeDetailsWarp(Warp):
             "LaunchTime",
             "PrivateIpAddress",
             "PricingPlatform",
-        )
-        right_cols = (
+            "Tenancy",
             "Environment",
             "Status",
         )
+
+    def __init__(self, config=None, log=None, **kwargs):
+        if(config):
+            super().__init__(config=config, log=log, **kwargs)
+        self.all_tags = kwargs.get("all_tags")
+
+    def parse(self, json_string):
+        results = json.loads(json_string)
+        self.items = self.merge(results)
         if self.all_tags:
-            return left_cols + ("ResourceTags",) + right_cols
+            self.header = self.header[:-2] + ("ResourceTags",) + self.header[-2:]
 
-        return left_cols + right_cols
-
-    def _datetime_fields(self):
-        return ("LaunchTime",)
-
-    def to_ddh(self):
-        header = self._fieldnames()
-        parsed = self.data[self._key()]
-
-        for row in parsed:
+        for row in self.items:
             row["Environment"] = ""
-        data = [
-            [self._filter_row(row)[col] for col in header]
-            for row in parsed
+        self.data = [
+            [self._filter_row(row)[col] for col in self.header]
+            for row in self.items
         ]
 
-        self._ddh = DDH(header=header, data=data)
-        return self._ddh
+    def _filter_row(self, row):
+        if "ResourceTags" not in row:
+            return row
+        for tag in row["ResourceTags"]:
+            if tag["Key"] != "lw:environment":
+                continue
+            row["Environment"] = tag["Value"]
+        return row
+
+    def _items_from_pages(self, page):
+        return page["Ec2Instances"]
+
 
 class ComputeMigrationWarp(SplitInstanceWarp):
     bpc_id = 240

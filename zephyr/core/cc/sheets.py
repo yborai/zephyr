@@ -39,6 +39,13 @@ class SheetEC2(Sheet):
 
         self.book = book
 
+        """Format datetimes"""
+        index = self.ddh.header.index("LaunchTime")
+        for row in self.ddh.data:
+            row[index] = datetime.strptime(
+                row[index], "%Y-%m-%dT%H:%M:%S"
+            ).strftime("%m/%d/%y %H:%M")
+
         # Insert raw data.
         self.sheet = self.book.add_worksheet(self.title)
         self.put_label(self.title)

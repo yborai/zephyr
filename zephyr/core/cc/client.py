@@ -11,6 +11,14 @@ from ..utils import get_config_values, timed, ZephyrException
 class CloudCheckr(Client):
     name = "CloudCheckr"
 
+    @classmethod
+    def get_params(cls, cc_api_key, name, date):
+        return dict(
+            access_key=cc_api_key,
+            date=date,
+            use_account=name,
+        )
+
     def __init__(self, config, log=None, **kwargs):
         super().__init__(config, log=log)
         self._CC_API_KEY = None
@@ -44,13 +52,6 @@ class CloudCheckr(Client):
             )
 
         return matches[0]
-    @classmethod
-    def get_params(cls, cc_api_key, name, date):
-        return dict(
-            access_key=cc_api_key,
-            date=date,
-            use_account=name,
-        )
 
     def load_pages(self, url, timing=False, log=print):
         """
@@ -82,6 +83,20 @@ class CloudCheckr(Client):
             out.append(obj)
         return out
 
+    def merge(self, pages):
+        return sum([
+            self._items_from_pages(page)
+            for page in pages
+        ], [])
+
+    def parse(self, json_string):
+        results = json.loads(json_string)
+        items = self.merge(results)
+        self.data = [
+            self._row(item)
+            for item in items
+        ]
+
     def request(self, account, date):
         cc_name = self.get_account_by_slug(account)
         params = self.get_params(self.CC_API_KEY, cc_name, date)
@@ -94,3 +109,7 @@ class CloudCheckr(Client):
         self.log.debug(url)
         response = self.load_pages(url, timing=True, log=self.log.info)
         return json.dumps(response)
+
+    def row(self, item):
+        row = dict([pair.split(": ") for pair in item.split(" | ")])
+        return [row[key] for key in self.header]

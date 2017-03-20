@@ -1,6 +1,7 @@
 import os
 
 from cement.utils import test
+from datetime import datetime
 
 from ..cli.tests import TestZephyr, TestZephyrFixtures
 from .ddh import DDH
@@ -69,7 +70,25 @@ class TestZephyrParseCache(TestZephyrParse):
         self.assert_equal_out("billing")
 
     def test_compute_details(self):
-        self.assert_equal_out("compute_details")
+        infile = os.path.join(self.assets, "{}.json".format("compute-details"))
+        outfile = os.path.join(self.assets, "{}.csv".format("compute-details"))
+
+        with open(infile, "r") as f:
+            response = f.read()
+        warp = ComputeDetailsWarp()
+        warp.parse(response)
+        ddh = warp.to_ddh()
+        for row in ddh.data:
+            row[ddh.header.index("LaunchTime")] = datetime.strptime(
+                row[ddh.header.index("LaunchTime")], "%Y-%m-%dT%H:%M:%S"
+            ).strftime("%m/%d/%y %H:%M")
+        csv_out = ddh.to_csv()
+        trans_csv = csv_out.replace("\r\n", "")
+
+        with open(outfile, "r") as f:
+            gold_result = f.read()
+        trans_gold = gold_result.replace("\n", "")
+        self.eq(trans_csv, trans_gold)
 
     def test_compute_migration(self):
         self.assert_equal_out("compute_migration")

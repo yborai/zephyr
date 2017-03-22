@@ -87,7 +87,13 @@ def get_session(key_id, secret):
 @SilenceExplicitly((TimeoutDecoratorError,), handler=aws_timeout_warning)
 @timeout(TIMEOUT, use_signals=False)
 def put_s3(s3, filename, bucket, key):
-    s3.meta.client.upload_file(filename, bucket, key)
+    with open(filename, "br") as f:
+        s3.meta.client.put_object(
+            ACL="bucket-owner-full-control",
+            Body=f,
+            Bucket=bucket,
+            Key=key
+        )
 
 def sdb_flatten(item):
     cells = item['Attributes']

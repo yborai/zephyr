@@ -54,6 +54,7 @@ class Book(Client):
         copyfile(self.filename, cache_local)
         # Cache result to local cache and S3
         self.log.info(cache_local, cache_key)
+        s3 = self.s3  # This is a bit kludgy. TODO: Fix this.
         if self.ZEPHYR_S3_BUCKET:
             aws.put_s3(self.s3, cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
 

@@ -154,7 +154,6 @@ class Client(object):
         raise NotImplementedError
 
     def get_s3(self, cache_key):
-        #s3 = self.s3  # This is a bit kludgy. TODO: Fix this.
         return aws.get_s3(self.s3, self.ZEPHYR_S3_BUCKET, cache_key)
 
     def get_slugs(self):

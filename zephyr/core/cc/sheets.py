@@ -19,11 +19,19 @@ from .calls import (
     StorageDetachedWarp,
 )
 
+def clean_money(value):
+    return value.replace(",", "").replace("$", "")
+
+def clean_percent(value):
+    return value.replace("%", "")
 
 class SheetDBIdle(Sheet):
     name = "DB Idle"
     title = "Idle DB Instances"
     calls = (DBIdleWarp,)
+    clean = {
+        3 : clean_money,
+    }
 
 
 class SheetEC2(Sheet):
@@ -39,7 +47,7 @@ class SheetEC2(Sheet):
 
         self.book = book
 
-        """Format datetimes"""
+        #Format datetimes
         index = self.ddh.header.index("LaunchTime")
         for row in self.ddh.data:
             row[index] = datetime.strptime(
@@ -218,12 +226,20 @@ class SheetLBIdle(Sheet):
     name = "LB Idle"
     title = "Idle LBs"
     calls = (LBIdleWarp,)
+    clean = {
+        2 : clean_money,
+    }
 
 
 class SheetMigration(Sheet):
     name = "Migration"
     title = "EC2 Migration Recommendations"
     calls = (ComputeMigrationWarp,)
+    clean = {
+        4 : clean_money,
+        5 : clean_money,
+        6 : clean_money,
+    }
 
 
 class SheetRDS(Sheet):
@@ -320,6 +336,12 @@ class SheetRIs(Sheet):
     name = "RIs"
     title = "EC2 RI Recommendations"
     calls = (ComputeRIWarp,)
+    clean = {
+        6 : clean_money,
+        7 : clean_money,
+        8 : clean_money,
+        9 : clean_money,
+    }
 
     def clean_data(self):
         new_data = []
@@ -468,6 +490,10 @@ class SheetUnderutilized(Sheet):
     name = "Underutil"
     title = "EC2 Underutilized Instances"
     calls = (ComputeDetailsWarp, ComputeUnderutilizedWarp)
+    clean = {
+        3 : clean_percent,
+        4 : clean_money,
+    }
 
     def predicted_cost_by_environment(self, top=0, left=0):
         con = self.con
@@ -540,8 +566,12 @@ class SheetUnderutilized(Sheet):
             WHERE uu."Average CPU Util" IS NOT NULL
             ORDER BY cd."Environment" DESC
         """.format(cd=CD.slug, uu=UU.slug), con)
-        cu_data = [list(row) for row in cu_df.values]
-        cu_ddh = DDH(data=cu_data, header=list(cu_df.columns))
+        header = cu_df.columns
+        cu_data = [[
+            self.clean.get(index, lambda x:x)(row[index])
+            for index in range(len(header))
+        ] for row in cu_df.values]
+        cu_ddh = DDH(data=cu_data, header=list(header))
         self._ddh = cu_ddh
         return self._ddh
 
@@ -590,5 +620,8 @@ class SheetStorageDetached(Sheet):
     name = "DetachedStorage"
     title = "Detached Storage"
     calls = (StorageDetachedWarp,)
+    clean = {
+        2 : clean_money,
+    }
 
 

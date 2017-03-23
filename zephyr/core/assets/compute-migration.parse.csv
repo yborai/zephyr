@@ -1,0 +1,2 @@
+Instance ID,Instance Name,Region,Recommendation,On-Demand Current Monthly Cost,Cost for Recommended,Yearly Savings,Platform,vCPU for current,vCPU for next gen,Memory for current,Memory for next gen
+i-83504432,AVID-MYSQLDEV01,US East (Northern Virginia),Migrate from c3.4xlarge to c4.4xlarge,$604.80,$603.36,$17.28,LinuxVpc,16,16,30 GB,30 GB

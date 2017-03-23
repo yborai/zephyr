@@ -11,7 +11,6 @@ from urllib.parse import urlencode
 from ..ddh import DDH
 from ..utils import timed
 from . import client as cc
-from .core import BestPracticesWarp, SplitInstanceWarp, Warp
 
 class CloudCheckrAccounts(cc.CloudCheckr):
     uri = "account.json/get_accounts_v2"
@@ -62,16 +61,15 @@ class ComputeDetailsWarp(cc.CloudCheckr):
 
     def parse(self, json_string):
         results = json.loads(json_string)
-        self.items = self.merge(results)
+        items = self.merge(results)
         if self.all_tags:
             self.header = self.header[:-2] + ("ResourceTags",) + self.header[-2:]
 
-        for row in self.items:
-            row["Environment"] = ""
-        self.data = [
-            [self._filter_row(row)[col] for col in self.header]
-            for row in self.items
-        ]
+        data = list()
+        for row in items:
+            filtered = self._filter_row(row)
+            data.append([filtered.get(col, "") for col in self.header])
+        self.data = data
 
     def _filter_row(self, row):
         if "ResourceTags" not in row:
@@ -85,47 +83,44 @@ class ComputeDetailsWarp(cc.CloudCheckr):
     def _items_from_pages(self, page):
         return page["Ec2Instances"]
 
-
-class ComputeMigrationWarp(SplitInstanceWarp):
+class ComputeMigrationWarp(cc.CloudCheckrBPC):
     bpc_id = 240
     slug = "compute-migration"
-
-    def _fieldnames(self):
-        return (
-            "Instance ID", "Instance Name", "Region", "Recommendation",
-            "On-Demand Current Monthly Cost", "Cost for Recommended",
-            "Yearly Savings", "Platform", "vCPU for current",
-            "vCPU for next gen", "Memory for current", "Memory for next gen"
+    header = (
+            "Instance ID",
+            "Instance Name",
+            "Region",
+            "Recommendation",
+            "On-Demand Current Monthly Cost",
+            "Cost for Recommended",
+            "Yearly Savings",
+            "Platform",
+            "vCPU for current",
+            "vCPU for next gen",
+            "Memory for current",
+            "Memory for next gen",
         )
 
-    def _money_fields(self):
-        return (
-            "On-Demand Current Monthly Cost", "Cost for Recommended", "Yearly Savings"
-        )
-
-class ComputeRIWarp(BestPracticesWarp):
+class ComputeRIWarp(cc.CloudCheckrBPC):
     bpc_id = 190
     slug = "compute-ri"
-
-    def _fieldnames(self):
-        return (
-            "Number", "Instance Type", "AZ", "Platform", "Commitment Type",
-            "Tenancy", "Upfront RI Cost", "Reserved Monthly Cost",
-            "On-Demand Monthly Cost", "Total Savings"
+    header = (
+            "Number",
+            "Instance Type",
+            "AZ",
+            "Platform",
+            "Commitment Type",
+            "Tenancy",
+            "Upfront RI Cost",
+            "Reserved Monthly Cost",
+            "On-Demand Monthly Cost",
+            "Total Savings",
         )
 
-    def _money_fields(self):
-        return (
-            "Upfront RI Cost", "Reserved Monthly Cost",
-            "On-Demand Monthly Cost", "Total Savings"
-        )
-
-class ComputeUnderutilizedWarp(SplitInstanceWarp):
+class ComputeUnderutilizedWarp(cc.CloudCheckrBPC):
     bpc_id = 68
     slug = "compute-underutilized"
-
-    def _fieldnames(self):
-        return (
+    header =  (
             "Instance ID",
             "Instance Name",
             "Average CPU Util",
@@ -133,67 +128,52 @@ class ComputeUnderutilizedWarp(SplitInstanceWarp):
             "Region",
         )
 
-    def _money_fields(self):
-        return (
-            "Predicted Monthly Cost",
-        )
-
-class DBDetailsWarp(Warp):
+class DBDetailsWarp(cc.CloudCheckr):
     slug = "db-details"
     uri = "inventory.json/get_resources_rds_details"
+    header = (
+        "DbInstanceId",
+        "DbInstanceName",
+        "MonthlyCost",
+        "RegionName",
+        "DbInstanceClass",
+        "Engine",
+        "EngineVersion",
+        "LicenseModel",
+        "AllocatedStorageGB",
+        "FreeStorageSpaceBytes",
+        "Endpoint",
+        "BackupRetentionPeriod",
+    )
 
-    def _key(self):
-        return "RdsDbInstances"
+    def _items_from_pages(self, page):
+        return page["RdsDbInstances"]
 
-    def _filter_row(self, details_row):
-        return {
-            key: details_row[key] for key in self._fieldnames() if key in details_row.keys()
-        }
-
-    def _fieldnames(self):
-        return (
-            "DbInstanceId", "DbInstanceName", "MonthlyCost", "RegionName",
-            "DbInstanceClass", "Engine", "EngineVersion", "LicenseModel",
-            "AllocatedStorageGB", "FreeStorageSpaceBytes", "Endpoint",
-            "BackupRetentionPeriod"
-        )
-
-class DBIdleWarp(BestPracticesWarp):
+class DBIdleWarp(cc.CloudCheckrBPC):
     bpc_id = 134
     slug = "db-idle"
-
-    def _fieldnames(self):
-        return (
-            "DB Instance",
-            "Average Read IOPS",
-            "Average Write IOPS",
-            "Predicted Monthly Cost",
-            "Region",
-        )
-
-    def _money_fields(self):
-        return (
-            "Predicted Monthly Cost",
-        )
+    header = (
+        "DB Instance",
+        "Average Read IOPS",
+        "Average Write IOPS",
+        "Predicted Monthly Cost",
+        "Region",
+    )
 
 class IAMUsersData(cc.CloudCheckr):
     slug = "iam-users"
     uri = "inventory.json/get_resources_iam_users"
-
-    def __init__(self, config=None, log=None, **kwargs):
-        if(config):
-            super().__init__(config, log=log, **kwargs)
+    header = (
+        "Username",
+        "Has MFA",
+        "Console Last Used",
+        "Access Key 1 Last Used",
+        "Access Key 2 Last Used",
+    )
 
     def parse(self, json_string):
-        self.raw_json = json.loads(json_string)
-        self.user_details = self.raw_json[0].get("IamUsersDetails")
-        self.header = [
-            "Username",
-            "Has MFA",
-            "Console Last Used",
-            "Access Key 1 Last Used",
-            "Access Key 2 Last Used",
-        ]
+        results = json.loads(json_string)
+        items = self.merge(results)
         self.data = [
             [
                 user["UserName"],
@@ -202,43 +182,33 @@ class IAMUsersData(cc.CloudCheckr):
                 user["UserCredential"]["AccessKey1LastUsedDate"],
                 user["UserCredential"]["AccessKey2LastUsedDate"],
             ]
-                for user in self.user_details
+                for user in items
         ]
 
-class LBIdleWarp(BestPracticesWarp):
+    def _items_from_pages(self, page):
+        return page["IamUsersDetails"]
+
+class LBIdleWarp(cc.CloudCheckrBPC):
     bpc_id = 126
     slug = "lb-idle"
+    uri = "best_practice.json/get_best_practices"
+    header = (
+        "Load Balancer",
+        "Average Hourly Request Count",
+        "Predicted Monthly Cost",
+    )
 
-    def _fieldnames(self):
-        return (
-            "Load Balancer",
-            "Average Hourly Request Count",
-            "Predicted Monthly Cost",
-        )
-
-    def _money_fields(self):
-        return (
-            "Predicted Monthly Cost",
-        )
-
-
-class StorageDetachedWarp(BestPracticesWarp):
+class StorageDetachedWarp(cc.CloudCheckrBPC):
     bpc_id = 1
     slug = "storage-detached"
+    header = (
+        "Volume ID",
+        "Size",
+        "Predicted Monthly Cost",
+        "EC2 Instance",
+        "Region",
+    )
 
-    def _fieldnames(self):
-        return (
-            "Volume ID",
-            "Size",
-            "Predicted Monthly Cost",
-            "EC2 Instance",
-            "Region",
-        )
-
-    def _money_fields(self):
-        return (
-            "Predicted Monthly Cost",
-        )
 
 __ALL__ = [
     CloudCheckrAccounts,

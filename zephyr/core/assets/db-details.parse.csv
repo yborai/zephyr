@@ -1,0 +1,2 @@
+DbInstanceId,DbInstanceName,MonthlyCost,RegionName,DbInstanceClass,Engine,EngineVersion,LicenseModel,AllocatedStorageGB,FreeStorageSpaceBytes,Endpoint,BackupRetentionPeriod
+sitecoredevdb,,1094.4,us-east-1,db.r3.xlarge,sqlserver-se,11.00.5058.0.v1,license-included,200,205733547212.8,sitecoredevdb.cqlobth4u0pr.us-east-1.rds.amazonaws.com:1433,7

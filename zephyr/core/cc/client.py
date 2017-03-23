@@ -4,6 +4,7 @@ import pandas as pd
 import requests
 
 from urllib.parse import urlencode
+from re import search, sub
 
 from ..client import Client
 from ..utils import get_config_values, timed, ZephyrException
@@ -19,8 +20,9 @@ class CloudCheckr(Client):
             use_account=name,
         )
 
-    def __init__(self, config, log=None, **kwargs):
-        super().__init__(config, log=log)
+    def __init__(self, config=None, log=None, **kwargs):
+        if(config):
+            super().__init__(config, log=log)
         self._CC_API_KEY = None
 
     @property
@@ -52,6 +54,15 @@ class CloudCheckr(Client):
             )
 
         return matches[0]
+
+    def get_instance_id(self, instance_string):
+        return instance_string.strip().split(" ")[0]
+
+    def get_instance_name(self, instance_string):
+        regex = search("\((.*?)\)", instance_string)
+        if regex is not None:
+            return search("\((.*?)\)", instance_string).group(0)[1:-1]
+        return ""
 
     def load_pages(self, url, timing=False, log=print):
         """
@@ -92,10 +103,7 @@ class CloudCheckr(Client):
     def parse(self, json_string):
         results = json.loads(json_string)
         items = self.merge(results)
-        self.data = [
-            self._row(item)
-            for item in items
-        ]
+        self.data = [[row[col] for col in self.header] for row in items]
 
     def request(self, account, date):
         cc_name = self.get_account_by_slug(account)
@@ -110,6 +118,40 @@ class CloudCheckr(Client):
         response = self.load_pages(url, timing=True, log=self.log.info)
         return json.dumps(response)
 
+class CloudCheckrBPC(CloudCheckr):
+    uri = "best_practice.json/get_best_practices"
+
+    @classmethod
+    def get_params(cls, cc_api_key, name, date):
+        return dict(
+            access_key=cc_api_key,
+            bpc_id=cls.bpc_id,
+            date=date,
+            use_account=name,
+        )
+
+    def __init__(self, bpc_id=None, config=None, log=None, **kwargs):
+        if(config):
+            super().__init__(config, log=log)
+        self.bpc_id = bpc_id
+
+    def parse(self, json_string):
+        results = json.loads(json_string)
+        items = self.merge(results)
+        self.data = [
+            self.row(item)
+            for item in items
+        ]
+
     def row(self, item):
         row = dict([pair.split(": ") for pair in item.split(" | ")])
+        if "Instance" in row.keys():
+            row["Instance ID"] = self.get_instance_id(row["Instance"])
+            row["Instance Name"] = self.get_instance_name(row["Instance"])
         return [row[key] for key in self.header]
+
+    def _items_from_pages(self, page):
+        result = page["BestPracticeChecks"]
+        if result:
+            return result[0]['Results']
+        return []

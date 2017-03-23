@@ -45,7 +45,7 @@ class TestZephyrParse(test.CementTestCase):
         module_name = module.replace("_", "-")
         print(self.assets)
         infile = os.path.join(self.assets, "{}.json".format(module_name))
-        outfile = os.path.join(self.assets, "{}.csv".format(module_name))
+        outfile = os.path.join(self.assets, "{}.parse.csv".format(module_name))
 
         with open(infile, "r") as f:
             response = f.read()

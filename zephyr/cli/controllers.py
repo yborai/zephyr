@@ -426,7 +426,6 @@ class Domains(SheetRun):
         secret_key = self.app.pargs.secret_key
         session_token = self.app.pargs.session_token
         self.app.log.info("Checking for domains.")
-        # import pdb;pdb.set_trace()
         out = domains(access_key_id, secret_key, session_token)
         self.app.render(out)
         return out

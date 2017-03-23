@@ -1,0 +1,2 @@
+Number,Instance Type,AZ,Platform,Commitment Type,Tenancy,Upfront RI Cost,Reserved Monthly Cost,On-Demand Monthly Cost,Total Savings
+2,c3.large,us-east-1a,LinuxVpc,1 Year Partial Upfront,Default,$652.00,$37.96,$145.00,$632.44

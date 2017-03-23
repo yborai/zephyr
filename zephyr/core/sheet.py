@@ -38,6 +38,7 @@ FORMATTING = {
     },
     "book_options": {
         "strings_to_numbers": True,
+        "num_format": "$#,##0.00",
     },
 }
 
@@ -46,6 +47,7 @@ class Sheet(Client):
     formatting = FORMATTING
     name = None
     title = None
+    clean = dict()
 
     def __init__(
         self, config, account=None, date=None, expire_cache=None, log=None
@@ -247,7 +249,13 @@ class Sheet(Client):
         client = self.clients[0]
         if(not client.ddh or not client.ddh.data):
             return False
-        self._ddh = client.ddh
+        header = client.ddh.header
+        data = [[
+            self.clean.get(index, lambda x:x)(row[index])
+            for index in range(len(header))
+        ] for row in client.ddh.data]
+        ddh = DDH(header=header, data=data)
+        self._ddh = ddh
         return self._ddh
 
     def to_xlsx(self, book, **kwargs):

@@ -9,17 +9,17 @@ from .ddh import DDH
 from .dy.calls import Billing
 from .lo.calls import ServiceRequests
 from .cc.calls import (
-    ComputeDetailsWarp,
-    ComputeMigrationWarp,
-    ComputeRIWarp,
-    ComputeUnderutilizedWarp,
-    DBDetailsWarp,
-    DBIdleWarp,
+    ComputeDetails,
+    ComputeMigration,
+    ComputeRI,
+    ComputeUnderutilized,
+    DBDetails,
+    DBIdle,
     IAMUsersData,
-    LBIdleWarp,
-    StorageDetachedWarp,
+    LBIdle,
+    StorageDetached,
 )
-from .cc.sheets import SheetEC2, SheetUnderutilized
+from .cc.sheets import SheetComputeDetails, SheetComputeUnderutilized
 from .utils import first_of_previous_month
 
 
@@ -30,16 +30,16 @@ class TestZephyrParse(test.CementTestCase):
     def assert_equal_out(self, module):
         modules = dict(
             billing=Billing,
-            compute_details=ComputeDetailsWarp,
-            compute_migration=ComputeMigrationWarp,
-            compute_ri=ComputeRIWarp,
-            compute_underutilized=ComputeUnderutilizedWarp,
-            db_details=DBDetailsWarp,
-            db_idle=DBIdleWarp,
+            compute_details=ComputeDetails,
+            compute_migration=ComputeMigration,
+            compute_ri=ComputeRI,
+            compute_underutilized=ComputeUnderutilized,
+            db_details=DBDetails,
+            db_idle=DBIdle,
             iam_users=IAMUsersData,
-            lb_idle=LBIdleWarp,
+            lb_idle=LBIdle,
             service_requests=ServiceRequests,
-            storage_detached=StorageDetachedWarp,
+            storage_detached=StorageDetached,
         )
 
         module_name = module.replace("_", "-")
@@ -49,9 +49,9 @@ class TestZephyrParse(test.CementTestCase):
 
         with open(infile, "r") as f:
             response = f.read()
-        warp = modules[module]()
-        warp.parse(response)
-        csv_out = warp.to_ddh().to_csv()
+        client = modules[module]()
+        client.parse(response)
+        csv_out = client.to_ddh().to_csv()
         trans_csv = csv_out.replace("\r\n", "")
 
         with open(outfile, "r") as f:
@@ -75,9 +75,9 @@ class TestZephyrParseCache(TestZephyrParse):
 
         with open(infile, "r") as f:
             response = f.read()
-        warp = ComputeDetailsWarp()
-        warp.parse(response)
-        ddh = warp.to_ddh()
+        client = ComputeDetails()
+        client.parse(response)
+        ddh = client.to_ddh()
         for row in ddh.data:
             row[ddh.header.index("LaunchTime")] = datetime.strptime(
                 row[ddh.header.index("LaunchTime")], "%Y-%m-%dT%H:%M:%S"
@@ -142,7 +142,7 @@ class TestZephyrReportParse(TestZephyrParse):
         days_180_ = 1
         days_270_ = 1
         test_result = launch_times_, days_90_, days_180_, days_270_
-        ec2 = SheetEC2(config, date="2017-03-01")
+        ec2 = SheetComputeDetails(config, date="2017-03-01")
         ec2._ddh = DDH(header=header, data=data)
         sheet_result = ec2.get_launch_times()
         self.eq(sheet_result, test_result)
@@ -162,7 +162,7 @@ class TestZephyrParseFixtures(TestZephyrFixtures):
         with open(path, "r") as f:
             gold_csv = f.read()
         trans_csv = gold_csv.replace("\n", "")
-        uu = SheetUnderutilized(config, account=".meta", date=date, log=log)
+        uu = SheetComputeUnderutilized(config, account=".meta", date=date, log=log)
         sheet_ddh = uu.ddh.to_csv()
         sheet_csv = sheet_ddh.replace("\r\n", "")
         self.eq(sheet_csv, trans_csv)

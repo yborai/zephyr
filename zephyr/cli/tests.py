@@ -8,7 +8,7 @@ from cement.utils import test
 
 from ..__main__ import Zephyr
 from ..core.book import Book
-from ..core.cc.sheets import SheetEC2, SheetRDS
+from ..core.cc.sheets import SheetComputeDetails, SheetDBDetails
 from ..core.dy.sheets import SheetBilling
 from ..core.lo.sheets import SheetSRs
 from ..core.fixtures import fixtures
@@ -90,7 +90,7 @@ class TestZephyrSheet(test.CementTestCase):
             app.configure()
             config = app.config
             log = app.log
-        self.sheet = SheetEC2(config, ".meta", "2001-01-01", None, log=log)
+        self.sheet = SheetComputeDetails(config, ".meta", "2001-01-01", None, log=log)
 
     def tearDown(self):
         # See comment in TestZephyrBook
@@ -120,7 +120,7 @@ class TestZephyrBook(test.CementTestCase):
         self.book = Book(
             config,
             "Test",
-            (SheetEC2, SheetRDS, SheetBilling, SheetSRs),
+            (SheetComputeDetails, SheetDBDetails, SheetBilling, SheetSRs),
             ".meta",
             None,
             None,

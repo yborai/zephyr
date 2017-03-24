@@ -37,7 +37,7 @@ class CloudCheckrAccounts(cc.CloudCheckr):
         df = pd.DataFrame(data, columns=header)
         df.to_sql("cc_accounts", self.database, if_exists="replace")
 
-class ComputeDetailsWarp(cc.CloudCheckr):
+class ComputeDetails(cc.CloudCheckr):
     key = "Ec2Instances"
     slug = "compute-details"
     uri = "inventory.json/get_resources_ec2_details_V3"
@@ -83,7 +83,7 @@ class ComputeDetailsWarp(cc.CloudCheckr):
     def _items_from_pages(self, page):
         return page["Ec2Instances"]
 
-class ComputeMigrationWarp(cc.CloudCheckrBPC):
+class ComputeMigration(cc.CloudCheckrBPC):
     bpc_id = 240
     slug = "compute-migration"
     header = (
@@ -101,7 +101,7 @@ class ComputeMigrationWarp(cc.CloudCheckrBPC):
             "Memory for next gen",
         )
 
-class ComputeRIWarp(cc.CloudCheckrBPC):
+class ComputeRI(cc.CloudCheckrBPC):
     bpc_id = 190
     slug = "compute-ri"
     header = (
@@ -117,7 +117,7 @@ class ComputeRIWarp(cc.CloudCheckrBPC):
             "Total Savings",
         )
 
-class ComputeUnderutilizedWarp(cc.CloudCheckrBPC):
+class ComputeUnderutilized(cc.CloudCheckrBPC):
     bpc_id = 68
     slug = "compute-underutilized"
     header =  (
@@ -128,7 +128,7 @@ class ComputeUnderutilizedWarp(cc.CloudCheckrBPC):
             "Region",
         )
 
-class DBDetailsWarp(cc.CloudCheckr):
+class DBDetails(cc.CloudCheckr):
     slug = "db-details"
     uri = "inventory.json/get_resources_rds_details"
     header = (
@@ -149,7 +149,7 @@ class DBDetailsWarp(cc.CloudCheckr):
     def _items_from_pages(self, page):
         return page["RdsDbInstances"]
 
-class DBIdleWarp(cc.CloudCheckrBPC):
+class DBIdle(cc.CloudCheckrBPC):
     bpc_id = 134
     slug = "db-idle"
     header = (
@@ -188,7 +188,7 @@ class IAMUsersData(cc.CloudCheckr):
     def _items_from_pages(self, page):
         return page["IamUsersDetails"]
 
-class LBIdleWarp(cc.CloudCheckrBPC):
+class LBIdle(cc.CloudCheckrBPC):
     bpc_id = 126
     slug = "lb-idle"
     uri = "best_practice.json/get_best_practices"
@@ -198,7 +198,7 @@ class LBIdleWarp(cc.CloudCheckrBPC):
         "Predicted Monthly Cost",
     )
 
-class StorageDetachedWarp(cc.CloudCheckrBPC):
+class StorageDetached(cc.CloudCheckrBPC):
     bpc_id = 1
     slug = "storage-detached"
     header = (
@@ -212,13 +212,13 @@ class StorageDetachedWarp(cc.CloudCheckrBPC):
 
 __ALL__ = [
     CloudCheckrAccounts,
-    ComputeDetailsWarp,
-    ComputeMigrationWarp,
-    ComputeRIWarp,
-    ComputeUnderutilizedWarp,
-    DBDetailsWarp,
-    DBIdleWarp,
+    ComputeDetails,
+    ComputeMigration,
+    ComputeRI,
+    ComputeUnderutilized,
+    DBDetails,
+    DBIdle,
     IAMUsersData,
-    LBIdleWarp,
-    StorageDetachedWarp,
+    LBIdle,
+    StorageDetached,
 ]

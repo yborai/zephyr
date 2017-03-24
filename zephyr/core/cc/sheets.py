@@ -8,15 +8,15 @@ from datetime import datetime
 from ..ddh import DDH
 from ..sheet import Sheet
 from .calls import (
-    ComputeDetailsWarp,
-    ComputeMigrationWarp,
-    ComputeRIWarp,
-    ComputeUnderutilizedWarp,
-    DBDetailsWarp,
-    DBIdleWarp,
-    LBIdleWarp,
+    ComputeDetails,
+    ComputeMigration,
+    ComputeRI,
+    ComputeUnderutilized,
+    DBDetails,
+    DBIdle,
+    LBIdle,
     IAMUsersData,
-    StorageDetachedWarp,
+    StorageDetached,
 )
 
 def clean_money(value):
@@ -28,16 +28,16 @@ def clean_percent(value):
 class SheetDBIdle(Sheet):
     name = "DB Idle"
     title = "Idle DB Instances"
-    calls = (DBIdleWarp,)
+    calls = (DBIdle,)
     clean = {
         3 : clean_money,
     }
 
 
-class SheetEC2(Sheet):
+class SheetComputeDetails(Sheet):
     name = "EC2s"
     title = "EC2 Details"
-    calls = (ComputeDetailsWarp,)
+    calls = (ComputeDetails,)
 
     def to_xlsx(self, book, **kwargs):
         """Format the sheet and insert the data for the EC2 sheet."""
@@ -225,16 +225,16 @@ class SheetIAMUsers(Sheet):
 class SheetLBIdle(Sheet):
     name = "LB Idle"
     title = "Idle LBs"
-    calls = (LBIdleWarp,)
+    calls = (LBIdle,)
     clean = {
         2 : clean_money,
     }
 
 
-class SheetMigration(Sheet):
+class SheetComputeMigration(Sheet):
     name = "Migration"
     title = "EC2 Migration Recommendations"
-    calls = (ComputeMigrationWarp,)
+    calls = (ComputeMigration,)
     clean = {
         4 : clean_money,
         5 : clean_money,
@@ -242,10 +242,10 @@ class SheetMigration(Sheet):
     }
 
 
-class SheetRDS(Sheet):
+class SheetDBDetails(Sheet):
     name = "RDS"
     title = "RDS Details"
-    calls = (DBDetailsWarp,)
+    calls = (DBDetails,)
 
     def to_xlsx(self, book, **kwargs):
         """Format the RDS sheet."""
@@ -332,10 +332,10 @@ class SheetRDS(Sheet):
         return self.book
 
 
-class SheetRIs(Sheet):
+class SheetComputeRI(Sheet):
     name = "RIs"
     title = "EC2 RI Recommendations"
-    calls = (ComputeRIWarp,)
+    calls = (ComputeRI,)
     clean = {
         6 : clean_money,
         7 : clean_money,
@@ -486,10 +486,10 @@ class SheetRIs(Sheet):
         return self.sheet
 
 
-class SheetUnderutilized(Sheet):
+class SheetComputeUnderutilized(Sheet):
     name = "Underutil"
     title = "EC2 Underutilized Instances"
-    calls = (ComputeDetailsWarp, ComputeUnderutilizedWarp)
+    calls = (ComputeDetails, ComputeUnderutilized)
     clean = {
         3 : clean_percent,
         4 : clean_money,
@@ -619,7 +619,7 @@ class SheetUnderutilized(Sheet):
 class SheetStorageDetached(Sheet):
     name = "DetachedStorage"
     title = "Detached Storage"
-    calls = (StorageDetachedWarp,)
+    calls = (StorageDetached,)
     clean = {
         2 : clean_money,
     }

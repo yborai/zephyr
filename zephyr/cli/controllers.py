@@ -14,14 +14,14 @@ from ..core.bd.calls import compute_av
 from ..core.boto.calls import domains
 from ..core.cc.sheets import (
     SheetDBIdle,
-    SheetEC2,
+    SheetComputeDetails,
     SheetIAMUsers,
     SheetLBIdle,
-    SheetMigration,
-    SheetRDS,
-    SheetRIs,
+    SheetComputeMigration,
+    SheetDBDetails,
+    SheetComputeRI,
     SheetStorageDetached,
-    SheetUnderutilized,
+    SheetComputeUnderutilized,
 )
 from ..core.dy.sheets import SheetBilling
 from ..core.lo.sheets import SheetSRs
@@ -354,12 +354,12 @@ class AccountReview(SheetRun):
         self._run(
             CoverPage,
             SheetBilling,
-            SheetEC2,
-            SheetRDS,
-            SheetMigration,
-            SheetRIs,
+            SheetComputeDetails,
+            SheetDBDetails,
+            SheetComputeMigration,
+            SheetComputeRI,
             SheetSRs,
-            SheetUnderutilized,
+            SheetComputeUnderutilized,
         )
 
 class ComputeAV(SheetRun):
@@ -444,7 +444,7 @@ class ComputeDetailsSheet(SheetRun):
         description = "Generate the compute-details worksheet."
 
     def run(self, **kwargs):
-        self._run(SheetEC2)
+        self._run(SheetComputeDetails)
 
 class ComputeMigrationSheet(SheetRun):
     class Meta:
@@ -452,7 +452,7 @@ class ComputeMigrationSheet(SheetRun):
         description = "Generate the compute-migration worksheet."
 
     def run(self, **kwargs):
-        self._run(SheetMigration)
+        self._run(SheetComputeMigration)
 
 class ComputeRISheet(SheetRun):
     class Meta:
@@ -460,7 +460,7 @@ class ComputeRISheet(SheetRun):
         description = "Generate the compute-ri worksheet."
 
     def run(self, **kwargs):
-        self._run(SheetRIs)
+        self._run(SheetComputeRI)
 
 class ComputeUnderutilizedSheet(SheetRun):
     class Meta:
@@ -468,7 +468,7 @@ class ComputeUnderutilizedSheet(SheetRun):
         description = "Generate the compute-underutilized worksheet"
 
     def run(self, **kwargs):
-        self._run(SheetUnderutilized)
+        self._run(SheetComputeUnderutilized)
 
 class DBDetailsSheet(SheetRun):
     class Meta:
@@ -476,7 +476,7 @@ class DBDetailsSheet(SheetRun):
         description = "Generate the db-details worksheet."
 
     def run(self, **kwargs):
-        self._run(SheetRDS)
+        self._run(SheetDBDetails)
 
 class DBIdleSheet(SheetRun):
     class Meta:

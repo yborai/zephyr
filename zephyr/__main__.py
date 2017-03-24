@@ -22,9 +22,7 @@ class Zephyr(CementApp):
         base_controller = "base"
         config_defaults = defaults
         config_files = [CONFIG_PATH]
-        handlers = sum((
-            ZephyrControllers,
-        ), [])
+        handlers = ZephyrControllers
         extensions = [
             "zephyr.cli.output",
             "colorlog",

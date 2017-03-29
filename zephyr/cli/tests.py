@@ -143,7 +143,7 @@ class TestZephyrBook(test.CementTestCase):
     def test_book_validators_fail(self):
         assert (
             self.book.cache_key("slug", "account", "2001-01-01") ==
-            "account/2001-01/slug.xlsx"
+            "account/2001-01/slug.account.2001-01-01.xlsx"
         )
 
 

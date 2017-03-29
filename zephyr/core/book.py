@@ -60,7 +60,9 @@ class Book(Client):
 
     def cache_key(self, slug, account, date):
         month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-        filename = "{slug}.xlsx".format(slug=slug)
+        filename = "{slug}.{account}.{date}.xlsx".format(
+            account=account, date=date, slug=slug
+        )
         return os.path.join(account, month, filename)
 
     def collate(self):

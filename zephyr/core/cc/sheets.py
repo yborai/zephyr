@@ -498,27 +498,28 @@ class SheetComputeUnderutilized(Sheet):
     def predicted_cost_by_environment(self, top=0, left=0):
         con = self.con
         CD, UU = self.calls
-        df = pd.read_sql("""
+        df = pd.DataFrame(self.ddh.data, columns=self.ddh.header)
+        df.to_sql("df", con, if_exists="replace")
+        sql_group = pd.read_sql("""
             SELECT
-                CASE cd."Environment"
+                CASE "Environment"
                     WHEN '' THEN 'No environment'
-                    ELSE cd."Environment"
+                    ELSE "Environment"
                 END AS "Environment",
-                SUM(uu."Predicted Monthly Cost") AS "Cost"
+                SUM("Predicted Monthly Cost") AS "Cost"
             FROM
-                "{cd}" AS cd LEFT OUTER JOIN
-                "{uu}" AS uu ON (cd."InstanceId"=uu."Instance ID")
-            WHERE uu."Average CPU Util" IS NOT NULL
-            GROUP BY cd."Environment"
-            ORDER BY SUM(uu."Predicted Monthly Cost") DESC
-        """.format(cd=CD.slug, uu=UU.slug), con)
+                df
+            WHERE "Average CPU Util" IS NOT NULL
+            GROUP BY "Environment"
+            ORDER BY SUM("Predicted Monthly Cost") DESC
+        """, con)
 
         # Account for hidden column
         table_left = left + self.chart_width + self.cell_spacing + 1
         table_top = top + self.cell_spacing + 1
 
-        data = [list(row) for row in df.values]
-        ddh = DDH(data=data, header=list(df.columns))
+        data = [list(row) for row in sql_group.values]
+        ddh = DDH(data=data, header=list(sql_group.columns))
 
         self.put_label("Predicted Monthly Cost", table_top-1, table_left)
         # Write the data table to the sheet.

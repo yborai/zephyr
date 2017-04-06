@@ -6,14 +6,15 @@ import xlsxwriter
 
 from shutil import copyfile
 
-from . import aws
+from .aws import utils as aws
 from .client import Client
 
 FORMATTING = {
-    "book_options" : {
+    "book_options": {
         "strings_to_numbers": True,
     },
 }
+
 
 class Book(Client):
     def __init__(
@@ -56,7 +57,7 @@ class Book(Client):
         self.log.info(cache_local, cache_key)
         s3 = self.s3  # This is a bit kludgy. TODO: Fix this.
         if self.ZEPHYR_S3_BUCKET:
-            aws.put_s3(self.s3, cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
+            aws.put_s3(s3, cache_local, self.ZEPHYR_S3_BUCKET, cache_key)
 
     def cache_key(self, slug, account, date):
         month = datetime.datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
@@ -66,10 +67,6 @@ class Book(Client):
         return os.path.join(account, month, filename)
 
     def collate(self):
-        account = self.account
-        config = self.config
-        date = self.date
-        expire_cache = self.expire_cache
         out = dict()
         for sheet in self.sheets:
             out[sheet.name] = sheet.to_xlsx(self.book)
@@ -97,7 +94,6 @@ class Book(Client):
             for client in getattr(sheet, "clients", [])
         }
         return out.values()
-
 
     def to_xlsx(self):
         options = FORMATTING["book_options"]

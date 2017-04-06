@@ -10,6 +10,8 @@ from ..core.client import Client
 from ..core.configure import create_config
 from ..core.sheet import CoverPage
 from ..core.utils import first_of_previous_month, ZephyrException
+from ..core.aws.calls import AWSEC2Pricing
+from ..core.aws.sheets import AWSEC2PricingSheet
 from ..core.bd.calls import compute_av
 from ..core.boto.calls import domains
 from ..core.cc.sheets import (
@@ -26,6 +28,7 @@ from ..core.cc.sheets import (
 from ..core.dy.sheets import SheetBilling
 from ..core.lo.sheets import SheetSRs
 
+
 class ZephyrCLI(CementBaseController):
     class Meta:
         label = "base"
@@ -37,12 +40,13 @@ class ZephyrCLI(CementBaseController):
         self.app.args.print_help()
         sys.exit(0)
 
+
 class ZephyrClearCache(ZephyrCLI):
     class Meta:
         label = "clear-cache"
         stacked_on = "base"
         stacked_type = "nested"
-        description = "Clears cache in S3 and locally for a given account and date."
+        description = "Clears local and S3 cache a given account and date."
         arguments = ZephyrCLI.Meta.arguments + [(
             ["--account"], dict(
                 type=str,
@@ -90,6 +94,7 @@ class ZephyrClearCache(ZephyrCLI):
             client.clear_cache_s3(acct, month)
             client.clear_cache_local(acct, month)
 
+
 class ZephyrConfigure(ZephyrCLI):
     class Meta:
         label = "configure"
@@ -124,19 +129,19 @@ class ZephyrConfigure(ZephyrCLI):
             )
         )]
 
-
     @expose(hide=True)
     def default(self):
         self.run(**vars(self.app.pargs))
 
     def run(self, **kwargs):
         first_run = self.app.pargs.first_run
-        write = self.app.pargs.write or first_run # first_run implies write
+        write = self.app.pargs.write or first_run  # first_run implies write
         # first_run implies no prompt
         no_prompt = self.app.pargs.no_prompt or first_run
         prompt = not no_prompt
-        ini = self.app.pargs.ini or write # write implies ini
+        ini = self.app.pargs.ini or write  # write implies ini
         create_config(self.app.config, prompt, write, ini)
+
 
 class ZephyrETL(ZephyrCLI):
     class Meta:
@@ -145,6 +150,7 @@ class ZephyrETL(ZephyrCLI):
         stacked_type = "nested"
         description = "Perform Extract-Transform-Load operations on data."
         arguments = ZephyrCLI.Meta.arguments
+
 
 class ZephyrMeta(ZephyrCLI):
     class Meta:
@@ -177,6 +183,23 @@ class ZephyrMeta(ZephyrCLI):
             projects.get_all_projects(),
             line_width=self.ZEPHYR_LINE_WIDTH
         )
+
+
+class ZephyrEC2Pricing(ZephyrMeta):
+    class Meta:
+        label = "ec2-pricing"
+        stacked_on = "meta"
+        stacked_type = "nested"
+        description = "Gather client meta information."
+
+    def run(self, **kwargs):
+        config = self.app.config
+        log = self.app.log
+        expire_cache = self.app.pargs.expire_cache
+        client = AWSEC2Pricing(config, log=log)
+        pub_date = client.cache_policy(expire_cache)
+        log.info(pub_date)
+
 
 class ZephyrDBRRI(ZephyrETL):
     class Meta:
@@ -234,10 +257,6 @@ class ZephyrDBRRI(ZephyrETL):
         self.app.log.info("Using output file: {outfile}".format(outfile=outfile))
         self.filter_ri_dbr(infile, outfile, no_tags)
 
-    @expose(hide=True)
-    def default(self):
-        self.run(**vars(self.app.pargs))
-
 
 class ZephyrReport(ZephyrCLI):
     class Meta:
@@ -270,6 +289,7 @@ class ZephyrReport(ZephyrCLI):
                 help="Forces the cached data to be refreshed."
             )
         )]
+
 
 class SheetRun(ZephyrReport):
     class Meta:
@@ -345,6 +365,7 @@ class SheetRun(ZephyrReport):
                 self.app.render(book.sheets[0].ddh)
         return book
 
+
 class AccountReview(SheetRun):
     class Meta:
         label = "account-review"
@@ -361,6 +382,7 @@ class AccountReview(SheetRun):
             SheetSRs,
             SheetComputeUnderutilized,
         )
+
 
 class ComputeAV(SheetRun):
     class Meta:
@@ -384,7 +406,7 @@ class ComputeAV(SheetRun):
         cache_file = self.app.pargs.cache_file
         compute_details = self.app.pargs.compute_details
         if(not cache_file):
-            raise NotImplementedError # We will add fetching later.
+            raise NotImplementedError  # We will add fetching later.
         self.app.log.info(
             "Using cached response: {cache}"
             .format(cache=cache_file)
@@ -398,6 +420,7 @@ class ComputeAV(SheetRun):
         out = compute_av(cache_file, compute_details)
         self.app.render(out)
         return out
+
 
 class Domains(SheetRun):
     class Meta:
@@ -430,6 +453,7 @@ class Domains(SheetRun):
         self.app.render(out)
         return out
 
+
 class BillingSheet(SheetRun):
     class Meta:
         label = "billing"
@@ -437,6 +461,7 @@ class BillingSheet(SheetRun):
 
     def run(self, **kwargs):
         self._run(SheetBilling)
+
 
 class ComputeDetailsSheet(SheetRun):
     class Meta:
@@ -446,6 +471,7 @@ class ComputeDetailsSheet(SheetRun):
     def run(self, **kwargs):
         self._run(SheetComputeDetails)
 
+
 class ComputeMigrationSheet(SheetRun):
     class Meta:
         label = "compute-migration"
@@ -453,6 +479,16 @@ class ComputeMigrationSheet(SheetRun):
 
     def run(self, **kwargs):
         self._run(SheetComputeMigration)
+
+
+class ComputePricingSheet(SheetRun):
+    class Meta:
+        label = "compute-pricing"
+        description = "Give the list prices for instances in the environment."
+
+    def run(self, **kwargs):
+        self._run(AWSEC2PricingSheet)
+
 
 class ComputeRISheet(SheetRun):
     class Meta:
@@ -462,6 +498,7 @@ class ComputeRISheet(SheetRun):
     def run(self, **kwargs):
         self._run(SheetComputeRI)
 
+
 class ComputeUnderutilizedSheet(SheetRun):
     class Meta:
         label = "compute-underutilized"
@@ -469,6 +506,7 @@ class ComputeUnderutilizedSheet(SheetRun):
 
     def run(self, **kwargs):
         self._run(SheetComputeUnderutilized)
+
 
 class DBDetailsSheet(SheetRun):
     class Meta:
@@ -478,6 +516,7 @@ class DBDetailsSheet(SheetRun):
     def run(self, **kwargs):
         self._run(SheetDBDetails)
 
+
 class DBIdleSheet(SheetRun):
     class Meta:
         label = "db-idle"
@@ -485,6 +524,7 @@ class DBIdleSheet(SheetRun):
 
     def run(self, **kwargs):
         self._run(SheetDBIdle)
+
 
 class IAMUsersSheet(SheetRun):
     class Meta:
@@ -494,6 +534,7 @@ class IAMUsersSheet(SheetRun):
     def run(self, **kwargs):
         self._run(SheetIAMUsers)
 
+
 class LBIdleSheet(SheetRun):
     class Meta:
         label = "lb-idle"
@@ -502,6 +543,7 @@ class LBIdleSheet(SheetRun):
     def run(self, **kwargs):
         self._run(SheetLBIdle)
 
+
 class ServiceRequestSheet(SheetRun):
     class Meta:
         label = "service-requests"
@@ -509,6 +551,7 @@ class ServiceRequestSheet(SheetRun):
 
     def run(self, **kwargs):
         self._run(SheetSRs)
+
 
 class StorageDetachedSheet(SheetRun):
     class Meta:
@@ -525,6 +568,7 @@ __ALL__ = [
     ComputeAV,
     ComputeDetailsSheet,
     ComputeMigrationSheet,
+    ComputePricingSheet,
     ComputeRISheet,
     ComputeUnderutilizedSheet,
     DBDetailsSheet,
@@ -538,6 +582,7 @@ __ALL__ = [
     ZephyrClearCache,
     ZephyrConfigure,
     ZephyrDBRRI,
+    ZephyrEC2Pricing,
     ZephyrETL,
     ZephyrMeta,
     ZephyrReport,

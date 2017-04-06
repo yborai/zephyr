@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-from . import aws
+from .aws import utils as aws
 from .cc import calls as cc
 from .lo import calls as lo
 from .sf import calls as sf

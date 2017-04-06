@@ -8,7 +8,7 @@ from shutil import rmtree
 
 from timeout_decorator import timeout
 
-from . import aws
+from .aws import utils as aws
 from .ddh import DDH
 from .utils import get_config_values
 
